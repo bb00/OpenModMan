@@ -54,7 +54,7 @@ class OmUiAddBat : public OmDialog
     /// \brief Get associated Context.
     ///
     /// Returns associated Context object previously defined
-    /// via OmUiAddLoc.setContext
+    /// via OmUiAddChn.setContext
     ///
     /// \return Associated Context or nullptr if none.
     ///

@@ -14,18 +14,18 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIADDLOC_H
-#define OMUIADDLOC_H
+#ifndef OMUIADDCHN_H
+#define OMUIADDCHN_H
 
 #include "OmDialog.h"
 
 class OmContext;
 
-/// \brief Add Location dialog
+/// \brief Add Mod Channel dialog
 ///
-/// OmDialog class derived for Add Location dialog window
+/// OmDialog class derived for Add Mod Channel dialog window
 ///
-class OmUiAddLoc : public OmDialog
+class OmUiAddChn : public OmDialog
 {
   public:
 
@@ -35,13 +35,13 @@ class OmUiAddLoc : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiAddLoc(HINSTANCE hins);
+    OmUiAddChn(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiAddLoc();
+    ~OmUiAddChn();
 
     /// \brief Get resource id.
     ///
@@ -53,8 +53,7 @@ class OmUiAddLoc : public OmDialog
 
     /// \brief Get associated Context.
     ///
-    /// Returns associated Context object previously defined
-    /// via OmUiAddLoc.setContext
+    /// Returns associated Context object
     ///
     /// \return Associated Context or nullptr if none.
     ///
@@ -101,4 +100,4 @@ class OmUiAddLoc : public OmDialog
     INT_PTR                   _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIADDLOC_H
+#endif // OMUIADDCHN_H

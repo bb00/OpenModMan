@@ -27,7 +27,7 @@
 #include "OmUiMgr.h"
 #include "OmUiMgrMain.h"
 #include "OmUiMgrFoot.h"
-#include "OmUiAddLoc.h"
+#include "OmUiAddChn.h"
 #include "OmUiAddBat.h"
 #include "OmUiPropPkg.h"
 #include "OmUiPropBat.h"
@@ -182,8 +182,8 @@ void OmUiMgrMainLib::freeze(bool enable)
   std::cout << "DEBUG => OmUiMgrMainLib::freeze (" << (enable ? "enabled" : "disabled") << ")\n";
   #endif
 
-  // Location ComboBox
-  this->enableItem(IDC_CB_LOC, !enable);
+  // Mod Channel ComboBox
+  this->enableItem(IDC_CB_CHN, !enable);
 
   // Packages ListView & buttons
   this->enableItem(IDC_LV_PKG, !enable);
@@ -231,7 +231,7 @@ void OmUiMgrMainLib::safemode(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiMgrMainLib::locSel(int id)
+void OmUiMgrMainLib::chnSel(int id)
 {
   #ifdef DEBUG
   std::cout << "DEBUG => OmUiMgrMainLib::locSel " << id << "\n";
@@ -246,29 +246,29 @@ void OmUiMgrMainLib::locSel(int id)
   // disable "Edit > Package []" in main menu
   this->_pUiMgr->setPopupItem(MNU_EDIT, MNU_EDIT_PKG, MF_GRAYED);
 
-  // select the requested Location
+  // select the requested Mod Channel
   if(pCtx) {
 
-    pCtx->locSel(id);
+    pCtx->chnSel(id);
 
-    OmLocation* pLoc = pCtx->locCur();
+    OmModChan* pChn = pCtx->chnCur();
 
-    if(pLoc) {
+    if(pChn) {
 
-      // Check Location Library folder access
-      if(pLoc->libDirAccess(false)) { //< check only for reading
+      // Check Mod Channel Library folder access
+      if(pChn->libDirAccess(false)) { //< check only for reading
         // force refresh library
-        pLoc->libRefresh();
+        pChn->libRefresh();
         // start Library folder monitoring
-        this->_dirMon_init(pLoc->libDir());
+        this->_dirMon_init(pChn->libDir());
       }
 
-      // enable the "Edit > Location properties..." menu
+      // enable the "Edit > Mod Channel properties..." menu
       this->_pUiMgr->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, MF_ENABLED);
 
     } else {
 
-      // disable the "Edit > Location properties..." menu
+      // disable the "Edit > Mod Channel properties..." menu
       this->_pUiMgr->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, MF_GRAYED);
     }
   }
@@ -278,7 +278,7 @@ void OmUiMgrMainLib::locSel(int id)
   this->_buildLvPkg();
 
   // forces control to select item
-  this->msgItem(IDC_CB_LOC, CB_SETCURSEL, id);
+  this->msgItem(IDC_CB_CHN, CB_SETCURSEL, id);
 
   if(!pCtx) return;
 }
@@ -330,8 +330,8 @@ void OmUiMgrMainLib::pkgDisc()
 {
   // prevent useless processing
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   this->_pkgDisc_init();
 }
@@ -352,10 +352,10 @@ void OmUiMgrMainLib::pkgTogg()
     return;
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
-  if(pLoc->pkgGet(lv_sel)->hasBck()) {
+  if(pChn->pkgGet(lv_sel)->hasBck()) {
     this->_pkgUnin_init();
   } else {
     this->_pkgInst_init();
@@ -378,12 +378,12 @@ void OmUiMgrMainLib::pkgProp()
     return;
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   OmPackage* pPkg = nullptr;
 
-  pPkg = pLoc->pkgGet(lv_sel);
+  pPkg = pChn->pkgGet(lv_sel);
 
   if(pPkg) {
     OmUiPropPkg* pUiPropPkg = static_cast<OmUiPropPkg*>(this->childById(IDD_PROP_PKG));
@@ -403,16 +403,16 @@ void OmUiMgrMainLib::pkgTrsh()
     return;
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  OmContext* pCtx = pLoc->pCtx();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  OmContext* pCtx = pChn->pCtx();
+  if(!pChn) return;
 
   vector<OmPackage*> sel_ls;
 
   int lv_sel = this->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
   while(lv_sel != -1) {
 
-    sel_ls.push_back(pLoc->pkgGet(lv_sel));
+    sel_ls.push_back(pChn->pkgGet(lv_sel));
 
     // next selected item
     lv_sel = this->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, lv_sel, LVNI_SELECTED);
@@ -447,7 +447,7 @@ void OmUiMgrMainLib::pkgTrsh()
 
       // remove package references from existing batches
       for(size_t i = 0; i < pCtx->batCount(); ++i) {
-        pCtx->batGet(i)->instRem(pLoc, pPkg->ident());
+        pCtx->batGet(i)->instRem(pChn, pPkg->ident());
       }
 
       int result = Om_moveToTrash(pPkg->srcPath());
@@ -484,15 +484,15 @@ void OmUiMgrMainLib::pkgOpen()
     return;
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   vector<OmPackage*> sel_ls;
 
   int lv_sel = this->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
   while(lv_sel != -1) {
 
-    sel_ls.push_back(pLoc->pkgGet(lv_sel));
+    sel_ls.push_back(pChn->pkgGet(lv_sel));
 
     // next selected item
     lv_sel = this->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, lv_sel, LVNI_SELECTED);
@@ -527,12 +527,12 @@ void OmUiMgrMainLib::pkgEdit()
     return;
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   OmPackage* pPkg = nullptr;
 
-  pPkg = pLoc->pkgGet(lv_sel);
+  pPkg = pChn->pkgGet(lv_sel);
 
   if(pPkg) {
     OmUiToolPkg* pUiToolPkg = static_cast<OmUiToolPkg*>(this->_pUiMgr->childById(IDD_TOOL_PKG));
@@ -566,8 +566,8 @@ bool OmUiMgrMainLib::_pkgProgressCb(void* ptr, size_t tot, size_t cur, uint64_t 
 void OmUiMgrMainLib::_pkgInstLs(const vector<OmPackage*>& pkg_ls, bool silent)
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   wstring msg_lst;
 
@@ -577,10 +577,10 @@ void OmUiMgrMainLib::_pkgInstLs(const vector<OmPackage*>& pkg_ls, bool silent)
   vector<wstring> miss_ls;    //< missing dependencies lists
 
   // prepare package installation
-  pLoc->pkgPrepareInst(inst_ls, over_ls, dpcs_ls, miss_ls, pkg_ls);
+  pChn->pkgPrepareInst(inst_ls, over_ls, dpcs_ls, miss_ls, pkg_ls);
 
   // warn user for missing dependencies
-  if(!silent && miss_ls.size() && pLoc->warnMissDeps()) {
+  if(!silent && miss_ls.size() && pChn->warnMissDeps()) {
 
     __msg_package_list(msg_lst, miss_ls);
     if(!Om_dlgBox_cal(this->_hwnd, L"Install Packages", IDI_PKG_WRN,
@@ -593,7 +593,7 @@ void OmUiMgrMainLib::_pkgInstLs(const vector<OmPackage*>& pkg_ls, bool silent)
   }
 
   // warn for additional installation
-  if(!silent && dpcs_ls.size() && pLoc->warnExtraInst()) {
+  if(!silent && dpcs_ls.size() && pChn->warnExtraInst()) {
 
     __msg_package_list(msg_lst, dpcs_ls);
     if(!Om_dlgBox_cal(this->_hwnd, L"Install Packages", IDI_PKG_ADD,
@@ -606,7 +606,7 @@ void OmUiMgrMainLib::_pkgInstLs(const vector<OmPackage*>& pkg_ls, bool silent)
   }
 
   // if there is overlapping, ask user if he really want to continue installation
-  if(!silent && over_ls.size() && pLoc->warnOverlaps()) {
+  if(!silent && over_ls.size() && pChn->warnOverlaps()) {
 
     __msg_package_list(msg_lst, over_ls);
     if(!Om_dlgBox_cal(this->_hwnd, L"Install Packages", IDI_PKG_OWR,
@@ -635,7 +635,7 @@ void OmUiMgrMainLib::_pkgInstLs(const vector<OmPackage*>& pkg_ls, bool silent)
       break;
 
     // set WIP status image
-    lvi.iItem = pLoc->pkgIndex(pPkg);
+    lvi.iItem = pChn->pkgIndex(pPkg);
     lvi.iImage =  4; //< STS_WIP
     this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
 
@@ -645,10 +645,10 @@ void OmUiMgrMainLib::_pkgInstLs(const vector<OmPackage*>& pkg_ls, bool silent)
     // we check overlapping before installation, we must do it step by step
     // because overlapping are cumulative with previously installed packages
     ovlp_ls.clear();
-    pLoc->pkgFindOverlaps(ovlp_ls, pPkg);
+    pChn->pkgFindOverlaps(ovlp_ls, pPkg);
 
     // install package
-    if(!pPkg->install(pLoc->bckZipLevel(), &this->_pkgProgressCb, this)) {
+    if(!pPkg->install(pChn->bckZipLevel(), &this->_pkgProgressCb, this)) {
       Om_dlgBox_okl(this->_hwnd, L"Install Packages", IDI_PKG_ERR,
                     L"Package installation error", L"Installation of \""+
                     pPkg->name()+L"\" failed because of the following error:",
@@ -661,7 +661,7 @@ void OmUiMgrMainLib::_pkgInstLs(const vector<OmPackage*>& pkg_ls, bool silent)
       this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
       // update icons for overlapped packages
       for(size_t j = 0; j < ovlp_ls.size(); ++j) {
-        lvi.iItem = pLoc->pkgIndex(ovlp_ls[j]);
+        lvi.iItem = pChn->pkgIndex(ovlp_ls[j]);
         lvi.iImage = 8; //< STS_OWR
         this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
       }
@@ -686,8 +686,8 @@ void OmUiMgrMainLib::_pkgInstLs(const vector<OmPackage*>& pkg_ls, bool silent)
 void OmUiMgrMainLib::_pkgUninLs(const vector<OmPackage*>& pkg_ls, bool silent)
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   wstring msg_lst;
 
@@ -696,10 +696,10 @@ void OmUiMgrMainLib::_pkgUninLs(const vector<OmPackage*>& pkg_ls, bool silent)
   vector<OmPackage*> unin_ls; // final uninstall list
 
   // prepare packages uninstall and backups restoration
-  pLoc->bckPrepareUnin(unin_ls, over_ls, dpnd_ls, pkg_ls);
+  pChn->bckPrepareUnin(unin_ls, over_ls, dpnd_ls, pkg_ls);
 
   // check and warn for extra uninstall due to overlaps
-  if(!silent && over_ls.size() && pLoc->warnExtraUnin()) {
+  if(!silent && over_ls.size() && pChn->warnExtraUnin()) {
 
     __msg_package_list(msg_lst, over_ls);
 
@@ -714,7 +714,7 @@ void OmUiMgrMainLib::_pkgUninLs(const vector<OmPackage*>& pkg_ls, bool silent)
   }
 
   // check and warn for extra uninstall due to dependencies
-  if(!silent && dpnd_ls.size() && pLoc->warnExtraUnin()) {
+  if(!silent && dpnd_ls.size() && pChn->warnExtraUnin()) {
 
     __msg_package_list(msg_lst, dpnd_ls);
 
@@ -744,7 +744,7 @@ void OmUiMgrMainLib::_pkgUninLs(const vector<OmPackage*>& pkg_ls, bool silent)
       break;
 
     // set WIP status image
-    lvi.iItem = pLoc->pkgIndex(pPkg);
+    lvi.iItem = pChn->pkgIndex(pPkg);
     lvi.iImage = 4; //< STS_WIP
     this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
 
@@ -754,7 +754,7 @@ void OmUiMgrMainLib::_pkgUninLs(const vector<OmPackage*>& pkg_ls, bool silent)
     // before uninstall, get list of overlapped packages (by this one)
     ovlp_ls.clear();
     for(size_t j = 0; j < pPkg->ovrCount(); ++j) {
-      ovlp_ls.push_back(pLoc->pkgFind(pPkg->ovrGet(j)));
+      ovlp_ls.push_back(pChn->pkgFind(pPkg->ovrGet(j)));
     }
 
     // uninstall package (restore backup)
@@ -766,15 +766,15 @@ void OmUiMgrMainLib::_pkgUninLs(const vector<OmPackage*>& pkg_ls, bool silent)
     }
 
     if(pPkg->hasBck()) { //< this mean something went wrong
-      lvi.iImage = pLoc->bckOverlapped(pPkg) ? 8/*STS_OWR*/:7/*STS_BOK*/;
+      lvi.iImage = pChn->bckOverlapped(pPkg) ? 8/*STS_OWR*/:7/*STS_BOK*/;
       this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
     } else {
       lvi.iImage = -1; //< No Icon
       this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
       // update status icon for overlapped packages
       for(size_t j = 0; j < ovlp_ls.size(); ++j) {
-        lvi.iItem = pLoc->pkgIndex(ovlp_ls[j]);
-        lvi.iImage = pLoc->bckOverlapped(ovlp_ls[j]) ? 8/*STS_OWR*/:7/*STS_BOK*/;
+        lvi.iItem = pChn->pkgIndex(ovlp_ls[j]);
+        lvi.iImage = pChn->bckOverlapped(ovlp_ls[j]) ? 8/*STS_OWR*/:7/*STS_BOK*/;
         this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
       }
     }
@@ -795,8 +795,8 @@ void OmUiMgrMainLib::_pkgUninLs(const vector<OmPackage*>& pkg_ls, bool silent)
 void OmUiMgrMainLib::_pkgClnsLs(const vector<OmPackage*>& pkg_ls, bool silent)
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   wstring msg_lst;
 
@@ -806,10 +806,10 @@ void OmUiMgrMainLib::_pkgClnsLs(const vector<OmPackage*>& pkg_ls, bool silent)
   vector<OmPackage*> clns_ls; // final clean uninstall list
 
   // prepare packages uninstall and backups restoration
-  pLoc->bckPrepareClns(clns_ls, over_ls, dpnd_ls, dpcs_ls, pkg_ls);
+  pChn->bckPrepareClns(clns_ls, over_ls, dpnd_ls, dpcs_ls, pkg_ls);
 
   // check and warn for extra uninstall due to dependencies
-  if(!silent && dpcs_ls.size() && pLoc->warnExtraUnin()) {
+  if(!silent && dpcs_ls.size() && pChn->warnExtraUnin()) {
 
     __msg_package_list(msg_lst, dpcs_ls);
 
@@ -823,7 +823,7 @@ void OmUiMgrMainLib::_pkgClnsLs(const vector<OmPackage*>& pkg_ls, bool silent)
   }
 
   // check and warn for extra uninstall due to overlaps
-  if(!silent && over_ls.size() && pLoc->warnExtraUnin()) {
+  if(!silent && over_ls.size() && pChn->warnExtraUnin()) {
 
     __msg_package_list(msg_lst, over_ls);
 
@@ -838,7 +838,7 @@ void OmUiMgrMainLib::_pkgClnsLs(const vector<OmPackage*>& pkg_ls, bool silent)
   }
 
   // check and warn for extra uninstall due to dependencies
-  if(!silent && dpnd_ls.size() && pLoc->warnExtraUnin()) {
+  if(!silent && dpnd_ls.size() && pChn->warnExtraUnin()) {
 
     __msg_package_list(msg_lst, dpnd_ls);
 
@@ -868,7 +868,7 @@ void OmUiMgrMainLib::_pkgClnsLs(const vector<OmPackage*>& pkg_ls, bool silent)
       break;
 
     // set WIP status image
-    lvi.iItem = pLoc->pkgIndex(pPkg);
+    lvi.iItem = pChn->pkgIndex(pPkg);
     lvi.iImage = 4; //< STS_WIP
     this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
 
@@ -878,7 +878,7 @@ void OmUiMgrMainLib::_pkgClnsLs(const vector<OmPackage*>& pkg_ls, bool silent)
     // before uninstall, get list of overlapped packages (by this one)
     ovlp_ls.clear();
     for(size_t j = 0; j < pPkg->ovrCount(); ++j) {
-      ovlp_ls.push_back(pLoc->pkgFind(pPkg->ovrGet(j)));
+      ovlp_ls.push_back(pChn->pkgFind(pPkg->ovrGet(j)));
     }
 
     // uninstall package (restore backup)
@@ -890,15 +890,15 @@ void OmUiMgrMainLib::_pkgClnsLs(const vector<OmPackage*>& pkg_ls, bool silent)
     }
 
     if(pPkg->hasBck()) { //< this mean something went wrong
-      lvi.iImage = pLoc->bckOverlapped(pPkg) ? 8/*STS_OWR*/:7/*STS_BOK*/;
+      lvi.iImage = pChn->bckOverlapped(pPkg) ? 8/*STS_OWR*/:7/*STS_BOK*/;
       this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
     } else {
       lvi.iImage = -1; //< No Icon
       this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
       // update status icon for overlapped packages
       for(size_t j = 0; j < ovlp_ls.size(); ++j) {
-        lvi.iItem = pLoc->pkgIndex(ovlp_ls[j]);
-        lvi.iImage = pLoc->bckOverlapped(ovlp_ls[j]) ? 8/*STS_OWR*/:7/*STS_BOK*/;
+        lvi.iItem = pChn->pkgIndex(ovlp_ls[j]);
+        lvi.iImage = pChn->bckOverlapped(ovlp_ls[j]) ? 8/*STS_OWR*/:7/*STS_BOK*/;
         this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
       }
     }
@@ -919,8 +919,8 @@ void OmUiMgrMainLib::_pkgClnsLs(const vector<OmPackage*>& pkg_ls, bool silent)
 void OmUiMgrMainLib::_pkgDiscLs(const vector<OmPackage*>& pkg_ls)
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   wstring msg_lst;
 
@@ -949,7 +949,7 @@ void OmUiMgrMainLib::_pkgDiscLs(const vector<OmPackage*>& pkg_ls)
       break;
 
     // set WIP status image
-    lvi.iItem = pLoc->pkgIndex(pPkg);
+    lvi.iItem = pChn->pkgIndex(pPkg);
     lvi.iImage = 4; //< STS_WIP
     this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
 
@@ -959,7 +959,7 @@ void OmUiMgrMainLib::_pkgDiscLs(const vector<OmPackage*>& pkg_ls)
     // before discard backup, get list of overlapped packages (by this one)
     ovlp_ls.clear();
     for(size_t j = 0; j < pPkg->ovrCount(); ++j) {
-      ovlp_ls.push_back(pLoc->pkgFind(pPkg->ovrGet(j)));
+      ovlp_ls.push_back(pChn->pkgFind(pPkg->ovrGet(j)));
     }
 
     // discard package backup data
@@ -971,15 +971,15 @@ void OmUiMgrMainLib::_pkgDiscLs(const vector<OmPackage*>& pkg_ls)
     }
 
     if(pPkg->hasBck()) { //< this mean something went wrong
-      lvi.iImage = pLoc->bckOverlapped(pPkg) ? 8/*STS_OWR*/:7/*STS_BOK*/;
+      lvi.iImage = pChn->bckOverlapped(pPkg) ? 8/*STS_OWR*/:7/*STS_BOK*/;
       this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
     } else {
       lvi.iImage = -1; //< No Icon
       this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
       // update status icon for overlapped packages
       for(size_t j = 0; j < ovlp_ls.size(); ++j) {
-        lvi.iItem = pLoc->pkgIndex(ovlp_ls[j]);
-        lvi.iImage = pLoc->bckOverlapped(ovlp_ls[j]) ? 8/*STS_OWR*/:7/*STS_BOK*/;
+        lvi.iItem = pChn->pkgIndex(ovlp_ls[j]);
+        lvi.iImage = pChn->bckOverlapped(ovlp_ls[j]) ? 8/*STS_OWR*/:7/*STS_BOK*/;
         this->msgItem(IDC_LV_PKG, LVM_SETITEM, 0, reinterpret_cast<LPARAM>(&lvi));
       }
     }
@@ -997,10 +997,10 @@ void OmUiMgrMainLib::_pkgDiscLs(const vector<OmPackage*>& pkg_ls)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiMgrMainLib::_buildCbLoc()
+void OmUiMgrMainLib::_buildCbChn()
 {
   #ifdef DEBUG
-  std::cout << "DEBUG => OmUiMgrMainLib::_buildCbLoc\n";
+  std::cout << "DEBUG => OmUiMgrMainLib::_buildCbChn\n";
   #endif
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
@@ -1009,57 +1009,57 @@ void OmUiMgrMainLib::_buildCbLoc()
   // check whether any context is selected
   if(!pCtx) {
     // empty the Combo-Box
-    this->msgItem(IDC_CB_LOC, CB_RESETCONTENT);
-    // disable Location ComboBox
-    this->enableItem(IDC_CB_LOC, false);
+    this->msgItem(IDC_CB_CHN, CB_RESETCONTENT);
+    // disable Mod Channel ComboBox
+    this->enableItem(IDC_CB_CHN, false);
     // force to reset current selection
-    this->locSel(-1);
+    this->chnSel(-1);
     // return now
     return;
   }
 
   // empty the Combo-Box
-  this->msgItem(IDC_CB_LOC, CB_RESETCONTENT);
+  this->msgItem(IDC_CB_CHN, CB_RESETCONTENT);
 
   // add Context(s) to Combo-Box
-  if(pCtx->locCount()) {
+  if(pCtx->chnCount()) {
 
     wstring label;
 
-    for(unsigned i = 0; i < pCtx->locCount(); ++i) {
+    for(unsigned i = 0; i < pCtx->chnCount(); ++i) {
 
-      // compose Location label
-      label = pCtx->locGet(i)->title() + L" - ";
+      // compose Mod Channel label
+      label = pCtx->chnGet(i)->title() + L" - ";
 
-      if(pCtx->locGet(i)->dstDirAccess(true)) { //< check for read and write
-        label += pCtx->locGet(i)->dstDir();
+      if(pCtx->chnGet(i)->dstDirAccess(true)) { //< check for read and write
+        label += pCtx->chnGet(i)->dstDir();
       } else {
         label += L"<folder access error>";
       }
 
-      this->msgItem(IDC_CB_LOC, CB_ADDSTRING, i, reinterpret_cast<LPARAM>(label.c_str()));
+      this->msgItem(IDC_CB_CHN, CB_ADDSTRING, i, reinterpret_cast<LPARAM>(label.c_str()));
     }
 
     // set selection to current active location
-    this->msgItem(IDC_CB_LOC, CB_SETCURSEL, pCtx->locCurId());
+    this->msgItem(IDC_CB_CHN, CB_SETCURSEL, pCtx->chnCurIndex());
 
     // enable the ComboBox control
-    this->enableItem(IDC_CB_LOC, true);
+    this->enableItem(IDC_CB_CHN, true);
 
   } else {
 
-    // disable Location ComboBox
-    this->enableItem(IDC_CB_LOC, false);
+    // disable Mod Channel ComboBox
+    this->enableItem(IDC_CB_CHN, false);
     // no selection
-    this->msgItem(IDC_CB_LOC, CB_SETCURSEL, -1);
+    this->msgItem(IDC_CB_CHN, CB_SETCURSEL, -1);
 
-    // ask user to create at least one Target Location in the Software Context
+    // ask user to create at least one Mod Channel in the Software Context
     if(!Om_dlgBox_yn(this->_hwnd, L"Packages Library", IDI_QRY,
-                  L"Empty Modding Hub", L"The selected Modding Hub is "
-                  "empty and have no Channel configured. Do you want "
-                  "to add a Channel now ?"))
+                  L"Empty Mod Hub", L"The selected Mod Hub is "
+                  "empty and have no Mod Channel configured. Do you want "
+                  "to add a Mod Channel now ?"))
     {
-      OmUiAddLoc* pUiAddLoc = static_cast<OmUiAddLoc*>(this->_pUiMgr->childById(IDD_ADD_LOC));
+      OmUiAddChn* pUiAddLoc = static_cast<OmUiAddChn*>(this->_pUiMgr->childById(IDD_ADD_CHN));
       pUiAddLoc->ctxSet(pCtx);
       pUiAddLoc->open(true);
     }
@@ -1077,13 +1077,13 @@ void OmUiMgrMainLib::_buildEcLib()
   #endif
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
+  OmModChan* pChn = pMgr->chnCur();
 
   wstring item_str;
 
-  if(pLoc) {
-    if(pLoc->libDirAccess(false)) { //< check only for reading
-      item_str = pLoc->libDir();
+  if(pChn) {
+    if(pChn->libDirAccess(false)) { //< check only for reading
+      item_str = pChn->libDir();
     } else {
       item_str = L"<folder access error>";
     }
@@ -1156,9 +1156,9 @@ void OmUiMgrMainLib::_buildLvPkg()
   this->msgItem(IDC_LV_PKG, LVM_DELETEALLITEMS);
 
   // get current context and location
-  OmLocation* pLoc = pMgr->locCur();
+  OmModChan* pChn = pMgr->chnCur();
 
-  if(!pLoc) {
+  if(!pChn) {
     // disable ListView
     this->enableItem(IDC_LV_PKG, false);
     // update Package ListView selection
@@ -1168,21 +1168,21 @@ void OmUiMgrMainLib::_buildLvPkg()
   }
 
   // save current legacy support status
-  this->_buildLvPkg_legacy = pLoc->libDevMode();
+  this->_buildLvPkg_legacy = pChn->libDevMode();
 
   // add item to list view
   OmPackage* pPkg;
   LVITEMW lvItem;
-  for(unsigned i = 0; i < pLoc->pkgCount(); ++i) {
+  for(unsigned i = 0; i < pChn->pkgCount(); ++i) {
 
-    pPkg = pLoc->pkgGet(i);
+    pPkg = pChn->pkgGet(i);
 
     // the first column, package status, here we INSERT the new item
     lvItem.iItem = i;
     lvItem.mask = LVIF_IMAGE;
     lvItem.iSubItem = 0;
     if(pPkg->isType(PKG_TYPE_BCK)) {
-      lvItem.iImage = pLoc->bckOverlapped(pPkg) ? 8/*STS_OWR*/:7/*STS_BOK*/;
+      lvItem.iImage = pChn->bckOverlapped(pPkg) ? 8/*STS_OWR*/:7/*STS_BOK*/;
     } else {
       lvItem.iImage = -1; // No Icon
     }
@@ -1313,7 +1313,7 @@ void OmUiMgrMainLib::_buildLvBat()
     pBat = pCtx->batGet(i);
     lvItem.iItem = i; //< to order list according insertion order
     lvItem.pszText = const_cast<LPWSTR>(pBat->title().c_str());
-    lvItem.lParam = static_cast<LPARAM>(i); // for Location index reordering
+    lvItem.lParam = static_cast<LPARAM>(i); // for Mod Channel index reordering
 
     this->msgItem(IDC_LV_BAT, LVM_INSERTITEMW, 0, reinterpret_cast<LPARAM>(&lvItem));
   }
@@ -1351,34 +1351,34 @@ void OmUiMgrMainLib::_rsizeLvBat()
 void OmUiMgrMainLib::_pkgInst_init()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // checks whether we have a valid Target path
-  if(!pLoc->dstDirAccess(true)) { //< check for read and write
+  if(!pChn->dstDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Install Packages", IDI_ERR,
                   L"Target path access error", L"The Target path "
                   "cannot be accessed because it do not exist or have read/write "
-                  "access restrictions. Please check Channel's settings "
-                  "and folder permissions.", pLoc->dstDir());
+                  "access restrictions. Please check Mod Channel's settings "
+                  "and folder permissions.", pChn->dstDir());
     return;
   }
   // checks whether we have a valid Library folder
-  if(!pLoc->libDirAccess(false)) { //< check only for read
+  if(!pChn->libDirAccess(false)) { //< check only for read
     Om_dlgBox_okl(this->_hwnd, L"Install Packages", IDI_ERR,
                   L"Library folder access error", L"The Library folder "
                   "cannot be accessed because it do not exist or have read "
-                  "access restrictions. Please check Channel's settings "
-                  "and folder permissions.", pLoc->libDir());
+                  "access restrictions. Please check Mod Channel's settings "
+                  "and folder permissions.", pChn->libDir());
     return;
   }
   // checks whether we have a valid Backup folder
-  if(!pLoc->bckDirAccess(true)) { //< check for read and write
+  if(!pChn->bckDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Install Packages", IDI_ERR,
                   L"Backup folder access error", L"The Backup folder "
                   "cannot be accessed because it do not exist or have read/write "
-                  "access restrictions. Please check Channel's settings "
-                  "and folder permissions.", pLoc->bckDir());
+                  "access restrictions. Please check Mod Channel's settings "
+                  "and folder permissions.", pChn->bckDir());
     return;
   }
 
@@ -1410,8 +1410,8 @@ void OmUiMgrMainLib::_pkgInst_stop()
 
   // Need to update Menu
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 }
 
 
@@ -1423,8 +1423,8 @@ DWORD WINAPI OmUiMgrMainLib::_pkgInst_fth(void* arg)
   OmUiMgrMainLib* self = static_cast<OmUiMgrMainLib*>(arg);
 
   OmManager* pMgr = static_cast<OmManager*>(self->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return 1;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return 1;
 
   // string for dialog messages
   wstring msg;
@@ -1437,7 +1437,7 @@ DWORD WINAPI OmUiMgrMainLib::_pkgInst_fth(void* arg)
   int lv_sel = self->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
   while(lv_sel != -1) {
 
-    pPkg = pLoc->pkgGet(lv_sel);
+    pPkg = pChn->pkgGet(lv_sel);
 
     if(pPkg->hasSrc() && !pPkg->hasBck())
       user_ls.push_back(pPkg);
@@ -1465,25 +1465,25 @@ DWORD WINAPI OmUiMgrMainLib::_pkgInst_fth(void* arg)
 void OmUiMgrMainLib::_pkgUnin_init()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // checks whether we have a valid Target path
-  if(!pLoc->dstDirAccess(true)) { //< check for read and write
+  if(!pChn->dstDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Uninstall Packages", IDI_ERR,
                   L"Target path access error", L"The Target path "
                   "cannot be accessed because it do not exist or have read/write "
-                  "access restrictions. Please check Channel's settings "
-                  "and folder permissions.", pLoc->dstDir());
+                  "access restrictions. Please check Mod Channel's settings "
+                  "and folder permissions.", pChn->dstDir());
     return;
   }
   // checks whether we have a valid Backup folder
-  if(!pLoc->bckDirAccess(true)) { //< check for read and write
+  if(!pChn->bckDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Uninstall Packages", IDI_ERR,
                   L"Backup folder access error", L"The Backup folder "
                   "cannot be accessed because it do not exist or have read/write "
-                  "access restrictions. Please check Channel's settings "
-                  "and folder permissions.", pLoc->bckDir());
+                  "access restrictions. Please check Mod Channel's settings "
+                  "and folder permissions.", pChn->bckDir());
     return;
   }
 
@@ -1515,11 +1515,11 @@ void OmUiMgrMainLib::_pkgUnin_stop()
   // no backup), so we clean Library and rebuild ListView if needed
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // clean Library list and rebuild ListView
-  if(pLoc->libClean())
+  if(pChn->libClean())
     this->_buildLvPkg();
 }
 
@@ -1532,8 +1532,8 @@ DWORD WINAPI OmUiMgrMainLib::_pkgUnin_fth(void* arg)
 
   OmManager* pMgr = static_cast<OmManager*>(self->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return 1;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return 1;
 
   // string for dialog messages
   wstring msg;
@@ -1546,7 +1546,7 @@ DWORD WINAPI OmUiMgrMainLib::_pkgUnin_fth(void* arg)
   int lv_sel = self->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
   while(lv_sel != -1) {
 
-    pPkg = pLoc->pkgGet(lv_sel);
+    pPkg = pChn->pkgGet(lv_sel);
 
     if(pPkg->hasBck())
       user_ls.push_back(pPkg);
@@ -1575,25 +1575,25 @@ void OmUiMgrMainLib::_pkgClns_init()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // checks whether we have a valid Target path
-  if(!pLoc->dstDirAccess(true)) { //< check for read and write
+  if(!pChn->dstDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Uninstall Tree", IDI_ERR,
                   L"Target path access error", L"The Target path "
                   "cannot be accessed because it do not exist or have read/write "
-                  "access restrictions. Please check Channel's settings "
-                  "and folder permissions.", pLoc->dstDir());
+                  "access restrictions. Please check Mod Channel's settings "
+                  "and folder permissions.", pChn->dstDir());
     return;
   }
   // checks whether we have a valid Backup folder
-  if(!pLoc->bckDirAccess(true)) { //< check for read and write
+  if(!pChn->bckDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Uninstall Tree", IDI_ERR,
                   L"Backup folder access error", L"The Backup folder "
                   "cannot be accessed because it do not exist or have read/write "
-                  "access restrictions. Please check Channel's settings "
-                  "and folder permissions.", pLoc->bckDir());
+                  "access restrictions. Please check Mod Channel's settings "
+                  "and folder permissions.", pChn->bckDir());
     return;
   }
 
@@ -1626,11 +1626,11 @@ void OmUiMgrMainLib::_pkgClns_stop()
   // no backup), so we clean Library and rebuild ListView if needed
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // clean Library list and rebuild ListView
-  if(pLoc->libClean())
+  if(pChn->libClean())
     this->_buildLvPkg();
 }
 
@@ -1644,8 +1644,8 @@ DWORD WINAPI OmUiMgrMainLib::_pkgClns_fth(void* arg)
 
   OmManager* pMgr = static_cast<OmManager*>(self->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return 1;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return 1;
 
   // string for dialog messages
   wstring msg;
@@ -1658,7 +1658,7 @@ DWORD WINAPI OmUiMgrMainLib::_pkgClns_fth(void* arg)
   int lv_sel = self->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
   while(lv_sel != -1) {
 
-    pPkg = pLoc->pkgGet(lv_sel);
+    pPkg = pChn->pkgGet(lv_sel);
 
     if(pPkg->hasBck())
       user_ls.push_back(pPkg);
@@ -1687,16 +1687,16 @@ void OmUiMgrMainLib::_pkgDisc_init()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // checks whether we have a valid Backup folder
-  if(!pLoc->bckDirAccess(true)) { //< check for read and write
+  if(!pChn->bckDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Discard backup data", IDI_ERR,
                   L"Backup folder access error", L"The Backup folder "
                   "cannot be accessed because it do not exist or have read/write "
-                  "access restrictions. Please check Channel's settings "
-                  "and folder permissions.", pLoc->bckDir());
+                  "access restrictions. Please check Mod Channel's settings "
+                  "and folder permissions.", pChn->bckDir());
     return;
   }
 
@@ -1717,8 +1717,8 @@ DWORD WINAPI OmUiMgrMainLib::_pkgDisc_fth(void* arg)
 
   OmManager* pMgr = static_cast<OmManager*>(self->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return 1;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return 1;
 
     // get user selection
   vector<OmPackage*> user_ls;
@@ -1728,7 +1728,7 @@ DWORD WINAPI OmUiMgrMainLib::_pkgDisc_fth(void* arg)
   int lv_sel = self->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
   while(lv_sel != -1) {
 
-    pPkg = pLoc->pkgGet(lv_sel);
+    pPkg = pChn->pkgGet(lv_sel);
 
     if(pPkg->hasBck())
       user_ls.push_back(pPkg);
@@ -1770,11 +1770,11 @@ void OmUiMgrMainLib::_pkgDisc_stop()
   // no backup), so we clean Library and rebuild ListView if needed
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // clean Library list and rebuild ListView
-  if(pLoc->libClean())
+  if(pChn->libClean())
     this->_buildLvPkg();
 }
 
@@ -1817,11 +1817,11 @@ void OmUiMgrMainLib::_batExe_stop()
   // no backup), so we clean Library and rebuild ListView if needed
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // clean Library list and rebuild ListView
-  if(pLoc->libClean())
+  if(pChn->libClean())
     this->_buildLvPkg();
 }
 
@@ -1837,7 +1837,7 @@ DWORD WINAPI OmUiMgrMainLib::_batExe_fth(void* arg)
   OmContext* pCtx = pMgr->ctxCur();
 
   // save current selected location
-  int cb_sel = self->msgItem(IDC_CB_LOC, CB_GETCURSEL);
+  int cb_sel = self->msgItem(IDC_CB_CHN, CB_GETCURSEL);
 
   // Get Batches ListView unique selection
   int lv_sel = self->msgItem(IDC_LV_BAT, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
@@ -1861,20 +1861,20 @@ DWORD WINAPI OmUiMgrMainLib::_batExe_fth(void* arg)
     self->_thread_abort = false;
 
     OmPackage* pPkg;
-    OmLocation* pLoc;
+    OmModChan* pChn;
 
-    for(size_t l = 0; l < pCtx->locCount(); ++l) {
+    for(size_t l = 0; l < pCtx->chnCount(); ++l) {
 
       if(self->_thread_abort)
         break;
 
-      // retrieve batch install list for Target Location
+      // retrieve batch install list for Mod Channel
       bat_ls.clear();
-      pBat->instGetList(pCtx->locGet(l), bat_ls);
+      pBat->instGetList(pCtx->chnGet(l), bat_ls);
 
-      // Select the Location
-      self->locSel(l);
-      pLoc = pCtx->locCur();
+      // Select the Mod Channel
+      self->chnSel(l);
+      pChn = pCtx->chnCur();
 
       // create the install list, to keep package order from batch we
       // fill the install list according the batch list
@@ -1888,8 +1888,8 @@ DWORD WINAPI OmUiMgrMainLib::_batExe_fth(void* arg)
 
         // create the uninstall list, here we do not care order
         uni_ls.clear();
-        for(size_t i = 0; i < pLoc->pkgCount(); ++i) {
-          pPkg = pLoc->pkgGet(i);
+        for(size_t i = 0; i < pChn->pkgCount(); ++i) {
+          pPkg = pChn->pkgGet(i);
           if(pPkg->hasBck()) {
             if(std::find(bat_ls.begin(), bat_ls.end(), pPkg) == bat_ls.end()) {
               uni_ls.push_back(pPkg);
@@ -1925,7 +1925,7 @@ DWORD WINAPI OmUiMgrMainLib::_batExe_fth(void* arg)
   }
 
   // Select previously selected location
-  self->locSel(cb_sel);
+  self->chnSel(cb_sel);
 
   // send message to notify process ended
   self->postMessage(UWM_BATEXE_DONE);
@@ -2012,9 +2012,9 @@ DWORD WINAPI OmUiMgrMainLib::_dirMon_fth(void* arg)
       OmContext* pCtx = pMgr->ctxCur();
 
       if(pCtx) { //< this should be always the case
-        if(pCtx->locCur()) { //< this should also be always the case
-          // refresh Location Library
-          if(pCtx->locCur()->libRefresh()) {
+        if(pCtx->chnCur()) { //< this should also be always the case
+          // refresh Mod Channel Library
+          if(pCtx->chnCur()->libRefresh()) {
             // if list changed, rebuilt package ListView
             self->_buildLvPkg();
           }
@@ -2034,8 +2034,8 @@ DWORD WINAPI OmUiMgrMainLib::_dirMon_fth(void* arg)
 ///
 void OmUiMgrMainLib::_onCbLocSel()
 {
-  int cb_sel = this->msgItem(IDC_CB_LOC, CB_GETCURSEL);
-  this->locSel(cb_sel);
+  int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
+  this->chnSel(cb_sel);
 }
 
 
@@ -2092,8 +2092,8 @@ void OmUiMgrMainLib::_onLvPkgSel()
   }
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmLocation* pLoc = pMgr->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = pMgr->chnCur();
+  if(!pChn) return;
 
   // at least one selected, enable "Edit > Package []" pop-up menu
   this->_pUiMgr->setPopupItem(MNU_EDIT, MNU_EDIT_PKG, MF_ENABLED);
@@ -2128,7 +2128,7 @@ void OmUiMgrMainLib::_onLvPkgSel()
     int lv_sel = this->msgItem(IDC_LV_PKG, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
     if(lv_sel >= 0) {
 
-      pPkg = pLoc->pkgGet(lv_sel);
+      pPkg = pChn->pkgGet(lv_sel);
 
       // show packages info in footer frame
       this->_pUiMgr->pUiMgrFoot()->selectItem(pPkg);
@@ -2307,7 +2307,7 @@ void OmUiMgrMainLib::_onBcDelBat()
     if(!pCtx) return;
 
     // warns the user before committing the irreparable
-    if(!Om_dlgBox_ynl(this->_hwnd, L"Modding Hub properties", IDI_QRY,
+    if(!Om_dlgBox_ynl(this->_hwnd, L"Mod Hub properties", IDI_QRY,
               L"Delete Script", L"Delete the Script ?",
               pCtx->batGet(lvItem.lParam)->title()))
     {
@@ -2317,7 +2317,7 @@ void OmUiMgrMainLib::_onBcDelBat()
     if(!pCtx->batRem(lvItem.lParam)) {
 
       // warns the user error occurred
-      Om_dlgBox_okl(this->_hwnd, L"Modding Hub properties", IDI_ERR,
+      Om_dlgBox_okl(this->_hwnd, L"Mod Hub properties", IDI_ERR,
                 L"Script delete error", L"Script deletion "
                 "process failed because of the following error:",
                 pCtx->lastError());
@@ -2348,7 +2348,7 @@ void OmUiMgrMainLib::_onInit()
   this->setBmIcon(IDC_BC_EDI, Om_getResIcon(this->_hins, IDI_BT_MOD));
 
   // define controls tool-tips
-  this->_createTooltip(IDC_CB_LOC,    L"Select active location");
+  this->_createTooltip(IDC_CB_CHN,    L"Select active location");
   this->_createTooltip(IDC_BC_INST,   L"Install selected package(s)");
   this->_createTooltip(IDC_BC_UNIN,   L"Uninstall selected package(s)");
   this->_createTooltip(IDC_BC_ABORT,  L"Abort current process");
@@ -2442,8 +2442,8 @@ void OmUiMgrMainLib::_onHide()
 ///
 void OmUiMgrMainLib::_onResize()
 {
-  // Locations Combo-Box
-  this->_setItemPos(IDC_CB_LOC, 2, 2, this->cliUnitX()-160, 12);
+  // Mod Channel Combo-Box
+  this->_setItemPos(IDC_CB_CHN, 2, 2, this->cliUnitX()-160, 12);
   // Library path EditControl
   this->_setItemPos(IDC_EC_INP01, 2, 18, this->cliUnitX()-160, 12);
   // Package List ListView
@@ -2486,8 +2486,8 @@ void OmUiMgrMainLib::_onRefresh()
   // rebuild Batches ListBox
   this->_buildLvBat();
 
-  // rebuild Location ComboBox
-  this->_buildCbLoc();
+  // rebuild Mod Channel ComboBox
+  this->_buildCbChn();
 
   // disable abort button
   this->enableItem(IDC_BC_ABORT, false);
@@ -2506,19 +2506,19 @@ void OmUiMgrMainLib::_onRefresh()
   // We try to avoid unnecessary refresh of ListView by
   // select specific condition of refresh
   if(pCtx) {
-    if(pCtx->locCur()) {
+    if(pCtx->chnCur()) {
 
-      dst_access = pCtx->locCur()->dstDirAccess(true);
-      bck_access = pCtx->locCur()->bckDirAccess(true);
+      dst_access = pCtx->chnCur()->dstDirAccess(true);
+      bck_access = pCtx->chnCur()->bckDirAccess(true);
 
       // restart folder monitoring if required
-      if(pCtx->locCur()->libDirAccess(false)) {
-        this->_dirMon_init(pCtx->locCur()->libDir());
+      if(pCtx->chnCur()->libDirAccess(false)) {
+        this->_dirMon_init(pCtx->chnCur()->libDir());
       } else {
         lib_access = false;
       }
 
-      pCtx->locCur()->libRefresh();
+      pCtx->chnCur()->libRefresh();
     }
   }
 
@@ -2528,29 +2528,29 @@ void OmUiMgrMainLib::_onRefresh()
   if(!pCtx) return;
 
   // Display error dialog AFTER ListView refreshed its content
-  if(pCtx->locCur()) {
+  if(pCtx->chnCur()) {
     if(!dst_access) {
       Om_dlgBox_okl(this->_hwnd, L"Packages Library", IDI_WRN,
                     L"Target path access error", L"The Target path "
                     "cannot be accessed because it do not exist or have read/write "
-                    "access restrictions. Please check Channel's settings "
-                    "and folder permissions.", pCtx->locCur()->dstDir());
+                    "access restrictions. Please check Mod Channel's settings "
+                    "and folder permissions.", pCtx->chnCur()->dstDir());
     }
 
     if(!bck_access) {
       Om_dlgBox_okl(this->_hwnd, L"Packages Library", IDI_WRN,
                     L"Backup folder access error", L"The Backup folder "
                     "cannot be accessed because it do not exist or have read/write "
-                    "access restrictions. Please check Channel's settings "
-                    "and folder permissions.", pCtx->locCur()->bckDir());
+                    "access restrictions. Please check Mod Channel's settings "
+                    "and folder permissions.", pCtx->chnCur()->bckDir());
     }
 
     if(!lib_access) {
       Om_dlgBox_okl(this->_hwnd, L"Packages Library", IDI_WRN,
                     L"Library folder access error", L"The Library folder "
                     "cannot be accessed because it do not exist or have read "
-                    "access restrictions. Please check Channel's settings "
-                    "and folder permissions.", pCtx->locCur()->libDir());
+                    "access restrictions. Please check Mod Channel's settings "
+                    "and folder permissions.", pCtx->chnCur()->libDir());
     }
   }
 }
@@ -2621,8 +2621,8 @@ INT_PTR OmUiMgrMainLib::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
   // UWM_MAIN_CTX_CHANGED is a custom message sent from Main (parent) Dialog
   // to notify its child tab dialogs the Context selection changed.
   if(uMsg == UWM_MAIN_CTX_CHANGED) {
-    // invalidate Location selection
-    this->msgItem(IDC_CB_LOC, CB_SETCURSEL, -1);
+    // invalidate Mod Channel selection
+    this->msgItem(IDC_CB_CHN, CB_SETCURSEL, -1);
     // Refresh the dialog
     this->_onRefresh();
     return false;
@@ -2642,8 +2642,8 @@ INT_PTR OmUiMgrMainLib::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   if(uMsg == WM_NOTIFY) {
 
-    OmLocation* pLoc = pCtx->locCur();
-    if(!pLoc) return false;
+    OmModChan* pChn = pCtx->chnCur();
+    if(!pChn) return false;
 
     if(LOWORD(wParam) == IDC_LV_PKG) {
 
@@ -2669,16 +2669,16 @@ INT_PTR OmUiMgrMainLib::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
         switch(reinterpret_cast<NMLISTVIEW*>(lParam)->iSubItem)
         {
         case 0:
-          pLoc->libSetSorting(LS_SORT_STAT);
+          pChn->libSetSorting(LS_SORT_STAT);
           break;
         case 2:
-          pLoc->libSetSorting(LS_SORT_VERS);
+          pChn->libSetSorting(LS_SORT_VERS);
           break;
         case 3:
-          pLoc->libSetSorting(LS_SORT_CATG);
+          pChn->libSetSorting(LS_SORT_CATG);
           break;
         default:
-          pLoc->libSetSorting(LS_SORT_NAME);
+          pChn->libSetSorting(LS_SORT_NAME);
           break;
         }
         this->_buildLvPkg(); //< rebuild ListView
@@ -2724,7 +2724,7 @@ INT_PTR OmUiMgrMainLib::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch(LOWORD(wParam))
     {
 
-    case IDC_CB_LOC:
+    case IDC_CB_CHN:
       if(HIWORD(wParam) == CBN_SELCHANGE) this->_onCbLocSel();
       break;
 

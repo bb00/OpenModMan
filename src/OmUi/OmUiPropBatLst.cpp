@@ -82,12 +82,12 @@ void OmUiPropBatLst::_buildLbs()
   OmContext* pCtx = pBat->pCtx();
   if(!pCtx) return;
 
-  // get current Combo-Box selection first Location by default
-  int cb_sel = this->msgItem(IDC_CB_LOC, CB_GETCURSEL);
+  // get current ComboBox selection first Mod Channel by default
+  int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
   if(cb_sel < 0) return;
 
-  // get Location corresponding to current selection
-  OmLocation* pLoc = pCtx->locGet(cb_sel);
+  // get Mod Channel corresponding to current selection
+  OmModChan* pChn = pCtx->chnGet(cb_sel);
 
   unsigned p;
   OmPackage* pPkg;
@@ -97,7 +97,7 @@ void OmUiPropBatLst::_buildLbs()
   for(size_t i = 0; i < this->_excluded[cb_sel].size(); i++) {
 
     p = this->_excluded[cb_sel][i];
-    pPkg = pLoc->pkgGet(p);
+    pPkg = pChn->pkgGet(p);
 
     item_str = Om_getFilePart(pPkg->srcPath());
     this->msgItem(IDC_LB_EXC, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
@@ -111,7 +111,7 @@ void OmUiPropBatLst::_buildLbs()
   for(size_t i = 0; i < this->_included[cb_sel].size(); i++) {
 
     p = this->_included[cb_sel][i];
-    pPkg = pLoc->pkgGet(p);
+    pPkg = pChn->pkgGet(p);
 
     item_str = Om_getFilePart(pPkg->srcPath());
     this->msgItem(IDC_LB_INC, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
@@ -125,8 +125,8 @@ void OmUiPropBatLst::_buildLbs()
 ///
 void OmUiPropBatLst::_includePkg()
 {
-  // get current Combo-Box selection first Location by default
-  int cb_sel = this->msgItem(IDC_CB_LOC, CB_GETCURSEL);
+  // get current ComboBox selection first Mod Channel by default
+  int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
   if(cb_sel < 0) return;
 
   // get count of selected items
@@ -143,9 +143,9 @@ void OmUiPropBatLst::_includePkg()
   // copy selected items from one list to the other list
   for(int i = 0; i < sel_cnt; ++i) {
 
-    // retrieve the package List-Box label
+    // retrieve the package ListBox label
     this->msgItem(IDC_LB_EXC, LB_GETTEXT, lb_sel[i], reinterpret_cast<LPARAM>(item_buf));
-    // retrieve the package reference index (in Location package list)
+    // retrieve the package reference index (in Mod Channel package list)
     index = this->msgItem(IDC_LB_EXC, LB_GETITEMDATA, lb_sel[i]);
 
     // remove package index from left mirror list
@@ -187,8 +187,8 @@ void OmUiPropBatLst::_includePkg()
 ///
 void OmUiPropBatLst::_excludePkg()
 {
-  // get current Combo-Box selection first Location by default
-  int cb_sel = this->msgItem(IDC_CB_LOC, CB_GETCURSEL);
+  // get current ComboBox selection first Mod Channel by default
+  int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
   if(cb_sel < 0) return;
 
   // get count of selected items
@@ -206,7 +206,7 @@ void OmUiPropBatLst::_excludePkg()
   for(int i = 0; i < sel_cnt; ++i) {
     // retrieve the package List-Box label
     this->msgItem(IDC_LB_INC, LB_GETTEXT, lb_sel[i], reinterpret_cast<LPARAM>(item_buf));
-    // retrieve the package reference index (in Location package list)
+    // retrieve the package reference index (in Mod Channel package list)
     index = this->msgItem(IDC_LB_INC, LB_GETITEMDATA, lb_sel[i]);
 
     // remove package index from right mirror list
@@ -300,8 +300,8 @@ void OmUiPropBatLst::_onLbInclsSel()
 ///
 void OmUiPropBatLst::_onBcUpPkg()
 {
-  // get current Combo-Box selection first Location by default
-  int cb_sel = this->msgItem(IDC_CB_LOC, CB_GETCURSEL);
+  // get current ComboBox selection first Mod Channel by default
+  int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
   if(cb_sel < 0) return;
 
   // get count of selected items
@@ -349,8 +349,8 @@ void OmUiPropBatLst::_onBcUpPkg()
 ///
 void OmUiPropBatLst::_onBcDnPkg()
 {
-  // get current Combo-Box selection first Location by default
-  int cb_sel = this->msgItem(IDC_CB_LOC, CB_GETCURSEL);
+  // get current ComboBox selection first Mod Channel by default
+  int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
   if(cb_sel < 0) return;
 
   // get count of selected items
@@ -409,7 +409,7 @@ void OmUiPropBatLst::_onInit()
   this->setBmIcon(IDC_BC_DN, Om_getResIcon(this->_hins, IDI_BT_DN));
 
   // define controls tool-tips
-  this->_createTooltip(IDC_CB_LOC,    L"Channel to configure");
+  this->_createTooltip(IDC_CB_CHN,    L"Channel to configure");
   this->_createTooltip(IDC_LB_INC,    L"Packages the Script will install (or leave installed)");
   this->_createTooltip(IDC_LB_EXC,    L"Packages the Script will uninstall (or leave uninstalled)");
   this->_createTooltip(IDC_BC_RIGH,   L"Add to installed");
@@ -431,10 +431,10 @@ void OmUiPropBatLst::_onResize()
 
   // Batch Configuration Label
   this->_setItemPos(IDC_SC_LBL02, 50, 25, 240, 9);
-  // Location list ComboBox
-  this->_setItemPos(IDC_CB_LOC, 50, 35, this->cliUnitX()-100, 12);
+  // Mod Channel list ComboBox
+  this->_setItemPos(IDC_CB_CHN, 50, 35, this->cliUnitX()-100, 12);
   // force ComboBox to repaint by invalidate rect, else it randomly disappears on resize
-  InvalidateRect(this->getItem(IDC_CB_LOC), nullptr, true);
+  InvalidateRect(this->getItem(IDC_CB_CHN), nullptr, true);
 
   // Not-Installed label
   this->_setItemPos(IDC_SC_LBL03, 50, 55, 150, 9);
@@ -465,10 +465,10 @@ void OmUiPropBatLst::_onRefresh()
   OmContext* pCtx = pBat->pCtx();
   if(!pCtx) return;
 
-  OmLocation* pLoc;
+  OmModChan* pChn;
 
   // empty the ComboBox
-  this->msgItem(IDC_CB_LOC, CB_RESETCONTENT);
+  this->msgItem(IDC_CB_CHN, CB_RESETCONTENT);
 
   wstring item_str;
 
@@ -477,52 +477,52 @@ void OmUiPropBatLst::_onRefresh()
 
   vector<OmPackage*> bat_ls;
 
-  // add Location(s) to Combo-Box
-  for(unsigned i = 0; i < pCtx->locCount(); ++i) {
+  // add Mod Channel(s) to Combo-Box
+  for(unsigned i = 0; i < pCtx->chnCount(); ++i) {
 
-    pLoc = pCtx->locGet(i);
+    pChn = pCtx->chnGet(i);
 
-    item_str = pLoc->title();
+    item_str = pChn->title();
     item_str += L" - ";
-    item_str += pLoc->home();
+    item_str += pChn->home();
 
-    this->msgItem(IDC_CB_LOC, CB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
+    this->msgItem(IDC_CB_CHN, CB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
 
-    // initialize new lists for this Location
+    // initialize new lists for this Mod Channel
     this->_excluded.push_back(vector<int>());
     this->_included.push_back(vector<int>());
 
     // get batch install list Packages
-    pBat->instGetList(pLoc, bat_ls);
+    pBat->instGetList(pChn, bat_ls);
 
     if(bat_ls.size()) {
 
       // fill the include list ordered as in the batch
       int p;
       for(size_t j = 0; j < bat_ls.size(); ++j) {
-        p = pLoc->pkgIndex(bat_ls[j]);
+        p = pChn->pkgIndex(bat_ls[j]);
         if(p >= 0) this->_included.back().push_back(p);
       }
 
       // fill the exclude list
-      for(size_t j = 0; j < pLoc->pkgCount(); ++j) {
-        if(std::find(bat_ls.begin(), bat_ls.end(), pLoc->pkgGet(j)) == bat_ls.end())
+      for(size_t j = 0; j < pChn->pkgCount(); ++j) {
+        if(std::find(bat_ls.begin(), bat_ls.end(), pChn->pkgGet(j)) == bat_ls.end())
           this->_excluded.back().push_back(j);
       }
 
     } else {
 
       // fill the exclude list
-      for(size_t j = 0; j < pLoc->pkgCount(); ++j)
+      for(size_t j = 0; j < pChn->pkgCount(); ++j)
         this->_excluded.back().push_back(j);
     }
   }
 
-  // Select first Location by default
-  this->msgItem(IDC_CB_LOC, CB_SETCURSEL, 0);
+  // Select first Mod Channel by default
+  this->msgItem(IDC_CB_CHN, CB_SETCURSEL, 0);
 
   // Disable ComboBox and ListBoxes
-  this->enableItem(IDC_CB_LOC, true);
+  this->enableItem(IDC_CB_CHN, true);
   this->enableItem(IDC_LB_EXC, true);
   this->enableItem(IDC_LB_INC, true);
 
@@ -544,7 +544,7 @@ INT_PTR OmUiPropBatLst::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch(LOWORD(wParam))
     {
 
-    case IDC_CB_LOC:  //< Location ComboBox
+    case IDC_CB_CHN:  //< Mod Channel ComboBox
       if(HIWORD(wParam) == CBN_SELCHANGE)
         this->_buildLbs();
       break;

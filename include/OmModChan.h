@@ -14,8 +14,8 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMLOCATION_H
-#define OMLOCATION_H
+#ifndef OMMODCHAN_H
+#define OMMODCHAN_H
 
 #include "OmBase.h"
 
@@ -27,9 +27,9 @@ class OmContext;
 
 /// \brief List sorting types
 ///
-/// Location packages and remote packages lists sorting type.
+/// Mod Channel lists sorting type.
 ///
-enum OmLocLsSort : unsigned {
+enum OmModChanSort : unsigned {
   LS_SORT_STAT = 0x01,
   LS_SORT_NAME = 0x02,
   LS_SORT_VERS = 0x04,
@@ -38,13 +38,13 @@ enum OmLocLsSort : unsigned {
   LS_SORT_REVERSE = 0x100
 };
 
-/// \brief Location object for Context.
+/// \brief Mod Channel object for Context.
 ///
-/// The Location object defines environment for package installation
+/// The Mod Channel object defines environment for package installation
 /// destination, library and backup. The object provide interface to
 /// store, manage, install and uninstall packages.
 ///
-class OmLocation
+class OmModChan
 {
   friend class OmPackage;
   friend class OmRemote;
@@ -55,13 +55,13 @@ class OmLocation
     ///
     /// Default constructor.
     ///
-    OmLocation(OmContext* pCtx);
+    OmModChan(OmContext* pCtx);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmLocation();
+    ~OmModChan();
 
     /// \brief Get last error string.
     ///
@@ -83,29 +83,29 @@ class OmLocation
       return _valid;
     }
 
-    /// \brief Get Location UUID.
+    /// \brief Get Mod Channel UUID.
     ///
-    /// Returns Location UUID.
+    /// Returns Mod Channel UUID.
     ///
-    /// \return Location UUID.
+    /// \return Mod Channel UUID.
     ///
     const wstring& uuid() const {
       return _uuid;
     }
 
-    /// \brief Get Location title.
+    /// \brief Get Mod Channel title.
     ///
-    /// Returns Location title.
+    /// Returns Mod Channel title.
     ///
-    /// \return Location title.
+    /// \return Mod Channel title.
     ///
     const wstring& title() const {
       return _title;
     }
 
-    /// \brief Get Location index.
+    /// \brief Get Mod Channel index.
     ///
-    /// Returns Location ordering index.
+    /// Returns Mod Channel ordering index.
     ///
     /// \return Ordering index number.
     ///
@@ -113,21 +113,21 @@ class OmLocation
       return _index;
     }
 
-    /// \brief Get Location home directory.
+    /// \brief Get Mod Channel home directory.
     ///
     /// Returns home directory.
     ///
-    /// \return Location home directory.
+    /// \return Mod Channel home directory.
     ///
     const wstring& home() const {
       return _home;
     }
 
-    /// \brief Get Location definition path.
+    /// \brief Get Mod Channel definition path.
     ///
-    /// Returns Location definition file path.
+    /// Returns Mod Channel definition file path.
     ///
-    /// \return Location definition file path.
+    /// \return Mod Channel definition file path.
     ///
     const wstring& path() const {
       return _path;
@@ -135,18 +135,18 @@ class OmLocation
 
     /// \brief Get Target path.
     ///
-    /// Returns Location packages installation destination directory.
+    /// Returns Mod Channel packages installation destination directory.
     ///
-    /// \return Location Target directory.
+    /// \return Mod Channel Target directory.
     ///
     const wstring& dstDir() const {
       return _dstDir;
     }
 
 
-    /// \brief Get Location library path.
+    /// \brief Get Mod Channel library path.
     ///
-    /// Returns Location packages library directory.
+    /// Returns Mod Channel packages library directory.
     ///
     /// \return Packages library directory.
     ///
@@ -154,9 +154,9 @@ class OmLocation
       return _libDir;
     }
 
-    /// \brief Get Location backup path.
+    /// \brief Get Mod Channel backup path.
     ///
-    /// Returns Location packages installation backup directory.
+    /// Returns Mod Channel packages installation backup directory.
     ///
     /// \return Backup directory.
     ///
@@ -292,41 +292,41 @@ class OmLocation
     ///
     void setWarnExtraUnin(bool enable);
 
-    /// \brief Open Location.
+    /// \brief Open Mod Channel.
     ///
-    /// Load Location from specified file.
+    /// Load Mod Channel from specified file.
     ///
-    /// \param[in]  path    : File path of Location to be loaded.
+    /// \param[in]  path    : File path of Mod Channel to be loaded.
     ///
     /// \return True if operation succeed, false otherwise.
     ///
     bool open(const wstring& path);
 
-    /// \brief Close Location.
+    /// \brief Close Mod Channel.
     ///
     /// Close and empty the current instance.
     ///
     void close();
 
-    /// \brief Set Location title.
+    /// \brief Set Mod Channel title.
     ///
-    /// Defines and save Location title.
+    /// Defines and save Mod Channel title.
     ///
     /// \param[in]  title   : Title to defines and save
     ///
     void setTitle(const wstring& title);
 
-    /// \brief Set Location index.
+    /// \brief Set Mod Channel index.
     ///
-    /// Defines and save Location index for ordering.
+    /// Defines and save Mod Channel index for ordering.
     ///
     /// \param[in]  index   : Index number to defines and save
     ///
     void setIndex(unsigned index);
 
-    /// \brief Set Location destination path.
+    /// \brief Set Mod Channel destination path.
     ///
-    /// Defines and save Location installation destination path.
+    /// Defines and save Mod Channel installation destination path.
     ///
     /// \param[in]  path    : destination path to save.
     ///
@@ -336,7 +336,7 @@ class OmLocation
     ///
     /// Defines and save a custom package Library folder. If custom
     /// Library folder is not defined, the default location is used:
-    /// <Location path>\library
+    /// <Mod Channel path>\library
     ///
     /// \param[in]  path    : Custom Library folder path to save.
     ///
@@ -364,7 +364,7 @@ class OmLocation
     ///
     /// Defines and save a custom package Backup folder. If custom
     /// Backup folder is not defined, the default location is used:
-    /// <Location path>\backup
+    /// <Mod Channel path>\backup
     ///
     /// \param[in]  path    : Custom Backup folder path to save.
     ///
@@ -472,7 +472,7 @@ class OmLocation
     ///
     /// \param[in]  sorting : Package list sorting type.
     ///
-    void libSetSorting(OmLocLsSort sorting);
+    void libSetSorting(OmModChanSort sorting);
 
     /// \brief Get package list sorting.
     ///
@@ -601,9 +601,9 @@ class OmLocation
       return -1;
     }
 
-    /// \brief Rename Location
+    /// \brief Rename Mod Channel
     ///
-    /// Truly rename Location definition name and home folder according
+    /// Truly rename Mod Channel definition name and home folder according
     /// the given new name.
     ///
     /// \param[in]  name   : New name to rename subfolder and definition file.
@@ -614,10 +614,10 @@ class OmLocation
 
     /// \brief Check whether has backup data
     ///
-    /// Checks whether the Location currently has one or more backup data
+    /// Checks whether the Mod Channel currently has one or more backup data
     /// to be restored.
     ///
-    /// \return True Location currently has backup data, false otherwise.
+    /// \return True if Mod Channel currently has backup data, false otherwise.
     ///
     bool bckHasData();
 
@@ -628,7 +628,7 @@ class OmLocation
     ///
     /// Notice this function only moves data and does not changes the
     /// current Backup folder path. This function should be used in conjunction
-    /// with Location.setCustBackup or Location.remCustBackup.
+    /// with setCustBackup() or remCustBackup().
     ///
     /// \param[in]  dest        : Destination folder to move backup data to.
     /// \param[in]  progress_cb : Optional progression callback function.
@@ -979,7 +979,7 @@ class OmLocation
     ///
     /// \param[in]  sorting : Package list sorting type.
     ///
-    void rmtSetSorting(OmLocLsSort sorting);
+    void rmtSetSorting(OmModChanSort sorting);
 
     /// \brief Get remote package list sorting.
     ///
@@ -1055,7 +1055,7 @@ class OmLocation
 
     /// \brief Get Context
     ///
-    /// Return Location affiliated context.
+    /// Return Mod Channel affiliated context.
     ///
     OmContext* pCtx() const {
       return _context;
@@ -1134,4 +1134,4 @@ class OmLocation
     wstring             _error;
 };
 
-#endif // OMLOCATION_H
+#endif // OMMODCHAN_H

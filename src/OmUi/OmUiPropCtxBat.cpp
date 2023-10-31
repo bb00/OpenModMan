@@ -192,7 +192,7 @@ void OmUiPropCtxBat::_onBcDelBat()
     int bat_id = this->msgItem(IDC_LB_BAT, LB_GETITEMDATA, lb_sel, 0);
 
     // warns the user before committing the irreparable
-    if(!Om_dlgBox_ynl(this->_hwnd, L"Modding Hub properties", IDI_QRY,
+    if(!Om_dlgBox_ynl(this->_hwnd, L"Mod Hub properties", IDI_QRY,
               L"Delete Script", L"Delete the Script ?",
               pCtx->batGet(bat_id)->title()))
     {
@@ -202,7 +202,7 @@ void OmUiPropCtxBat::_onBcDelBat()
     if(!pCtx->batRem(bat_id)) {
 
       // warns the user error occurred
-      Om_dlgBox_okl(this->_hwnd, L"Modding Hub properties", IDI_ERR,
+      Om_dlgBox_okl(this->_hwnd, L"Mod Hub properties", IDI_ERR,
                 L"Script delete error", L"Script deletion "
                 "process failed because of the following error:",
                 pCtx->lastError());
@@ -275,7 +275,7 @@ void OmUiPropCtxBat::_onInit()
 ///
 void OmUiPropCtxBat::_onResize()
 {
-  // Locations list Label & ListBox
+  // Mod Channel list Label & ListBox
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 180, 9);
   this->_setItemPos(IDC_LB_BAT, 50, 25, this->cliUnitX()-107, 58);
   // Up and Down buttons
@@ -307,7 +307,7 @@ void OmUiPropCtxBat::_onRefresh()
 
   for(unsigned i = 0; i < pCtx->batCount(); ++i) {
     this->msgItem(IDC_LB_BAT, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(pCtx->batGet(i)->title().c_str()));
-    this->msgItem(IDC_LB_BAT, LB_SETITEMDATA, i, i); // for Location index reordering
+    this->msgItem(IDC_LB_BAT, LB_SETITEMDATA, i, i); // for Mod Channel index reordering
   }
 
   this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pCtx->batQuietMode());
@@ -336,7 +336,7 @@ INT_PTR OmUiPropCtxBat::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch(LOWORD(wParam))
     {
-    case IDC_LB_BAT: //< Location(s) list List-Box
+    case IDC_LB_BAT: //< Mod Channel(s) list List-Box
       if(HIWORD(wParam) == LBN_SELCHANGE)
         this->_onLbBatlsSel();
       break;

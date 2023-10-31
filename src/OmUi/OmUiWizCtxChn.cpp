@@ -26,13 +26,13 @@
 #include "OmUtilStr.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiWizCtxLoc.h"
+#include "OmUiWizCtxChn.h"
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtxLoc::OmUiWizCtxLoc(HINSTANCE hins) : OmDialog(hins)
+OmUiWizCtxChn::OmUiWizCtxChn(HINSTANCE hins) : OmDialog(hins)
 {
 
 }
@@ -41,7 +41,7 @@ OmUiWizCtxLoc::OmUiWizCtxLoc(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtxLoc::~OmUiWizCtxLoc()
+OmUiWizCtxChn::~OmUiWizCtxChn()
 {
 
 }
@@ -50,16 +50,16 @@ OmUiWizCtxLoc::~OmUiWizCtxLoc()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiWizCtxLoc::id() const
+long OmUiWizCtxChn::id() const
 {
-  return IDD_WIZ_CTX_LOC;
+  return IDD_WIZ_CTX_CHN;
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiWizCtxLoc::hasValidParams() const
+bool OmUiWizCtxChn::hasValidParams() const
 {
   wstring item_str, msg;
 
@@ -97,7 +97,7 @@ bool OmUiWizCtxLoc::hasValidParams() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onTitleChange()
+void OmUiWizCtxChn::_onTitleChange()
 {
   wstring title;
 
@@ -117,7 +117,7 @@ void OmUiWizCtxLoc::_onTitleChange()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onBcBrwDst()
+void OmUiWizCtxChn::_onBcBrwDst()
 {
   wstring start, result;
 
@@ -132,7 +132,7 @@ void OmUiWizCtxLoc::_onBcBrwDst()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onCkBoxLib()
+void OmUiWizCtxChn::_onCkBoxLib()
 {
   wstring title;
 
@@ -154,7 +154,7 @@ void OmUiWizCtxLoc::_onCkBoxLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onBcBrwLib()
+void OmUiWizCtxChn::_onBcBrwLib()
 {
   wstring start, result;
 
@@ -169,7 +169,7 @@ void OmUiWizCtxLoc::_onBcBrwLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onCkBoxBck()
+void OmUiWizCtxChn::_onCkBoxBck()
 {
   wstring title;
 
@@ -191,7 +191,7 @@ void OmUiWizCtxLoc::_onCkBoxBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onBcBrwBck()
+void OmUiWizCtxChn::_onBcBrwBck()
 {
   wstring start, result;
 
@@ -206,7 +206,7 @@ void OmUiWizCtxLoc::_onBcBrwBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onInit()
+void OmUiWizCtxChn::_onInit()
 {
   // define controls tool-tips
   this->_createTooltip(IDC_EC_INP01,  L"Mod Channel name, to identify it and create folder");
@@ -236,7 +236,7 @@ void OmUiWizCtxLoc::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onShow()
+void OmUiWizCtxChn::_onShow()
 {
   wstring item_str;
 
@@ -274,14 +274,14 @@ void OmUiWizCtxLoc::_onShow()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onResize()
+void OmUiWizCtxChn::_onResize()
 {
   // Introduction text
   this->_setItemPos(IDC_SC_INTRO, 10, 5, 190, 25);
-  // Location title Label & EditControl
+  // Mod Channel title Label & EditControl
   this->_setItemPos(IDC_SC_LBL01, 10, 40, this->cliUnitX()-25, 9);
   this->_setItemPos(IDC_EC_INP01, 10, 50, this->cliUnitX()-25, 13);
-  // Location Install Label & EditControl & Browse button
+  // Mod Channel Install Label & EditControl & Browse button
   this->_setItemPos(IDC_SC_LBL02, 10, 80, this->cliUnitX()-25, 9);
   this->_setItemPos(IDC_EC_INP02, 10, 90, this->cliUnitX()-45, 13);
   this->_setItemPos(IDC_BC_BRW02, this->cliUnitX()-31, 90, 16, 13);
@@ -299,7 +299,7 @@ void OmUiWizCtxLoc::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onRefresh()
+void OmUiWizCtxChn::_onRefresh()
 {
 
 }
@@ -308,7 +308,7 @@ void OmUiWizCtxLoc::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxLoc::_onQuit()
+void OmUiWizCtxChn::_onQuit()
 {
 
 }
@@ -317,7 +317,7 @@ void OmUiWizCtxLoc::_onQuit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiWizCtxLoc::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiWizCtxChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
@@ -353,9 +353,9 @@ INT_PTR OmUiWizCtxLoc::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       this->_onBcBrwBck();
       break;
 
-    case IDC_EC_INP02: //< Location
+    case IDC_EC_INP02: //< Mod Channel
     case IDC_EC_INP03: //< Library
-    case IDC_EC_INP04: //< backup
+    case IDC_EC_INP04: //< Backup
       if(HIWORD(wParam) == EN_CHANGE)
         has_changed = true;
       break;

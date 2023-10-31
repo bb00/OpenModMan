@@ -148,8 +148,7 @@ OmUiToolRep::OmUiToolRep(HINSTANCE hins) : OmDialog(hins),
   _addDir_hth(nullptr),
   _addDir_path()
 {
-  this->addChild(new OmUiProgress(hins));   //< for Location backup cleaning
-
+  this->addChild(new OmUiProgress(hins));
 }
 
 
@@ -752,12 +751,12 @@ void OmUiToolRep::_onBcOpen()
   }
 
   OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmLocation* pLoc = pCtx ? pCtx->locCur() : nullptr;
+  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pLoc) start = pLoc->libDir();
+  if(pChn) start = pChn->libDir();
 
   // new dialog to open file
   if(!Om_dlgOpenFile(result, this->_hwnd, L"Open Repository definition", OMM_XML_FILES_FILTER, start))
@@ -802,12 +801,12 @@ void OmUiToolRep::_onBcOpen()
 bool OmUiToolRep::_onBcBrwPkg()
 {
   OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmLocation* pLoc = pCtx ? pCtx->locCur() : nullptr;
+  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pLoc) start = pLoc->libDir();
+  if(pChn) start = pChn->libDir();
 
   // open file dialog
   if(!Om_dlgOpenFile(result, this->_hwnd, L"Open Package file", OMM_PKG_FILES_FILTER, start))
@@ -833,12 +832,12 @@ bool OmUiToolRep::_onBcBrwPkg()
 bool OmUiToolRep::_onBcBrwDir()
 {
   OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmLocation* pLoc = pCtx ? pCtx->locCur() : nullptr;
+  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pLoc) start = pLoc->libDir();
+  if(pChn) start = pChn->libDir();
 
   // open dialog to select folder
   if(!Om_dlgBrowseDir(result, this->_hwnd, L"Select a folder where to find packages to parse and add", start))
@@ -1012,12 +1011,12 @@ bool OmUiToolRep::_onBcBrwSnap()
     return false;
 
   OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmLocation* pLoc = pCtx ? pCtx->locCur() : nullptr;
+  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pLoc) start = pLoc->libDir();
+  if(pChn) start = pChn->libDir();
 
   // open file dialog
   if(!Om_dlgOpenFile(result, this->_hwnd, L"Open image file", OMM_IMG_FILES_FILTER, start))
@@ -1087,12 +1086,12 @@ void OmUiToolRep::_onBcDelSnap()
 void OmUiToolRep::_onBcBrwDesc()
 {
   OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmLocation* pLoc = pCtx ? pCtx->locCur() : nullptr;
+  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pLoc) start = pLoc->libDir();
+  if(pChn) start = pChn->libDir();
 
   // open file dialog
   if(!Om_dlgOpenFile(result, this->_hwnd, L"Open text file", OMM_TXT_FILES_FILTER, start))
@@ -1156,7 +1155,7 @@ void OmUiToolRep::_onBcSavDesc()
 void OmUiToolRep::_onBcSave()
 {
   OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmLocation* pLoc = pCtx ? pCtx->locCur() : nullptr;
+  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
 
   // Repository XML node
   OmXmlNode xml_def = this->_config.xml();
@@ -1199,7 +1198,7 @@ void OmUiToolRep::_onBcSave()
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pLoc) start = pLoc->libDir();
+  if(pChn) start = pChn->libDir();
 
   // send save dialog to user
   if(!Om_dlgSaveFile(result, this->_hwnd, L"Save Repository definition...", OMM_XML_FILES_FILTER, start))
@@ -1442,7 +1441,7 @@ INT_PTR OmUiToolRep::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
   // UWM_ADDENTRIES_DONE is a custom message sent from add entries thread
   // function, to notify the progress dialog ended is job.
   if(uMsg == UWM_ADDENTRIES_DONE) {
-    // end the removing Location process
+    // end the Add Entries process
     this->_addDir_stop();
     has_changed = true;
   }

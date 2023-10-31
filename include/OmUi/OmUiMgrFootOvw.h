@@ -73,7 +73,7 @@ class OmUiMgrFootOvw : public OmDialog
     /// Enables or disable the dialog safe mode.
     ///
     /// The safe mode is used to operate modifications on sensitive
-    /// or monitored elements such as deleting or moving Location in
+    /// or monitored elements such as deleting or moving Mod Channel in
     /// order to prevent conflicts or crash during process.
     ///
     /// \param[in]  enable  : Enable or disable safe mode.

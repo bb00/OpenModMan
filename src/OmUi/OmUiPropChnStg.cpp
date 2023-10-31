@@ -20,18 +20,18 @@
 
 #include "OmManager.h"
 
-#include "OmUiPropLoc.h"
+#include "OmUiPropChn.h"
 
 #include "OmUtilDlg.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiPropLocStg.h"
+#include "OmUiPropChnStg.h"
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropLocStg::OmUiPropLocStg(HINSTANCE hins) : OmDialog(hins)
+OmUiPropChnStg::OmUiPropChnStg(HINSTANCE hins) : OmDialog(hins)
 {
   // modified parameters flags
   for(unsigned i = 0; i < 8; ++i)
@@ -42,7 +42,7 @@ OmUiPropLocStg::OmUiPropLocStg(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropLocStg::~OmUiPropLocStg()
+OmUiPropChnStg::~OmUiPropChnStg()
 {
 
 }
@@ -51,16 +51,16 @@ OmUiPropLocStg::~OmUiPropLocStg()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiPropLocStg::id() const
+long OmUiPropChnStg::id() const
 {
-  return IDD_PROP_LOC_STG;
+  return IDD_PROP_CHN_STG;
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::setChParam(unsigned i, bool en)
+void OmUiPropChnStg::setChParam(unsigned i, bool en)
 {
   _chParam[i] = en;
   static_cast<OmDialogProp*>(this->_parent)->checkChanges();
@@ -70,7 +70,7 @@ void OmUiPropLocStg::setChParam(unsigned i, bool en)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::_onBcBrwDst()
+void OmUiPropChnStg::_onBcBrwDst()
 {
   wstring start, result;
 
@@ -86,20 +86,20 @@ void OmUiPropLocStg::_onBcBrwDst()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::_onCkBoxLib()
+void OmUiPropChnStg::_onCkBoxLib()
 {
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  if(!pChn) return;
 
   bool bm_chk = this->msgItem(IDC_BC_CKBX1, BM_GETCHECK);
 
   this->enableItem(IDC_EC_INP03, bm_chk);
   this->enableItem(IDC_BC_BRW03, bm_chk);
 
-  if(bm_chk && pLoc->hasCustLibDir()) {
-    this->setItemText(IDC_EC_INP03, pLoc->libDir());
+  if(bm_chk && pChn->hasCustLibDir()) {
+    this->setItemText(IDC_EC_INP03, pChn->libDir());
   } else {
-    this->setItemText(IDC_EC_INP03, pLoc->home() + L"\\Library");
+    this->setItemText(IDC_EC_INP03, pChn->home() + L"\\Library");
   }
 }
 
@@ -107,7 +107,7 @@ void OmUiPropLocStg::_onCkBoxLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::_onBcBrwLib()
+void OmUiPropChnStg::_onBcBrwLib()
 {
   wstring start, result;
 
@@ -123,20 +123,20 @@ void OmUiPropLocStg::_onBcBrwLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::_onCkBoxBck()
+void OmUiPropChnStg::_onCkBoxBck()
 {
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  if(!pChn) return;
 
   bool bm_chk = this->msgItem(IDC_BC_CKBX2, BM_GETCHECK);
 
   this->enableItem(IDC_EC_INP04, bm_chk);
   this->enableItem(IDC_BC_BRW04, bm_chk);
 
-  if(bm_chk && pLoc->hasCustBckDir()) {
-    this->setItemText(IDC_EC_INP04, pLoc->bckDir());
+  if(bm_chk && pChn->hasCustBckDir()) {
+    this->setItemText(IDC_EC_INP04, pChn->bckDir());
   } else {
-    this->setItemText(IDC_EC_INP04, pLoc->home() + L"\\Backup");
+    this->setItemText(IDC_EC_INP04, pChn->home() + L"\\Backup");
   }
 }
 
@@ -144,7 +144,7 @@ void OmUiPropLocStg::_onCkBoxBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::_onBcBrwBck()
+void OmUiPropChnStg::_onBcBrwBck()
 {
   wstring start, result;
 
@@ -160,10 +160,10 @@ void OmUiPropLocStg::_onBcBrwBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::_onInit()
+void OmUiPropChnStg::_onInit()
 {
   // define controls tool-tips
-  this->_createTooltip(IDC_EC_INP01,  L"Location name, to identify it");
+  this->_createTooltip(IDC_EC_INP01,  L"Mod Channel name, to identify it");
 
   this->_createTooltip(IDC_EC_INP02,  L"Installation destination path, where Mods/Packages are to be installed");
   this->_createTooltip(IDC_BC_BRW02,  L"Browse to select destination folder");
@@ -183,26 +183,26 @@ void OmUiPropLocStg::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::_onResize()
+void OmUiPropChnStg::_onResize()
 {
-  // Location Title Label & EditControl
+  // Mod Channel Title Label & EditControl
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 220, 9);
   this->_setItemPos(IDC_EC_INP01, 50, 25, this->cliUnitX()-90, 13);
 
-  // Location Location Label, EditControl and Browse button
+  // Mod Channel Label, EditControl and Browse button
   this->_setItemPos(IDC_SC_LBL02, 50, 50, 220, 9);
   this->_setItemPos(IDC_EC_INP02, 50, 60, this->cliUnitX()-108, 13);
   this->_setItemPos(IDC_BC_BRW02, this->cliUnitX()-55, 60, 16, 13);
 
   // Custom Library CheckBox
   this->_setItemPos(IDC_BC_CKBX1, 50, 90, 240, 9);
-  // Location Library Label, EditControl and Browse button
+  // Mod Channel Library Label, EditControl and Browse button
   this->_setItemPos(IDC_EC_INP03, 50, 100, this->cliUnitX()-108, 13);
   this->_setItemPos(IDC_BC_BRW03, this->cliUnitX()-55, 100, 16, 13);
 
   // Custom Backup CheckBox
   this->_setItemPos(IDC_BC_CKBX2, 50, 120, 240, 9);
-  // Location Backup Label, EditControl and Browse button
+  // Mod Channel Backup Label, EditControl and Browse button
   this->_setItemPos(IDC_EC_INP04, 50, 130, this->cliUnitX()-108, 13);
   this->_setItemPos(IDC_BC_BRW04, this->cliUnitX()-55, 130, 16, 13);
 }
@@ -211,25 +211,25 @@ void OmUiPropLocStg::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocStg::_onRefresh()
+void OmUiPropChnStg::_onRefresh()
 {
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
 
-  if(pLoc == nullptr)
+  if(pChn == nullptr)
     return;
 
-  this->setItemText(IDC_EC_INP01, pLoc->title());
-  this->setItemText(IDC_EC_INP02, pLoc->dstDir());
+  this->setItemText(IDC_EC_INP01, pChn->title());
+  this->setItemText(IDC_EC_INP02, pChn->dstDir());
 
-  this->setItemText(IDC_EC_INP03, pLoc->libDir());
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pLoc->hasCustLibDir());
-  this->enableItem(IDC_EC_INP03, pLoc->hasCustLibDir());
-  this->enableItem(IDC_BC_BRW03, pLoc->hasCustLibDir());
+  this->setItemText(IDC_EC_INP03, pChn->libDir());
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pChn->hasCustLibDir());
+  this->enableItem(IDC_EC_INP03, pChn->hasCustLibDir());
+  this->enableItem(IDC_BC_BRW03, pChn->hasCustLibDir());
 
-  this->setItemText(IDC_EC_INP04, pLoc->bckDir());
-  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pLoc->hasCustBckDir());
-  this->enableItem(IDC_EC_INP04, pLoc->hasCustBckDir());
-  this->enableItem(IDC_BC_BRW04, pLoc->hasCustBckDir());
+  this->setItemText(IDC_EC_INP04, pChn->bckDir());
+  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pChn->hasCustBckDir());
+  this->enableItem(IDC_EC_INP04, pChn->hasCustBckDir());
+  this->enableItem(IDC_BC_BRW04, pChn->hasCustBckDir());
 
   // reset modified parameters flags
   for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;
@@ -239,7 +239,7 @@ void OmUiPropLocStg::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropLocStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropChnStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
@@ -248,7 +248,7 @@ INT_PTR OmUiPropLocStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case IDC_EC_INP01: //< Title EditText
       if(HIWORD(wParam) == EN_CHANGE)
         // user modified parameter, notify it
-        this->setChParam(LOC_PROP_STG_TITLE, true);
+        this->setChParam(CHN_PROP_STG_TITLE, true);
       break;
 
     case IDC_BC_BRW02: //< Target path "..." (browse) Button
@@ -258,7 +258,7 @@ INT_PTR OmUiPropLocStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case IDC_EC_INP02: //< Target path EditText
       if(HIWORD(wParam) == EN_CHANGE)
         // user modified parameter, notify it
-        this->setChParam(LOC_PROP_STG_INSTALL, true);
+        this->setChParam(CHN_PROP_STG_INSTALL, true);
       break;
 
     case IDC_BC_CKBX1: //< Check Box for custom Library path
@@ -272,7 +272,7 @@ INT_PTR OmUiPropLocStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case IDC_EC_INP03: //< Library EditText
       if(HIWORD(wParam) == EN_CHANGE)
         // user modified parameter, notify it
-        this->setChParam(LOC_PROP_STG_LIBRARY, true);
+        this->setChParam(CHN_PROP_STG_LIBRARY, true);
       break;
 
     case IDC_BC_CKBX2: //< Check Box for custom Backup path
@@ -286,7 +286,7 @@ INT_PTR OmUiPropLocStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case IDC_EC_INP04: //< Backup EditText
       if(HIWORD(wParam) == EN_CHANGE)
         // user modified parameter, notify it
-        this->setChParam(LOC_PROP_STG_BACKUP, true);
+        this->setChParam(CHN_PROP_STG_BACKUP, true);
       break;
     }
   }

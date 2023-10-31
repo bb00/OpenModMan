@@ -20,16 +20,16 @@
 
 #include "OmManager.h"
 
-#include "OmUiPropLoc.h"
+#include "OmUiPropChn.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiPropLocLib.h"
+#include "OmUiPropChnLib.h"
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropLocLib::OmUiPropLocLib(HINSTANCE hins) : OmDialog(hins)
+OmUiPropChnLib::OmUiPropChnLib(HINSTANCE hins) : OmDialog(hins)
 {
   // modified parameters flags
   for(unsigned i = 0; i < 8; ++i)
@@ -40,7 +40,7 @@ OmUiPropLocLib::OmUiPropLocLib(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropLocLib::~OmUiPropLocLib()
+OmUiPropChnLib::~OmUiPropChnLib()
 {
 
 }
@@ -49,16 +49,16 @@ OmUiPropLocLib::~OmUiPropLocLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiPropLocLib::id() const
+long OmUiPropChnLib::id() const
 {
-  return IDD_PROP_LOC_LIB;
+  return IDD_PROP_CHN_LIB;
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocLib::setChParam(unsigned i, bool en)
+void OmUiPropChnLib::setChParam(unsigned i, bool en)
 {
   _chParam[i] = en;
   static_cast<OmDialogProp*>(this->_parent)->checkChanges();
@@ -68,36 +68,36 @@ void OmUiPropLocLib::setChParam(unsigned i, bool en)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocLib::_onCkBoxDev()
+void OmUiPropChnLib::_onCkBoxDev()
 {
   // user modified parameter, notify it
-  this->setChParam(LOC_PROP_LIB_DEVMODE, true);
+  this->setChParam(CHN_PROP_LIB_DEVMODE, true);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocLib::_onCkBoxWrn()
+void OmUiPropChnLib::_onCkBoxWrn()
 {
   // user modified parameter, notify it
-  this->setChParam(LOC_PROP_LIB_WARNINGS, true);
+  this->setChParam(CHN_PROP_LIB_WARNINGS, true);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocLib::_onCkBoxHid()
+void OmUiPropChnLib::_onCkBoxHid()
 {
   // user modified parameter, notify it
-  this->setChParam(LOC_PROP_LIB_SHOWHIDDEN, true);
+  this->setChParam(CHN_PROP_LIB_SHOWHIDDEN, true);
 }
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocLib::_onInit()
+void OmUiPropChnLib::_onInit()
 {
   // define controls tool-tips
   this->_createTooltip(IDC_BC_CKBX1,  L"Parse library subfolders as packages source for mod development purpose or legacy support");
@@ -108,15 +108,15 @@ void OmUiPropLocLib::_onInit()
   this->_createTooltip(IDC_BC_CKBX5,  L"Warn when packages uninstall require additional uninstallations");
   this->_createTooltip(IDC_BC_CKBX6,  L"Parse and show library hidden files and subfolders");
 
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  if(!pChn) return;
 
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pLoc->libDevMode());
-  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pLoc->warnOverlaps());
-  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pLoc->warnExtraInst());
-  this->msgItem(IDC_BC_CKBX4, BM_SETCHECK, pLoc->warnMissDeps());
-  this->msgItem(IDC_BC_CKBX5, BM_SETCHECK, pLoc->warnExtraUnin());
-  this->msgItem(IDC_BC_CKBX6, BM_SETCHECK, pLoc->libShowHidden());
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pChn->libDevMode());
+  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pChn->warnOverlaps());
+  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pChn->warnExtraInst());
+  this->msgItem(IDC_BC_CKBX4, BM_SETCHECK, pChn->warnMissDeps());
+  this->msgItem(IDC_BC_CKBX5, BM_SETCHECK, pChn->warnExtraUnin());
+  this->msgItem(IDC_BC_CKBX6, BM_SETCHECK, pChn->libShowHidden());
 
   // reset modified parameters flags
   for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;
@@ -126,7 +126,7 @@ void OmUiPropLocLib::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocLib::_onResize()
+void OmUiPropChnLib::_onResize()
 {
   // Library Dev Mode CheckBox
   this->_setItemPos(IDC_BC_CKBX1, 50, 20, 200, 9);
@@ -148,7 +148,7 @@ void OmUiPropLocLib::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropLocLib::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropChnLib::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 

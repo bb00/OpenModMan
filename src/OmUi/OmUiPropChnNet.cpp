@@ -24,7 +24,7 @@
 #include "OmSocket.h"
 
 #include "OmUiAddRep.h"
-#include "OmUiPropLoc.h"
+#include "OmUiPropChn.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilStr.h"
@@ -32,13 +32,13 @@
 #include "OmUtilWin.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiPropLocNet.h"
+#include "OmUiPropChnNet.h"
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropLocNet::OmUiPropLocNet(HINSTANCE hins) : OmDialog(hins)
+OmUiPropChnNet::OmUiPropChnNet(HINSTANCE hins) : OmDialog(hins)
 {
   // modified parameters flags
   for(unsigned i = 0; i < 8; ++i)
@@ -49,7 +49,7 @@ OmUiPropLocNet::OmUiPropLocNet(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropLocNet::~OmUiPropLocNet()
+OmUiPropChnNet::~OmUiPropChnNet()
 {
 
 }
@@ -58,16 +58,16 @@ OmUiPropLocNet::~OmUiPropLocNet()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiPropLocNet::id() const
+long OmUiPropChnNet::id() const
 {
-  return IDD_PROP_LOC_NET;
+  return IDD_PROP_CHN_NET;
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::setChParam(unsigned i, bool en)
+void OmUiPropChnNet::setChParam(unsigned i, bool en)
 {
   _chParam[i] = en;
   static_cast<OmDialogProp*>(this->_parent)->checkChanges();
@@ -77,7 +77,7 @@ void OmUiPropLocNet::setChParam(unsigned i, bool en)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onLbReplsSel()
+void OmUiPropChnNet::_onLbReplsSel()
 {
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
   if(lb_sel >= 0) {
@@ -92,14 +92,14 @@ void OmUiPropLocNet::_onLbReplsSel()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onBcAddRepo()
+void OmUiPropChnNet::_onBcAddRepo()
 {
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  if(!pChn) return;
 
   // Open new Repository dialog
   OmUiAddRep* pUiNewRep = static_cast<OmUiAddRep*>(this->siblingById(IDD_ADD_REP));
-  pUiNewRep->locSet(pLoc);
+  pUiNewRep->chnSet(pChn);
   pUiNewRep->open(true);
 }
 
@@ -107,10 +107,10 @@ void OmUiPropLocNet::_onBcAddRepo()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onBcDelRepo()
+void OmUiPropChnNet::_onBcDelRepo()
 {
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  if(!pChn) return;
 
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
   if(lb_sel >= 0) {
@@ -118,7 +118,7 @@ void OmUiPropLocNet::_onBcDelRepo()
     // warns the user before committing the irreparable
     if(!Om_dlgBox_ynl(this->_hwnd, L"Channel properties", IDI_QRY,
                 L"Remove Repository", L"Remove Repository from list ?",
-                pLoc->repGet(lb_sel)->base()+L" - "+pLoc->repGet(lb_sel)->name()))
+                pChn->repGet(lb_sel)->base()+L" - "+pChn->repGet(lb_sel)->name()))
     {
       return;
     }
@@ -132,10 +132,10 @@ void OmUiPropLocNet::_onBcDelRepo()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onBcChkRepo()
+void OmUiPropChnNet::_onBcChkRepo()
 {
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  if(!pChn) return;
 
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
 
@@ -143,7 +143,7 @@ void OmUiPropLocNet::_onBcChkRepo()
 
     this->setItemText(IDC_SC_STATE, L"Pending...");
 
-    OmRepository* pRep = pLoc->repGet(lb_sel);
+    OmRepository* pRep = pChn->repGet(lb_sel);
 
     OmSocket sock;
 
@@ -181,32 +181,32 @@ void OmUiPropLocNet::_onBcChkRepo()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onCkBoxWrn()
+void OmUiPropChnNet::_onCkBoxWrn()
 {
-  this->setChParam(LOC_PROP_NET_WARNINGS, true);
+  this->setChParam(CHN_PROP_NET_WARNINGS, true);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onBcRadUpg()
+void OmUiPropChnNet::_onBcRadUpg()
 {
-  this->setChParam(LOC_PROP_NET_ONUPGRADE, true);
+  this->setChParam(CHN_PROP_NET_ONUPGRADE, true);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onInit()
+void OmUiPropChnNet::_onInit()
 {
   // Set buttons inner icons
   this->setBmIcon(IDC_BC_ADD, Om_getResIcon(this->_hins, IDI_BT_ADD));
   this->setBmIcon(IDC_BC_DEL, Om_getResIcon(this->_hins, IDI_BT_REM));
 
   // define controls tool-tips
-  this->_createTooltip(IDC_LB_LOC,    L"Repositories list");
+  this->_createTooltip(IDC_LB_CHN,    L"Repositories list");
 
   this->_createTooltip(IDC_BC_DEL,    L"Remove selection Repository");
   this->_createTooltip(IDC_BC_EDI,    L"Test for Repository availability");
@@ -229,9 +229,9 @@ void OmUiPropLocNet::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onResize()
+void OmUiPropChnNet::_onResize()
 {
-  // Locations list Label & ListBox
+  // Mod Channel list Label & ListBox
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 68, 9);
   this->_setItemPos(IDC_LB_REP, 50, 25, this->cliUnitX()-107, 20);
 
@@ -262,32 +262,32 @@ void OmUiPropLocNet::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocNet::_onRefresh()
+void OmUiPropChnNet::_onRefresh()
 {
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  if(!pChn) return;
 
   this->msgItem(IDC_LB_REP, LB_RESETCONTENT);
-  if(pLoc) {
+  if(pChn) {
 
     wstring label;
     OmRepository* pRep;
 
-    for(unsigned i = 0; i < pLoc->repCount(); ++i) {
-      pRep = pLoc->repGet(i);
+    for(unsigned i = 0; i < pChn->repCount(); ++i) {
+      pRep = pChn->repGet(i);
       label = pRep->base() + L" - " + pRep->name();
       this->msgItem(IDC_LB_REP, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(label.c_str()));
     }
   }
 
   // set warning messages
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pLoc->warnExtraDnld());
-  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pLoc->warnMissDnld());
-  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pLoc->warnUpgdBrkDeps());
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pChn->warnExtraDnld());
+  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pChn->warnMissDnld());
+  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pChn->warnUpgdBrkDeps());
 
   // set Upgrade Rename
-  this->msgItem(IDC_BC_RAD01, BM_SETCHECK, !pLoc->upgdRename());
-  this->msgItem(IDC_BC_RAD02, BM_SETCHECK, pLoc->upgdRename());
+  this->msgItem(IDC_BC_RAD01, BM_SETCHECK, !pChn->upgdRename());
+  this->msgItem(IDC_BC_RAD02, BM_SETCHECK, pChn->upgdRename());
 
   // Set controls default states and parameters
   this->enableItem(IDC_SC_STATE, false);
@@ -304,22 +304,22 @@ void OmUiPropLocNet::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropLocNet::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropChnNet::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
     switch(LOWORD(wParam))
     {
-    case IDC_LB_REP: //< Location(s) list List-Box
+    case IDC_LB_REP: //< Mod Channel(s) list ListBox
       if(HIWORD(wParam) == LBN_SELCHANGE)
         this->_onLbReplsSel();
       break;
 
-    case IDC_BC_ADD: //< New button for Location(s) list
+    case IDC_BC_ADD: //< New button for Mod Channel(s) list
       this->_onBcAddRepo();
       break;
 
-    case IDC_BC_DEL: //< Remove button for Location(s) list
+    case IDC_BC_DEL: //< Remove button for Mod Channel(s) list
       this->_onBcDelRepo();
       break;
 

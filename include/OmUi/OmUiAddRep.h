@@ -19,7 +19,7 @@
 
 #include "OmDialog.h"
 
-class OmLocation;
+class OmModChan;
 
 /// \brief Add Repository dialog
 ///
@@ -51,34 +51,33 @@ class OmUiAddRep : public OmDialog
     ///
     long id() const;
 
-    /// \brief Get associated Location.
+    /// \brief Get associated Mod Channel.
     ///
-    /// Returns associated Location object previously defined
-    /// via OmUiAddLoc.setLocation
+    /// Returns associated Mod Channel object
     ///
-    /// \return Associated Location or nullptr if none.
+    /// \return Associated Mod Channel or nullptr if none.
     ///
-    OmLocation* locCur() const {
-      return _pLoc;
+    OmModChan* chnCur() const {
+      return _pChn;
     }
 
-    /// \brief Set associated Location.
+    /// \brief Set associated Mod Channel.
     ///
-    /// Define the associated Location, which the dialog is intended to
-    /// work with and on. A valid Location must be set in order before
+    /// Define the associated Mod Channel, which the dialog is intended to
+    /// work with and on. A valid Mod Channel must be set in order before
     /// opening the dialog.
     ///
-    /// \param[in]  pCtx  : Location object to associate.
+    /// \param[in]  pModChan  : Mod Channel object to associate.
     ///
-    void locSet(OmLocation* pLoc) {
-      _pLoc = pLoc;
+    void chnSet(OmModChan* pModChan) {
+      _pChn = pModChan;
     }
 
   protected:
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmLocation*         _pLoc;
+    OmModChan*         _pChn;
 
     int                 _testResult;
 

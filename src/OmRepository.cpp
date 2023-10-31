@@ -16,7 +16,7 @@
 */
 #include "OmBaseApp.h"
 
-#include "OmLocation.h"
+#include "OmModChan.h"
 #include "OmSocket.h"
 
 #include "OmUtilStr.h"
@@ -28,8 +28,8 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmRepository::OmRepository(OmLocation* pLoc) :
-  _location(pLoc),_base(),_name(),_url(),_valid(false),_error()
+OmRepository::OmRepository(OmModChan* pChn) :
+  _pChn(pChn),_base(),_name(),_url(),_valid(false),_error()
 {
 
 }
@@ -264,11 +264,11 @@ void OmRepository::clear()
 ///
 void OmRepository::log(unsigned level, const wstring& head, const wstring& detail)
 {
-  if(this->_location != nullptr) {
+  if(this->_pChn != nullptr) {
 
-    wstring log_str = L"Location("; log_str.append(this->_location->title());
+    wstring log_str = L"ModChan("; log_str.append(this->_pChn->title());
     log_str.append(L"):: "); log_str.append(head);
 
-    this->_location->log(level, log_str, detail);
+    this->_pChn->log(level, log_str, detail);
   }
 }

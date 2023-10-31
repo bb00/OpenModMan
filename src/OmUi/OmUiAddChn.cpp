@@ -24,12 +24,12 @@
 #include "OmUtilWin.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiAddLoc.h"
+#include "OmUiAddChn.h"
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiAddLoc::OmUiAddLoc(HINSTANCE hins) : OmDialog(hins),
+OmUiAddChn::OmUiAddChn(HINSTANCE hins) : OmDialog(hins),
   _pCtx(nullptr)
 {
 
@@ -39,7 +39,7 @@ OmUiAddLoc::OmUiAddLoc(HINSTANCE hins) : OmDialog(hins),
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiAddLoc::~OmUiAddLoc()
+OmUiAddChn::~OmUiAddChn()
 {
 
 }
@@ -48,16 +48,16 @@ OmUiAddLoc::~OmUiAddLoc()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiAddLoc::id() const
+long OmUiAddChn::id() const
 {
-  return IDD_ADD_LOC;
+  return IDD_ADD_CHN;
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiAddLoc::_onTitleChange()
+void OmUiAddChn::_onTitleChange()
 {
   wstring title;
 
@@ -78,7 +78,7 @@ void OmUiAddLoc::_onTitleChange()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiAddLoc::_onBcBrwDst()
+void OmUiAddChn::_onBcBrwDst()
 {
   wstring start, result;
 
@@ -94,7 +94,7 @@ void OmUiAddLoc::_onBcBrwDst()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiAddLoc::_onCkBoxLib()
+void OmUiAddChn::_onCkBoxLib()
 {
   wstring title;
 
@@ -117,7 +117,7 @@ void OmUiAddLoc::_onCkBoxLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiAddLoc::_onBcBrwLib()
+void OmUiAddChn::_onBcBrwLib()
 {
   wstring start, result;
 
@@ -133,7 +133,7 @@ void OmUiAddLoc::_onBcBrwLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiAddLoc::_onCkBoxBck()
+void OmUiAddChn::_onCkBoxBck()
 {
   wstring title;
 
@@ -156,7 +156,7 @@ void OmUiAddLoc::_onCkBoxBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiAddLoc::_onBcBrwBck()
+void OmUiAddChn::_onBcBrwBck()
 {
   wstring start, result;
 
@@ -172,25 +172,25 @@ void OmUiAddLoc::_onBcBrwBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiAddLoc::_onBcOk()
+bool OmUiAddChn::_onBcOk()
 {
   if(!this->_pCtx)
     return false;
 
-  wstring loc_name, loc_dst, loc_lib, loc_bck, msg;
+  wstring chn_name, chn_dst, chn_lib, chn_bck, msg;
 
-  this->getItemText(IDC_EC_INP01, loc_name);
-  if(!Om_dlgValidName(this->_hwnd, L"Channel name", loc_name))
+  this->getItemText(IDC_EC_INP01, chn_name);
+  if(!Om_dlgValidName(this->_hwnd, L"Channel name", chn_name))
     return false;
 
-  this->getItemText(IDC_EC_INP02, loc_dst);
-  if(!Om_dlgValidDir(this->_hwnd, L"Target path", loc_dst))
+  this->getItemText(IDC_EC_INP02, chn_dst);
+  if(!Om_dlgValidDir(this->_hwnd, L"Target path", chn_dst))
     return false;
 
   if(this->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) { //< Custom Library CheckBox
-    this->getItemText(IDC_EC_INP03, loc_lib);
-    if(Om_dlgValidPath(this->_hwnd, L"Library folder path", loc_lib)) {
-      if(!Om_dlgCreateFolder(this->_hwnd, L"Custom Library folder", loc_lib))
+    this->getItemText(IDC_EC_INP03, chn_lib);
+    if(Om_dlgValidPath(this->_hwnd, L"Library folder path", chn_lib)) {
+      if(!Om_dlgCreateFolder(this->_hwnd, L"Custom Library folder", chn_lib))
         return false;
     } else {
       return false;
@@ -198,9 +198,9 @@ bool OmUiAddLoc::_onBcOk()
   }
 
   if(this->msgItem(IDC_BC_CKBX2, BM_GETCHECK)) { //< Custom Backup CheckBox
-    this->getItemText(IDC_EC_INP04, loc_bck);
-    if(Om_dlgValidPath(this->_hwnd, L"Backup folder path", loc_bck)) {
-      if(!Om_dlgCreateFolder(this->_hwnd, L"Custom Backup folder", loc_bck))
+    this->getItemText(IDC_EC_INP04, chn_bck);
+    if(Om_dlgValidPath(this->_hwnd, L"Backup folder path", chn_bck)) {
+      if(!Om_dlgCreateFolder(this->_hwnd, L"Custom Backup folder", chn_bck))
         return false;
     } else {
       return false;
@@ -209,11 +209,11 @@ bool OmUiAddLoc::_onBcOk()
 
   this->quit();
 
-  // create new Location in Context
-  if(!this->_pCtx->locAdd(loc_name, loc_dst, loc_lib, loc_bck)) {
+  // create new Mod Channel in Context
+  if(!this->_pCtx->chnAdd(chn_name, chn_dst, chn_lib, chn_bck)) {
 
-    Om_dlgBox_okl(this->_hwnd, L"New Channel", IDI_ERR,
-                  L"Channel creation error", L"Channel "
+    Om_dlgBox_okl(this->_hwnd, L"New Mod Channel", IDI_ERR,
+                  L"Mod Channel creation error", L"Mod Channel "
                   "creation failed because of the following error:",
                   this->_pCtx->lastError());
   }
@@ -228,13 +228,13 @@ bool OmUiAddLoc::_onBcOk()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiAddLoc::_onInit()
+void OmUiAddChn::_onInit()
 {
   // set dialog icon
   this->setIcon(Om_getResIcon(this->_hins,IDI_APP,2),Om_getResIcon(this->_hins,IDI_APP,1));
 
   // define controls tool-tips
-  this->_createTooltip(IDC_EC_INP01,  L"Channel name, to identify it and create folder");
+  this->_createTooltip(IDC_EC_INP01,  L"Mod Channel name, to identify it and create folder");
 
   this->_createTooltip(IDC_EC_INP02,  L"Target path, where Mods/Packages are to be installed");
   this->_createTooltip(IDC_BC_BRW02,  L"Browse to select destination folder");
@@ -248,10 +248,10 @@ void OmUiAddLoc::_onInit()
   this->_createTooltip(IDC_BC_BRW04,  L"Browse to select a custom Backup folder");
 
   // set default start values
-  this->setItemText(IDC_EC_INP01, L"New Channel");
+  this->setItemText(IDC_EC_INP01, L"New Mod Channel");
   this->setItemText(IDC_EC_INP02, L"");
-  this->setItemText(IDC_EC_INP03, L"New Channel\\Library");
-  this->setItemText(IDC_EC_INP04, L"New Channel\\Backup");
+  this->setItemText(IDC_EC_INP03, L"New Mod Channel\\Library");
+  this->setItemText(IDC_EC_INP04, L"New Mod Channel\\Backup");
 
   wstring item_str;
 
@@ -263,13 +263,13 @@ void OmUiAddLoc::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiAddLoc::_onResize()
+void OmUiAddChn::_onResize()
 {
-  // Location title Label & EditControl
+  // Mod Channel title Label & EditControl
   this->_setItemPos(IDC_SC_LBL01, 10, 10, this->cliUnitX()-25, 9);
   this->_setItemPos(IDC_EC_INP01, 10, 25, this->cliUnitX()-25, 13);
 
-  // Location Install Label & EditControl & Browse button
+  // Mod Channel Install Label & EditControl & Browse button
   this->_setItemPos(IDC_SC_LBL02, 10, 50, this->cliUnitX()-25, 9);
   this->_setItemPos(IDC_EC_INP02, 10, 65, this->cliUnitX()-45, 13);
   this->_setItemPos(IDC_BC_BRW02, this->cliUnitX()-31, 65, 16, 13);
@@ -298,7 +298,7 @@ void OmUiAddLoc::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiAddLoc::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiAddChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 

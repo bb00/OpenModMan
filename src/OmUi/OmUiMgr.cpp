@@ -32,9 +32,9 @@
 #include "OmUiMgrMainTst.h" //< tab for test purposes
 #include "OmUiAddBat.h"
 #include "OmUiAddRep.h"
-#include "OmUiAddLoc.h"
+#include "OmUiAddChn.h"
 #include "OmUiPropCtx.h"
-#include "OmUiPropLoc.h"
+#include "OmUiPropChn.h"
 #include "OmUiPropMgr.h"
 #include "OmUiPropBat.h"
 #include "OmUiHelpLog.h"
@@ -72,14 +72,14 @@ OmUiMgr::OmUiMgr(HINSTANCE hins) : OmDialog(hins),
   // add children dialogs
   this->addChild(new OmUiPropMgr(hins));    //< Dialog for Manager Options
   this->addChild(new OmUiPropCtx(hins));    //< Dialog for Context Properties
-  this->addChild(new OmUiPropLoc(hins));    //< Dialog for Location Properties
+  this->addChild(new OmUiPropChn(hins));    //< Dialog for Mod Channel Properties
   this->addChild(new OmUiPropBat(hins));    //< Dialog for Batch Properties
   this->addChild(new OmUiHelpLog(hins));    //< Dialog for Help Debug log
   this->addChild(new OmUiHelpAbt(hins));    //< Dialog for Help About
   this->addChild(new OmUiWizCtx(hins));     //< Dialog for New Context Wizard
   this->addChild(new OmUiToolPkg(hins));    //< Dialog for New Package
   this->addChild(new OmUiAddBat(hins));     //< Dialog for New Batch
-  this->addChild(new OmUiAddLoc(hins));     //< Dialog for Adding Location
+  this->addChild(new OmUiAddChn(hins));     //< Dialog for Adding Mod Channel
   this->addChild(new OmUiAddRep(hins));     //< Dialog for Add Repository
   this->addChild(new OmUiToolRep(hins));    //< Dialog for Repository Editor
   this->addChild(new OmUiPictView(hins));   //< Dialog for Picture Viewer
@@ -177,8 +177,8 @@ void OmUiMgr::ctxOpen(const wstring& path)
 
   } else {
 
-    Om_dlgBox_okl(this->_hwnd, L"Open Modding Hub", IDI_ERR,
-                 L"Modding Hub open error", L"Modding Hub "
+    Om_dlgBox_okl(this->_hwnd, L"Open Mod Hub", IDI_ERR,
+                 L"Mod Hub open error", L"Mod Hub "
                  "loading failed because of the following error:",
                  pMgr->lastError());
   }
@@ -396,7 +396,7 @@ void OmUiMgr::_onInit()
   HFONT hFt = Om_createFont(18, 200, L"Ms Shell Dlg");
   this->msgItem(IDC_CB_CTX, WM_SETFONT, reinterpret_cast<WPARAM>(hFt), true);
 
-  this->_createTooltip(IDC_CB_CTX, L"Select Modding Hub");
+  this->_createTooltip(IDC_CB_CTX, L"Select Mod Hub");
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
@@ -462,9 +462,9 @@ void OmUiMgr::_onResize()
 
   if(!this->_divIsCapt) {
 
-    // Modding Hubs ComboBox
+    // Mod Hubs ComboBox
     this->_setItemPos(IDC_CB_CTX, 4, 5, this->cliWidth()-42 , 28, true);
-    // Modding Hub Icon
+    // Mod Hub Icon
     this->_setItemPos(IDC_SB_ICON, this->cliWidth()-33, 3, 28, 28, true);
 
   } else {
@@ -540,12 +540,12 @@ void OmUiMgr::_onRefresh()
   // update menus
   int state = pCtx ? MF_ENABLED : MF_GRAYED;
   this->setPopupItem(MNU_FILE, MNU_FILE_CLOSE, state); // File > Close
-  this->setPopupItem(MNU_EDIT, MNU_EDIT_CTX, state); // Edit > Modding Hub...
+  this->setPopupItem(MNU_EDIT, MNU_EDIT_CTX, state); // Edit > Mod Hub...
   if(pCtx) {
-    // Edit > Location properties...
-    this->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, pMgr->ctxCur()->locCur() ? MF_ENABLED : MF_GRAYED);
+    // Edit > Mod Channel properties...
+    this->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, pMgr->ctxCur()->chnCur() ? MF_ENABLED : MF_GRAYED);
   } else {
-    this->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, MF_GRAYED); // Edit > Modding Channel
+    this->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, MF_GRAYED); // Edit > Mod Channel
     this->setPopupItem(MNU_EDIT, MNU_EDIT_PKG, MF_GRAYED); // Edit > Package []
     this->setPopupItem(MNU_EDIT, MNU_EDIT_RMT, MF_GRAYED); // Edit > Remote []
   }
@@ -787,15 +787,15 @@ INT_PTR OmUiMgr::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       break;
     }
 
-    case IDM_EDIT_LOC_PROP: {
-      OmUiPropLoc* pUiPropLoc = static_cast<OmUiPropLoc*>(this->childById(IDD_PROP_LOC));
-      pUiPropLoc->locSet(pCtx->locCur());
+    case IDM_EDIT_CHN_PROP: {
+      OmUiPropChn* pUiPropLoc = static_cast<OmUiPropChn*>(this->childById(IDD_PROP_CHN));
+      pUiPropLoc->chnSet(pCtx->chnCur());
       pUiPropLoc->open();
       break;
     }
 
-    case IDM_EDIT_ADD_LOC: {
-      OmUiAddLoc* pUiAddLoc = static_cast<OmUiAddLoc*>(this->childById(IDD_ADD_LOC));
+    case IDM_EDIT_ADD_CHN: {
+      OmUiAddChn* pUiAddLoc = static_cast<OmUiAddChn*>(this->childById(IDD_ADD_CHN));
       pUiAddLoc->ctxSet(pCtx);
       pUiAddLoc->open();
       break;

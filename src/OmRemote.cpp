@@ -23,7 +23,7 @@
 
 #include "OmManager.h"
 #include "OmContext.h"
-#include "OmLocation.h"
+#include "OmModChan.h"
 #include "OmPackage.h"
 #include "OmImage.h"
 #include "OmSocket.h"
@@ -344,12 +344,12 @@ void OmRemote::clear()
 ///
 void OmRemote::log(unsigned level, const wstring& head, const wstring& detail)
 {
-  if(this->_repository->pLoc() != nullptr) {
+  if(this->_repository->pChn() != nullptr) {
 
-    wstring log_str = L"Location("; log_str.append(this->_repository->pLoc()->title());
+    wstring log_str = L"ModChan("; log_str.append(this->_repository->pChn()->title());
     log_str.append(L"):: "); log_str.append(head);
 
-    this->_repository->pLoc()->log(level, log_str, detail);
+    this->_repository->pChn()->log(level, log_str, detail);
   }
 }
 
@@ -450,8 +450,8 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
       // manage previous packages supersedes
       if(self->_downl_spsd) {
 
-        OmLocation* pLoc = self->_repository->pLoc();
-        OmContext* pCtx = pLoc->pCtx();
+        OmModChan* pChn = self->_repository->pChn();
+        OmContext* pCtx = pChn->pCtx();
         OmPackage* pPkg;
 
         bool install = false;
@@ -473,7 +473,7 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
         vector<wstring> remid_ls; // removed/renamed packages ident list
 
         // prepare packages uninstall and backups restoration
-        pLoc->bckPrepareUnin(unin_ls, over_ls, dpnd_ls, pkg_ls);
+        pChn->bckPrepareUnin(unin_ls, over_ls, dpnd_ls, pkg_ls);
 
         // clean uninstall with proper overlaps and dependencies management
         for(size_t i = 0; i < unin_ls.size(); ++i) {
@@ -497,7 +497,7 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
             // add to removed packages ident list
             remid_ls.push_back(pkg_iden);
 
-            if(pLoc->upgdRename()) {
+            if(pChn->upgdRename()) {
               // rename source with .old extension
               Om_fileMove(pkg_path, pkg_path + L".old");
               log =  L"Previous Package \""+pkg_iden+L"\" renamed as .old";
@@ -521,12 +521,12 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
 
           for(size_t i = 0; i < ident_ls.size(); ++i) {
             // find additional uninstalled packages to be reinstalled
-            pPkg = pLoc->pkgFind(ident_ls[i], PKG_TYPE_ZIP);
+            pPkg = pChn->pkgFind(ident_ls[i], PKG_TYPE_ZIP);
             if(pPkg) pkg_ls.push_back(pPkg);
           }
 
           // add this new version to be installed
-          pPkg = pLoc->pkgFind(self->ident(), PKG_TYPE_ZIP);
+          pPkg = pChn->pkgFind(self->ident(), PKG_TYPE_ZIP);
           if(pPkg) pkg_ls.push_back(pPkg);
 
           vector<OmPackage*> inst_ls; //< final install list
@@ -535,17 +535,17 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
           vector<wstring> miss_ls;    //< missing dependencies lists
 
           // prepare package installation
-          pLoc->pkgPrepareInst(inst_ls, over_ls, dpcs_ls, miss_ls, pkg_ls);
+          pChn->pkgPrepareInst(inst_ls, over_ls, dpcs_ls, miss_ls, pkg_ls);
 
           for(size_t i = 0; i < inst_ls.size(); ++i) {
-            inst_ls[i]->install(pLoc->bckZipLevel(), nullptr, nullptr);
+            inst_ls[i]->install(pChn->bckZipLevel(), nullptr, nullptr);
           }
         }
 
         OmBatch* pBat;
 
         // find our new version package
-        pPkg = pLoc->pkgFind(self->ident(), PKG_TYPE_ZIP);
+        pPkg = pChn->pkgFind(self->ident(), PKG_TYPE_ZIP);
 
         bool add_new;
 
@@ -560,12 +560,12 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
           for(size_t j = 0; j < remid_ls.size(); ++j) {
 
             // search for package reference in batch, then remove
-            if(pBat->instRem(pLoc, remid_ls[j]))
+            if(pBat->instRem(pChn, remid_ls[j]))
               add_new = true;
           }
 
           // old reference was found, add reference to the new version
-          if(add_new) pBat->instAdd(pLoc, pPkg);
+          if(add_new) pBat->instAdd(pChn, pPkg);
         }
       }
     }

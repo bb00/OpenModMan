@@ -22,7 +22,7 @@
 #include "OmVersion.h"
 #include "OmImage.h"
 
-class OmLocation;
+class OmModChan;
 
 /// \brief Package Type Mask
 ///
@@ -136,7 +136,7 @@ const wchar_t OmPkgCatStr[][16] = {
 ///
 class OmPackage
 {
-  friend class OmLocation;
+  friend class OmModChan;
 
   public:
 
@@ -148,11 +148,11 @@ class OmPackage
 
     /// \brief Constructor.
     ///
-    /// Constructor with Location.
+    /// Constructor with Mod Channel.
     ///
-    /// \param[in]  pLoc    : Related Location for the Package.
+    /// \param[in]  pChn    : Related Mod Channel for the Package.
     ///
-    OmPackage(OmLocation* pLoc);
+    OmPackage(OmModChan* pChn);
 
     /// \brief Destructor.
     ///
@@ -718,16 +718,6 @@ class OmPackage
     ///
     bool loadOverview(const wstring& path);
 
-    /// \brief Get owner Location.
-    ///
-    /// Returns Location that own this package.
-    ///
-    /// \return Pointer to Location or nullptr.
-    ///
-    OmLocation* ownerLoc() const {
-      return _location;
-    }
-
     /// \brief Save Package.
     ///
     /// Create a new package file from this package
@@ -737,7 +727,7 @@ class OmPackage
     /// \param[in]  progress_cb : Optional progression callback function.
     /// \param[in]  user_ptr    : Optional pointer to user data passed to progression callback.
     ///
-    /// \return Pointer to Package related Location.
+    /// \return Pointer to Package related Mod Channel.
     ///
     bool save(const wstring& path, unsigned zipLvl = 2, Om_progressCb progress_cb = nullptr, void* user_ptr = nullptr);
 
@@ -753,14 +743,14 @@ class OmPackage
     ///
     void log(unsigned level, const wstring& head, const wstring& detail);
 
-    /// \brief Package Location.
+    /// \brief Package Mod Channel.
     ///
-    /// Returns Package affiliated Target Location.
+    /// Returns Package affiliated Mod Channel.
     ///
-    /// \return Pointer to Location object.
+    /// \return Pointer to Mod Channel object.
     ///
-    OmLocation* pLoc() const {
-      return this->_location;
+    OmModChan* pChn() const {
+      return this->_pChn;
     }
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -818,7 +808,7 @@ class OmPackage
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmLocation*         _location;
+    OmModChan*          _pChn;
 
     unsigned            _type;
 

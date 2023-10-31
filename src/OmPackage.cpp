@@ -20,7 +20,7 @@
 #include "OmXmlDoc.h"
 #include "OmManager.h"
 #include "OmContext.h"
-#include "OmLocation.h"
+#include "OmModChan.h"
 
 #include "OmImage.h"
 
@@ -104,7 +104,7 @@ static void __get_folder_src_items(vector<OmPkgItem>* ls, const wstring& orig, c
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 OmPackage::OmPackage() :
-  _location(nullptr), _type(0), _ident(), _hash(0), _core(), _version(), _name(),
+  _pChn(nullptr), _type(0), _ident(), _hash(0), _core(), _version(), _name(),
   _src(), _srcDir(), _srcTime(0), _srcItemLs(), _depLs(), _bck(), _bckDir(),
   _bckItemLs(), _ovrLs(), _category(), _desc(), _descTime(0), _thumb(), _thumbTime(0),
   _error()
@@ -116,8 +116,8 @@ OmPackage::OmPackage() :
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmPackage::OmPackage(OmLocation* pLoc) :
-  _location(pLoc), _type(0), _ident(), _hash(0), _core(), _version(), _name(),
+OmPackage::OmPackage(OmModChan* pChn) :
+  _pChn(pChn), _type(0), _ident(), _hash(0), _core(), _version(), _name(),
   _src(), _srcDir(), _srcTime(0), _srcItemLs(), _depLs(), _bck(), _bckDir(),
   _bckItemLs(), _ovrLs(), _category(), _desc(), _descTime(0), _thumb(), _thumbTime(0),
   _error()
@@ -725,9 +725,9 @@ bool OmPackage::bckValid()
 ///
 bool OmPackage::uninst(Om_progressCb progress_cb, void* user_ptr)
 {
-  // cannot install without valid Location
-  if(this->_location == nullptr) {
-    this->_error = L"Package cannot be uninstalled out of a valid Location.";
+  // cannot install without valid Mod Channel
+  if(this->_pChn == nullptr) {
+    this->_error = L"Package cannot be uninstalled out of a valid Mod Channel.";
     this->log(0, L"Package("+this->_ident+L") Uninstall", this->_error);
     return false;
   }
@@ -772,9 +772,9 @@ bool OmPackage::uninst(Om_progressCb progress_cb, void* user_ptr)
 ///
 bool OmPackage::install(unsigned zipLvl, Om_progressCb progress_cb, void* user_ptr)
 {
-  // cannot install without valid Location
-  if(this->_location == nullptr) {
-    this->_error = L"Package cannot be installed out of a valid Location.";
+  // cannot install without valid Mod Channel
+  if(this->_pChn == nullptr) {
+    this->_error = L"Package cannot be installed out of a valid Mod Channel.";
     this->log(0, L"Package("+this->_ident+L") Install", this->_error);
     return false;
   }
@@ -824,9 +824,9 @@ bool OmPackage::install(unsigned zipLvl, Om_progressCb progress_cb, void* user_p
 ///
 bool OmPackage::unbackup()
 {
-  // cannot install without valid Location
-  if(this->_location == nullptr) {
-    this->_error = L"Package cannot be uninstalled out of a valid Location.";
+  // cannot install without valid Mod Channel
+  if(this->_pChn == nullptr) {
+    this->_error = L"Package cannot be uninstalled out of a valid Mod Channel.";
     this->log(0, L"Package("+this->_ident+L") Unbackup", this->_error);
     return false;
   }
@@ -882,7 +882,7 @@ void OmPackage::footprint(vector<OmPkgItem>& footprint) const
 
   for(size_t i = 0; i < this->_srcItemLs.size(); ++i) {
 
-    Om_concatPaths(path, this->_location->_dstDir, this->_srcItemLs[i].path);
+    Om_concatPaths(path, this->_pChn->_dstDir, this->_srcItemLs[i].path);
 
     item.path = this->_srcItemLs[i].path;
     item.type = this->_srcItemLs[i].type;
@@ -1351,12 +1351,12 @@ void OmPackage::clear()
 ///
 void OmPackage::log(unsigned level, const wstring& head, const wstring& detail)
 {
-  if(this->_location != nullptr) {
+  if(this->_pChn != nullptr) {
 
-    wstring log_str = L"Location("; log_str.append(this->_location->title());
+    wstring log_str = L"ModChan("; log_str.append(this->_pChn->title());
     log_str.append(L"):: "); log_str.append(head);
 
-    this->_location->log(level, log_str, detail);
+    this->_pChn->log(level, log_str, detail);
   }
 }
 
@@ -1460,7 +1460,7 @@ bool OmPackage::_backup(int zipLvl, Om_progressCb progress_cb, void* user_ptr)
     bck_file_name += L".";
     bck_file_name += OMM_BCK_FILE_EXT;
     // backup zip full path
-    this->_bck = this->_location->_bckDir; //< Location Backup location
+    this->_bck = this->_pChn->_bckDir; //< Mod Channel Backup location
     this->_bck += L"\\";
     this->_bck += bck_file_name;
 
@@ -1476,7 +1476,7 @@ bool OmPackage::_backup(int zipLvl, Om_progressCb progress_cb, void* user_ptr)
     }
   } else { // Sub-Directory backup
     // backup sub-directory full path
-    this->_bck = this->_location->_bckDir; //< Location Backup location
+    this->_bck = this->_pChn->_bckDir; //< Mod Channel Backup location
     this->_bck += L"\\";
     this->_bck += bck_file_name;
 
@@ -1504,7 +1504,7 @@ bool OmPackage::_backup(int zipLvl, Om_progressCb progress_cb, void* user_ptr)
 
   // retrieve the list of overlapped package
   vector<uint64_t> ovlap_list;
-  this->_location->pkgFindOverlaps(ovlap_list, this);
+  this->_pChn->pkgFindOverlaps(ovlap_list, this);
 
   // compose the Backup definition file name
   wstring back_def_name = PKG_BACKUP_DEF;
@@ -1537,7 +1537,7 @@ bool OmPackage::_backup(int zipLvl, Om_progressCb progress_cb, void* user_ptr)
   for(size_t i = 0, z = 0; i < this->_srcItemLs.size(); ++i) {
 
     // path to item in the destination tree
-    Om_concatPaths(app_file, this->_location->_dstDir, this->_srcItemLs[i].path);
+    Om_concatPaths(app_file, this->_pChn->_dstDir, this->_srcItemLs[i].path);
     // our future Backup item entry
     bck_item.path = this->_srcItemLs[i].path;
     bck_item.type = this->_srcItemLs[i].type;
@@ -1603,7 +1603,7 @@ bool OmPackage::_backup(int zipLvl, Om_progressCb progress_cb, void* user_ptr)
         // check whether folder was created by another package, in this case
         // we add it as to be deleted by this one too, this allow to
         // automatically delete unused shared folders when empty by any package
-        if(this->_location->bckItemExists(bck_item.path, PKGITEM_DEST_DEL)) {
+        if(this->_pChn->bckItemExists(bck_item.path, PKGITEM_DEST_DEL)) {
           #ifdef DEBUG
           std::wcout << L"DEBUG => OmPackage::_backup : shared temp dir: " << bck_item.path << L"\n";
           #endif
@@ -1767,7 +1767,7 @@ bool OmPackage::_apply(Om_progressCb progress_cb, void* user_ptr)
   for(size_t i = 0; i < this->_srcItemLs.size(); ++i) {
 
     // path to destination file to be overwritten
-    Om_concatPaths(app_file, this->_location->_dstDir, this->_srcItemLs[i].path);
+    Om_concatPaths(app_file, this->_pChn->_dstDir, this->_srcItemLs[i].path);
     // check if we have a file or folder to install
     if(this->_srcItemLs[i].type == PKGITEM_TYPE_F) { //< this is a file
 
@@ -1891,7 +1891,7 @@ bool OmPackage::_restore(Om_progressCb progress_cb, void* user_ptr, bool undo)
       // we are interested only by backup file to copy
       if(this->_bckItemLs[i].dest == PKGITEM_DEST_CPY) {
         // path to installed file to be overwritten
-        Om_concatPaths(app_file, this->_location->_dstDir, this->_bckItemLs[i].path);
+        Om_concatPaths(app_file, this->_pChn->_dstDir, this->_bckItemLs[i].path);
         // extract from zip
         if(!zip.extract(this->_bckItemLs[i].cdri, app_file)) {
           this->_error = Om_errZipInfl(L"Backup file", this->_bckItemLs[i].path, zip.lastErrorStr());
@@ -1944,7 +1944,7 @@ bool OmPackage::_restore(Om_progressCb progress_cb, void* user_ptr, bool undo)
         // path to file in the backup sub-directory
         Om_concatPaths(bck_file, bck_dir_path, this->_bckItemLs[i].path);
         // path to destination file to be overwritten
-        Om_concatPaths(app_file, this->_location->_dstDir, this->_bckItemLs[i].path);
+        Om_concatPaths(app_file, this->_pChn->_dstDir, this->_bckItemLs[i].path);
         // Move file from backup directory to destination, replacing destination
         result = Om_fileMove(bck_file, app_file);
         if(result != 0) {
@@ -1983,7 +1983,7 @@ bool OmPackage::_restore(Om_progressCb progress_cb, void* user_ptr, bool undo)
     // we are interested only by file to cleanup
     if(this->_bckItemLs[n].dest == PKGITEM_DEST_DEL) {
       // get destination file (to be deleted) path
-      Om_concatPaths(del_file, this->_location->_dstDir, this->_bckItemLs[n].path);
+      Om_concatPaths(del_file, this->_pChn->_dstDir, this->_bckItemLs[n].path);
       // in case we undo, the file may be not installed already, to prevent
       // useless warnings we test existing file/folder before trying to delete
       if(undo) {

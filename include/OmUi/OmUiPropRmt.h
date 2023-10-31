@@ -54,7 +54,7 @@ class OmUiPropRmt : public OmDialogProp
     /// \brief Get associated Package.
     ///
     /// Returns associated Package object previously defined
-    /// via OmUiPropLoc.setPackage
+    /// via OmUiPropChn.setPackage
     ///
     /// \return Associated Package or nullptr if none.
     ///

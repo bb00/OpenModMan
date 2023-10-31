@@ -39,7 +39,7 @@
 
 #define OMM_XMAGIC_APP    L"Open_Mod_Manager_Main"
 #define OMM_XMAGIC_CTX    L"Open_Mod_Manager_Context"
-#define OMM_XMAGIC_LOC    L"Open_Mod_Manager_Location"
+#define OMM_XMAGIC_CHN    L"Open_Mod_Manager_Location"
 #define OMM_XMAGIC_PKG    L"Open_Mod_Manager_Package"
 #define OMM_XMAGIC_BCK    L"Open_Mod_Manager_Backup"
 #define OMM_XMAGIC_BAT    L"Open_Mod_Manager_Batch"

@@ -78,7 +78,7 @@ class OmUiPropBatLst : public OmDialog
     ///
     /// Get count of item in the Included List at index.
     ///
-    /// \param[in]  l   : List index, corresponding to Location combo box.
+    /// \param[in]  l   : List index, corresponding to Mod Channel combo box.
     ///
     unsigned incCount(unsigned l) const {
       return this->_included[l].size();
@@ -88,7 +88,7 @@ class OmUiPropBatLst : public OmDialog
     ///
     /// Get count of item in the Included List at index.
     ///
-    /// \param[in]  l   : List index, corresponding to Location combo box.
+    /// \param[in]  l   : List index, corresponding to Mod Channel combo box.
     /// \param[in]  v   : Value index to get in list.
     ///
     int incGet(unsigned l, unsigned v) const {

@@ -70,20 +70,20 @@ class OmUiMgrMainLib : public OmDialog
     /// Enables or disable the dialog safe mode.
     ///
     /// The safe mode is used to operate modifications on sensitive
-    /// or monitored elements such as deleting or moving Location in
+    /// or monitored elements such as deleting or moving Mod Channel in
     /// order to prevent conflicts or crash during process.
     ///
     /// \param[in]  enable  : Enable or disable safe mode.
     ///
     void safemode(bool enable);
 
-    /// \brief Select Location
+    /// \brief Select Mod Channel
     ///
-    /// Select or unselect Location then refresh dialog.
+    /// Select or unselect Mod Channel then refresh dialog.
     ///
-    /// \param[in]  i  Index of Location to select or -1 to select none.
+    /// \param[in]  i  Index of Mod Channel to select or -1 to select none.
     ///
-    void locSel(int i);
+    void chnSel(int i);
 
     /// \brief Install selected packages.
     ///
@@ -212,7 +212,7 @@ class OmUiMgrMainLib : public OmDialog
 
     bool                _thread_abort;
 
-    void                _buildCbLoc();
+    void                _buildCbChn();
 
     void                _buildLvBat();
 

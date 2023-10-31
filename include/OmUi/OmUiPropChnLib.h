@@ -14,18 +14,20 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPCTXLOCS_H
-#define OMUIPROPCTXLOCS_H
+#ifndef OMUIPROPCHNLIB_H
+#define OMUIPROPCHNLIB_H
 
 #include "OmDialog.h"
 
-#define CTX_PROP_LOC_ORDER   0
+#define CHN_PROP_LIB_DEVMODE     0
+#define CHN_PROP_LIB_WARNINGS    1
+#define CHN_PROP_LIB_SHOWHIDDEN  2
 
-/// \brief Context Properties / Locations tab child
+/// \brief Manager Options / Packages tab child
 ///
-/// OmDialog class derived for Context Properties / Locations tab child dialog window
+/// OmDialog class derived for Manager Options / Packages tab child dialog window
 ///
-class OmUiPropCtxLoc : public OmDialog
+class OmUiPropChnLib : public OmDialog
 {
   public:
 
@@ -35,13 +37,13 @@ class OmUiPropCtxLoc : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropCtxLoc(HINSTANCE hins);
+    OmUiPropChnLib(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropCtxLoc();
+    ~OmUiPropChnLib();
 
     /// \brief Get resource id.
     ///
@@ -78,37 +80,17 @@ class OmUiPropCtxLoc : public OmDialog
 
     bool                _chParam[8];
 
-    void                _delLoc_init(int id);
+    void                _onCkBoxDev();
 
-    void                _delLoc_stop();
+    void                _onCkBoxWrn();
 
-    void*               _delLoc_hth;
-
-    static DWORD WINAPI _delLoc_fth(void*);
-
-    static bool         _delLoc_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data);
-
-    int                 _delLoc_id;
-
-    void                _onLbLoclsSel();
-
-    void                _onBcUpLoc();
-
-    void                _onBcDnLoc();
-
-    void                _onBcDelLoc();
-
-    void                _onBcEdiLoc();
-
-    void                _onBcAddLoc();
+    void                _onCkBoxHid();
 
     void                _onInit();
 
     void                _onResize();
 
-    void                _onRefresh();
-
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPCTXLOCS_H
+#endif // OMUIPROPCHNLIB_H

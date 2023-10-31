@@ -14,18 +14,18 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPLOC_H
-#define OMUIPROPLOC_H
+#ifndef OMUIPROPCHN_H
+#define OMUIPROPCHN_H
 
 #include "OmDialogProp.h"
 
-class OmLocation;
+class OmModChan;
 
-/// \brief Location Properties parent dialog
+/// \brief Mod Channel Properties parent dialog
 ///
-/// OmDialogProp class derived for Location Properties parent dialog window.
+/// OmDialogProp class derived for Mod Channel Properties parent dialog window.
 ///
-class OmUiPropLoc : public OmDialogProp
+class OmUiPropChn : public OmDialogProp
 {
   public: ///         - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -35,13 +35,13 @@ class OmUiPropLoc : public OmDialogProp
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropLoc(HINSTANCE hins);
+    OmUiPropChn(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropLoc();
+    ~OmUiPropChn();
 
     /// \brief Get resource id.
     ///
@@ -51,27 +51,26 @@ class OmUiPropLoc : public OmDialogProp
     ///
     long id() const;
 
-    /// \brief Get associated Location.
+    /// \brief Get associated Mod Channel.
     ///
-    /// Returns associated Location object previously defined
-    /// via OmUiPropLoc.setLocation
+    /// Returns associated Mod Channel object
     ///
-    /// \return Associated Location or nullptr if none.
+    /// \return Associated Mod Channel or nullptr if none.
     ///
-    OmLocation* locCur() const {
-      return _pLoc;
+    OmModChan* chnCur() const {
+      return _pChn;
     }
 
-    /// \brief Set associated Location.
+    /// \brief Set associated Mod Channel.
     ///
-    /// Define the associated Location, which the dialog is intended to
-    /// work with and on. A valid Location must be set in order before
+    /// Define the associated Mod Channel, which the dialog is intended to
+    /// work with and on. A valid Mod Channel must be set in order before
     /// opening the dialog.
     ///
-    /// \param[in]  pLoc  : Location object to associate.
+    /// \param[in]  pChn  : Mod Channel object to associate.
     ///
-    void locSet(OmLocation* pLoc) {
-      _pLoc = pLoc;
+    void chnSet(OmModChan* pChn) {
+      _pChn = pChn;
     }
 
     /// \brief Check for properties changes
@@ -89,7 +88,7 @@ class OmUiPropLoc : public OmDialogProp
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmLocation*         _pLoc;
+    OmModChan*         _pChn;
 
     void*               _movBck_hth;
 
@@ -108,4 +107,4 @@ class OmUiPropLoc : public OmDialogProp
     INT_PTR             _onPropMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPLOC_H
+#endif // OMUIPROPCHN_H

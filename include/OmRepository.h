@@ -22,7 +22,7 @@
 #include "OmConfig.h"
 #include "OmRemote.h"
 
-class OmLocation;
+class OmModChan;
 
 /// \brief Repository object for Context.
 ///
@@ -31,7 +31,7 @@ class OmLocation;
 ///
 class OmRepository
 {
-  friend class OmLocation;
+  friend class OmModChan;
 
   public:
 
@@ -39,7 +39,7 @@ class OmRepository
     ///
     /// Default constructor.
     ///
-    OmRepository(OmLocation* pLoc);
+    OmRepository(OmModChan* pChn);
 
     /// \brief Destructor.
     ///
@@ -186,14 +186,14 @@ class OmRepository
     ///
     bool rmtHas(const wstring& ident);
 
-    /// \brief Get owner Location.
+    /// \brief Get owner Mod Channel.
     ///
-    /// Returns Location that own this remote package.
+    /// Returns Mod Channel that own this remote package.
     ///
-    /// \return Pointer to Location or nullptr.
+    /// \return Pointer to Mod Channel or nullptr.
     ///
-    OmLocation* pLoc() const {
-      return _location;
+    OmModChan* pChn() const {
+      return _pChn;
     }
 
     /// \brief Clear repository.
@@ -211,7 +211,7 @@ class OmRepository
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmLocation*         _location;
+    OmModChan*          _pChn;
 
     OmConfig            _config;
 

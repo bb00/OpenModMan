@@ -21,20 +21,20 @@
 #include "OmManager.h"
 
 #include "OmUiMgr.h"
-#include "OmUiAddLoc.h"
+#include "OmUiAddChn.h"
 #include "OmUiPropCtx.h"
-#include "OmUiPropLoc.h"
+#include "OmUiPropChn.h"
 #include "OmUiProgress.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilWin.h"         //< Om_getResIcon
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiPropCtxLoc.h"
+#include "OmUiPropCtxChn.h"
 
 /// \brief Custom window Message
 ///
-/// Custom window message to notify the dialog window that the _delLoc_fth
+/// Custom window message to notify the dialog window that the _delChn_fth
 /// thread finished his job.
 ///
 #define UWM_BACKPURGE_DONE     (WM_APP+1)
@@ -43,9 +43,9 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropCtxLoc::OmUiPropCtxLoc(HINSTANCE hins) : OmDialog(hins),
-  _delLoc_hth(nullptr),
-  _delLoc_id(-1)
+OmUiPropCtxChn::OmUiPropCtxChn(HINSTANCE hins) : OmDialog(hins),
+  _delChn_hth(nullptr),
+  _delChn_id(-1)
 {
   // modified parameters flags
   for(unsigned i = 0; i < 8; ++i) {
@@ -57,7 +57,7 @@ OmUiPropCtxLoc::OmUiPropCtxLoc(HINSTANCE hins) : OmDialog(hins),
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropCtxLoc::~OmUiPropCtxLoc()
+OmUiPropCtxChn::~OmUiPropCtxChn()
 {
 
 }
@@ -66,16 +66,16 @@ OmUiPropCtxLoc::~OmUiPropCtxLoc()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiPropCtxLoc::id() const
+long OmUiPropCtxChn::id() const
 {
-  return IDD_PROP_CTX_LOC;
+  return IDD_PROP_CTX_CHN;
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::setChParam(unsigned i, bool en)
+void OmUiPropCtxChn::setChParam(unsigned i, bool en)
 {
   this->_chParam[i] = en;
   static_cast<OmDialogProp*>(this->_parent)->checkChanges();
@@ -85,38 +85,38 @@ void OmUiPropCtxLoc::setChParam(unsigned i, bool en)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_delLoc_init(int id)
+void OmUiPropCtxChn::_delChn_init(int id)
 {
   OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
   if(!pCtx) return;
 
-  // store Location id
-  this->_delLoc_id = id;
-  OmLocation* pLoc = pCtx->locGet(id);
+  // store Mod Channel id
+  this->_delChn_id = id;
+  OmModChan* pChn = pCtx->chnGet(id);
 
   // To prevent crash during operation we unselect location in the main dialog
   static_cast<OmUiMgr*>(this->root())->safemode(true);
 
   // unselect location
-  pCtx->locSel(-1);
+  pCtx->chnSel(-1);
 
-  // if Location does not have backup data, we can bypass the purge and
+  // if Mod Channel does not have backup data, we can bypass the purge and
   // do directly to the end
-  if(pLoc->bckHasData()) {
+  if(pChn->bckHasData()) {
 
     OmUiProgress* pUiProgress = static_cast<OmUiProgress*>(this->siblingById(IDD_PROGRESS));
 
     pUiProgress->open(true);
-    pUiProgress->setCaption(L"Delete Channel");
+    pUiProgress->setCaption(L"Delete Mod Channel");
     pUiProgress->setScHeadText(L"Restoring all backup data");
 
     DWORD dwId;
-    this->_delLoc_hth = CreateThread(nullptr, 0, this->_delLoc_fth, this, 0, &dwId);
+    this->_delChn_hth = CreateThread(nullptr, 0, this->_delChn_fth, this, 0, &dwId);
 
   } else {
 
     // directly delete the location
-    this->_delLoc_stop();
+    this->_delChn_stop();
   }
 }
 
@@ -124,15 +124,15 @@ void OmUiPropCtxLoc::_delLoc_init(int id)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_delLoc_stop()
+void OmUiPropCtxChn::_delChn_stop()
 {
   DWORD exitCode;
 
-  if(this->_delLoc_hth) {
-    WaitForSingleObject(this->_delLoc_hth, INFINITE);
-    GetExitCodeThread(this->_delLoc_hth, &exitCode);
-    CloseHandle(this->_delLoc_hth);
-    this->_delLoc_hth = nullptr;
+  if(this->_delChn_hth) {
+    WaitForSingleObject(this->_delChn_hth, INFINITE);
+    GetExitCodeThread(this->_delChn_hth, &exitCode);
+    CloseHandle(this->_delChn_hth);
+    this->_delChn_hth = nullptr;
   }
 
   // quit the progress dialog
@@ -146,8 +146,8 @@ void OmUiPropCtxLoc::_delLoc_stop()
   // check whether purge succeed
   if(exitCode == 0) {
 
-    // backup data purged, now delete Location
-    if(!pCtx->locRem(this->_delLoc_id)) {
+    // backup data purged, now delete Mod Channel
+    if(!pCtx->chnRem(this->_delChn_id)) {
       Om_dlgBox_ok(this->_hwnd, L"Hub properties", IDI_WRN,
                 L"Channel remove error", L"Channel "
                 "remove process encountered error(s), some file may "
@@ -163,7 +163,7 @@ void OmUiPropCtxLoc::_delLoc_stop()
   }
 
   // select the first location in list
-  pCtx->locSel(0);
+  pCtx->chnSel(0);
 
   // Back to main dialog window to normal state
   static_cast<OmUiMgr*>(this->root())->safemode(false);
@@ -176,18 +176,18 @@ void OmUiPropCtxLoc::_delLoc_stop()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-DWORD WINAPI OmUiPropCtxLoc::_delLoc_fth(void* arg)
+DWORD WINAPI OmUiPropCtxChn::_delChn_fth(void* arg)
 {
-  OmUiPropCtxLoc* self = static_cast<OmUiPropCtxLoc*>(arg);
+  OmUiPropCtxChn* self = static_cast<OmUiPropCtxChn*>(arg);
 
   OmContext* pCtx = static_cast<OmUiPropCtx*>(self->_parent)->ctxCur();
   if(!pCtx) return 1;
-  OmLocation* pLoc = pCtx->locGet(self->_delLoc_id);
-  if(!pLoc) return 1;
+  OmModChan* pChn = pCtx->chnGet(self->_delChn_id);
+  if(!pChn) return 1;
 
   DWORD exitCode = 0;
 
-  if(!pLoc->bckPurge(&self->_delLoc_progress_cb, self->siblingById(IDD_PROGRESS))) {
+  if(!pChn->bckPurge(&self->_delChn_progress_cb, self->siblingById(IDD_PROGRESS))) {
     exitCode = 1; //< report error
   }
 
@@ -201,7 +201,7 @@ DWORD WINAPI OmUiPropCtxLoc::_delLoc_fth(void* arg)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiPropCtxLoc::_delLoc_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data)
+bool OmUiPropCtxChn::_delChn_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data)
 {
   OmUiProgress* pUiProgress = reinterpret_cast<OmUiProgress*>(ptr);
 
@@ -218,21 +218,21 @@ bool OmUiPropCtxLoc::_delLoc_progress_cb(void* ptr, size_t tot, size_t cur, uint
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onLbLoclsSel()
+void OmUiPropCtxChn::_onLbLoclsSel()
 {
   OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
   if(!pCtx) return;
 
-  int lb_sel = this->msgItem(IDC_LB_LOC, LB_GETCURSEL);
-  int loc_id = this->msgItem(IDC_LB_LOC, LB_GETITEMDATA, lb_sel);
+  int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
+  int chn_id = this->msgItem(IDC_LB_CHN, LB_GETITEMDATA, lb_sel);
 
-  if(loc_id >= 0) {
+  if(chn_id >= 0) {
 
-    OmLocation* pLoc = pCtx->locGet(loc_id);
+    OmModChan* pChn = pCtx->chnGet(chn_id);
 
-    this->setItemText(IDC_EC_READ2, pLoc->dstDir());
-    this->setItemText(IDC_EC_READ3, pLoc->libDir());
-    this->setItemText(IDC_EC_READ4, pLoc->bckDir());
+    this->setItemText(IDC_EC_READ2, pChn->dstDir());
+    this->setItemText(IDC_EC_READ3, pChn->libDir());
+    this->setItemText(IDC_EC_READ4, pChn->bckDir());
 
     this->enableItem(IDC_SC_LBL02, true);
     this->enableItem(IDC_EC_READ2, true);
@@ -245,7 +245,7 @@ void OmUiPropCtxLoc::_onLbLoclsSel()
     this->enableItem(IDC_BC_EDI, true);
 
     this->enableItem(IDC_BC_UP, (lb_sel > 0));
-    int lb_max = this->msgItem(IDC_LB_LOC, LB_GETCOUNT) - 1;
+    int lb_max = this->msgItem(IDC_LB_CHN, LB_GETCOUNT) - 1;
     this->enableItem(IDC_BC_DN, (lb_sel < lb_max));
   } else {
     this->setItemText(IDC_EC_READ2, L"<no selection>");
@@ -271,10 +271,10 @@ void OmUiPropCtxLoc::_onLbLoclsSel()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onBcUpLoc()
+void OmUiPropCtxChn::_onBcUpChn()
 {
   // get selected item (index)
-  int lb_sel = this->msgItem(IDC_LB_LOC, LB_GETCURSEL);
+  int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
 
   // check whether we can move up
   if(lb_sel == 0)
@@ -284,31 +284,31 @@ void OmUiPropCtxLoc::_onBcUpLoc()
   int idx;
 
   // retrieve the package List-Box label
-  this->msgItem(IDC_LB_LOC, LB_GETTEXT, lb_sel - 1, reinterpret_cast<LPARAM>(item_buf));
-  idx = this->msgItem(IDC_LB_LOC, LB_GETITEMDATA, lb_sel - 1);
+  this->msgItem(IDC_LB_CHN, LB_GETTEXT, lb_sel - 1, reinterpret_cast<LPARAM>(item_buf));
+  idx = this->msgItem(IDC_LB_CHN, LB_GETITEMDATA, lb_sel - 1);
 
-  this->msgItem(IDC_LB_LOC, LB_DELETESTRING, lb_sel - 1);
+  this->msgItem(IDC_LB_CHN, LB_DELETESTRING, lb_sel - 1);
 
-  this->msgItem(IDC_LB_LOC, LB_INSERTSTRING, lb_sel, reinterpret_cast<LPARAM>(item_buf));
-  this->msgItem(IDC_LB_LOC, LB_SETITEMDATA, lb_sel, idx);
+  this->msgItem(IDC_LB_CHN, LB_INSERTSTRING, lb_sel, reinterpret_cast<LPARAM>(item_buf));
+  this->msgItem(IDC_LB_CHN, LB_SETITEMDATA, lb_sel, idx);
 
   this->enableItem(IDC_BC_UP, (lb_sel > 1));
   this->enableItem(IDC_BC_DN, true);
 
   // user modified parameter, notify it
-  this->setChParam(CTX_PROP_LOC_ORDER, true);
+  this->setChParam(CTX_PROP_CHN_ORDER, true);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onBcDnLoc()
+void OmUiPropCtxChn::_onBcDnChn()
 {
   // get selected item (index)
-  int lb_sel = this->msgItem(IDC_LB_LOC, LB_GETCURSEL);
+  int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
   // get count of item in List-Box as index to for insertion
-  int lb_max = this->msgItem(IDC_LB_LOC, LB_GETCOUNT) - 1;
+  int lb_max = this->msgItem(IDC_LB_CHN, LB_GETCOUNT) - 1;
 
   // check whether we can move down
   if(lb_sel == lb_max)
@@ -317,51 +317,51 @@ void OmUiPropCtxLoc::_onBcDnLoc()
   wchar_t item_buf[OMM_ITM_BUFF];
   int idx;
 
-  this->msgItem(IDC_LB_LOC, LB_GETTEXT, lb_sel, reinterpret_cast<LPARAM>(item_buf));
-  idx = this->msgItem(IDC_LB_LOC, LB_GETITEMDATA, lb_sel);
-  this->msgItem(IDC_LB_LOC, LB_DELETESTRING, lb_sel);
+  this->msgItem(IDC_LB_CHN, LB_GETTEXT, lb_sel, reinterpret_cast<LPARAM>(item_buf));
+  idx = this->msgItem(IDC_LB_CHN, LB_GETITEMDATA, lb_sel);
+  this->msgItem(IDC_LB_CHN, LB_DELETESTRING, lb_sel);
 
   lb_sel++;
 
-  this->msgItem(IDC_LB_LOC, LB_INSERTSTRING, lb_sel, reinterpret_cast<LPARAM>(item_buf));
-  this->msgItem(IDC_LB_LOC, LB_SETITEMDATA, lb_sel, idx);
-  this->msgItem(IDC_LB_LOC, LB_SETCURSEL, lb_sel);
+  this->msgItem(IDC_LB_CHN, LB_INSERTSTRING, lb_sel, reinterpret_cast<LPARAM>(item_buf));
+  this->msgItem(IDC_LB_CHN, LB_SETITEMDATA, lb_sel, idx);
+  this->msgItem(IDC_LB_CHN, LB_SETCURSEL, lb_sel);
 
   this->enableItem(IDC_BC_UP, true);
   this->enableItem(IDC_BC_DN, (lb_sel < lb_max));
 
   // user modified parameter, notify it
-  this->setChParam(CTX_PROP_LOC_ORDER, true);
+  this->setChParam(CTX_PROP_CHN_ORDER, true);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onBcDelLoc()
+void OmUiPropCtxChn::_onBcDelChn()
 {
   OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
   if(!pCtx) return;
 
-  int lb_sel = this->msgItem(IDC_LB_LOC, LB_GETCURSEL);
-  int loc_id = this->msgItem(IDC_LB_LOC, LB_GETITEMDATA, lb_sel);
+  int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
+  int chn_id = this->msgItem(IDC_LB_CHN, LB_GETITEMDATA, lb_sel);
 
-  if(loc_id < 0) return;
+  if(chn_id < 0) return;
 
-  OmLocation* pLoc = pCtx->locGet(loc_id);
+  OmModChan* pChn = pCtx->chnGet(chn_id);
 
   // warns the user before committing the irreparable
-  if(!Om_dlgBox_ca(this->_hwnd, L"Hub properties", IDI_QRY,
-            L"Delete Channel", L"The operation will permanently delete "
-            "the Channel \""+pLoc->title()+L"\" and its associated data."))
+  if(!Om_dlgBox_ca(this->_hwnd, L"Mod Hub properties", IDI_QRY,
+            L"Delete Mod Channel", L"The operation will permanently delete "
+            "the Mod Channel \""+pChn->title()+L"\" and its associated data."))
   {
     return;
   }
 
-  if(pLoc->bckHasData()) {
+  if(pChn->bckHasData()) {
 
-    if(!Om_dlgBox_ca(this->_hwnd, L"Hub properties", IDI_QRY,
-              L"Remaining backup data", L"The Channel currently have "
+    if(!Om_dlgBox_ca(this->_hwnd, L"Mod Hub properties", IDI_QRY,
+              L"Remaining backup data", L"The Mod Channel currently have "
               "installed packages, the deletion process will uninstall them "
               "and restore all backup data."))
     {
@@ -369,26 +369,26 @@ void OmUiPropCtxLoc::_onBcDelLoc()
     }
   }
 
-  // here we go for Location delete
-  this->_delLoc_init(loc_id);
+  // here we go for Mod Channel delete
+  this->_delChn_init(chn_id);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onBcEdiLoc()
+void OmUiPropCtxChn::_onBcEdiChn()
 {
   OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
   if(!pCtx) return;
 
-  int lb_sel = this->msgItem(IDC_LB_LOC, LB_GETCURSEL);
-  int loc_id = this->msgItem(IDC_LB_LOC, LB_GETITEMDATA, lb_sel);
+  int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
+  int chn_id = this->msgItem(IDC_LB_CHN, LB_GETITEMDATA, lb_sel);
 
-  if(loc_id >= 0) {
-    // open the Location Properties dialog
-    OmUiPropLoc* pUiPropLoc = static_cast<OmUiPropLoc*>(this->siblingById(IDD_PROP_LOC));
-    pUiPropLoc->locSet(pCtx->locGet(loc_id));
+  if(chn_id >= 0) {
+    // open the Mod Channel Properties dialog
+    OmUiPropChn* pUiPropLoc = static_cast<OmUiPropChn*>(this->siblingById(IDD_PROP_CHN));
+    pUiPropLoc->chnSet(pCtx->chnGet(chn_id));
     pUiPropLoc->open();
   }
 }
@@ -397,13 +397,13 @@ void OmUiPropCtxLoc::_onBcEdiLoc()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onBcAddLoc()
+void OmUiPropCtxChn::_onBcAddChn()
 {
   OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
   if(!pCtx) return;
 
-  // open add Location dialog
-  OmUiAddLoc* pUiNewLoc = static_cast<OmUiAddLoc*>(this->siblingById(IDD_ADD_LOC));
+  // open add Mod Channel dialog
+  OmUiAddChn* pUiNewLoc = static_cast<OmUiAddChn*>(this->siblingById(IDD_ADD_CHN));
   pUiNewLoc->ctxSet(pCtx);
   pUiNewLoc->open(true);
 }
@@ -412,7 +412,7 @@ void OmUiPropCtxLoc::_onBcAddLoc()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onInit()
+void OmUiPropCtxChn::_onInit()
 {
   // Set buttons inner icons
   this->setBmIcon(IDC_BC_ADD, Om_getResIcon(this->_hins, IDI_BT_ADD));
@@ -422,12 +422,12 @@ void OmUiPropCtxLoc::_onInit()
   this->setBmIcon(IDC_BC_DN, Om_getResIcon(this->_hins, IDI_BT_DN));
 
   // define controls tool-tips
-  this->_createTooltip(IDC_LB_LOC,  L"Channels list");
+  this->_createTooltip(IDC_LB_CHN,  L"Mod Channels list");
   this->_createTooltip(IDC_BC_UP,   L"Move up in list");
   this->_createTooltip(IDC_BC_DN,   L"Move down in list");
-  this->_createTooltip(IDC_BC_DEL,  L"Delete Channel and its associated data");
-  this->_createTooltip(IDC_BC_ADD,  L"Configure a new Channel for this Hub");
-  this->_createTooltip(IDC_BC_EDI,  L"Modify Channel properties");
+  this->_createTooltip(IDC_BC_DEL,  L"Delete Mod Channel and its associated data");
+  this->_createTooltip(IDC_BC_ADD,  L"Configure a new Mod Channel for this Mod Hub");
+  this->_createTooltip(IDC_BC_EDI,  L"Modify Mod Channel properties");
 
   // Update values
   this->_onRefresh();
@@ -437,11 +437,11 @@ void OmUiPropCtxLoc::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onResize()
+void OmUiPropCtxChn::_onResize()
 {
-  // Locations list Label & ListBox
+  // Mod Channel list Label & ListBox
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 64, 9);
-  this->_setItemPos(IDC_LB_LOC, 50, 25, this->cliUnitX()-107, 30);
+  this->_setItemPos(IDC_LB_CHN, 50, 25, this->cliUnitX()-107, 30);
   // Up and Down buttons
   this->_setItemPos(IDC_BC_UP, this->cliUnitX()-55, 25, 16, 15);
   this->_setItemPos(IDC_BC_DN, this->cliUnitX()-55, 40, 16, 15);
@@ -465,16 +465,16 @@ void OmUiPropCtxLoc::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxLoc::_onRefresh()
+void OmUiPropCtxChn::_onRefresh()
 {
   OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
   if(!pCtx) return;
 
-  this->msgItem(IDC_LB_LOC, LB_RESETCONTENT);
+  this->msgItem(IDC_LB_CHN, LB_RESETCONTENT);
 
-  for(unsigned i = 0; i < pCtx->locCount(); ++i) {
-    this->msgItem(IDC_LB_LOC, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(pCtx->locGet(i)->title().c_str()));
-    this->msgItem(IDC_LB_LOC, LB_SETITEMDATA, i, i); // for Location index reordering
+  for(unsigned i = 0; i < pCtx->chnCount(); ++i) {
+    this->msgItem(IDC_LB_CHN, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(pCtx->chnGet(i)->title().c_str()));
+    this->msgItem(IDC_LB_CHN, LB_SETITEMDATA, i, i); // for Mod Channel index reordering
   }
 
   // Set controls default states and parameters
@@ -500,41 +500,41 @@ void OmUiPropCtxLoc::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropCtxLoc::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropCtxChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  // UWM_BACKPURGE_DONE is a custom message sent from Location backups purge thread
+  // UWM_BACKPURGE_DONE is a custom message sent from Mod Channel backups purge thread
   // function, to notify the progress dialog ended is job.
   if(uMsg == UWM_BACKPURGE_DONE) {
-    // end the removing Location process
-    this->_delLoc_stop();
+    // end the removing Mod Channel process
+    this->_delChn_stop();
   }
 
   if(uMsg == WM_COMMAND) {
 
     switch(LOWORD(wParam))
     {
-    case IDC_LB_LOC: //< Location(s) list List-Box
+    case IDC_LB_CHN: //< Mod Channel(s) list List-Box
       this->_onLbLoclsSel();
       break;
 
     case IDC_BC_UP: //< Up Buttn
-      this->_onBcUpLoc();
+      this->_onBcUpChn();
       break;
 
     case IDC_BC_DN: //< Down Buttn
-      this->_onBcDnLoc();
+      this->_onBcDnChn();
       break;
 
     case IDC_BC_DEL: //< "Remove" Button
-      this->_onBcDelLoc();
+      this->_onBcDelChn();
       break;
 
     case IDC_BC_EDI: //< "Modify" Button
-      this->_onBcEdiLoc();
+      this->_onBcEdiChn();
       break;
 
     case IDC_BC_ADD: //< "New" Button
-      this->_onBcAddLoc();
+      this->_onBcAddChn();
       break;
     }
   }

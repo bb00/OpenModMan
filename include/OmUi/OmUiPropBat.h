@@ -53,8 +53,7 @@ class OmUiPropBat : public OmDialogProp
 
     /// \brief Get associated Batch.
     ///
-    /// Returns associated Batch object previously defined
-    /// via OmUiPropLoc.setContext
+    /// Returns associated Batch object
     ///
     /// \return Associated Batch or nullptr if none.
     ///

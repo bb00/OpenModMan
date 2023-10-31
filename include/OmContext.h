@@ -22,7 +22,7 @@
 #include "OmBaseWin.h"
 
 #include "OmConfig.h"
-#include "OmLocation.h"
+#include "OmModChan.h"
 #include "OmBatch.h"
 
 class OmManager;
@@ -33,7 +33,7 @@ class OmManager;
 ///
 class OmContext
 {
-  friend class OmLocation;
+  friend class OmModChan;
   friend class Package;
 
   public:
@@ -154,117 +154,117 @@ class OmContext
     ///
     void setIcon(const wstring& src);
 
-    /// \brief Get Context Location count.
+    /// \brief Get Mod Channel count.
     ///
-    /// Returns count of Location defined in the Context.
+    /// Returns count of Mod Channel defined in the Context.
     ///
-    /// \return Location count.
+    /// \return Mod Channel count.
     ///
-    size_t locCount() {
-      return _locLs.size();
+    size_t chnCount() {
+      return _chnLs.size();
     }
 
-    /// \brief Get Location.
+    /// \brief Get Mod Channel.
     ///
-    /// Returns Location at index.
+    /// Returns Mod Channel at index.
     ///
-    /// \param[in]  i      : Location index.
+    /// \param[in]  i      : Mod Channel index.
     ///
-    /// \return Location object at index or nullptr if index is out of bound.
+    /// \return Mod Channel object at index or nullptr if index is out of bound.
     ///
-    OmLocation* locGet(unsigned i) {
-      return (i < _locLs.size()) ? _locLs[i] : nullptr;
+    OmModChan* chnGet(unsigned i) {
+      return (i < _chnLs.size()) ? _chnLs[i] : nullptr;
     }
 
-    /// \brief Get Location.
+    /// \brief Get Mod Channel.
     ///
-    /// Returns Location with specified UUID.
+    /// Returns Mod Channel with specified UUID.
     ///
-    /// \param[in]  uuid     : Location UUID to search.
+    /// \param[in]  uuid     : Mod Channel UUID to search.
     ///
-    /// \return Location object or nullptr if not found.
+    /// \return Mod Channel object or nullptr if not found.
     ///
-    OmLocation* locGet(const wstring& uuid);
+    OmModChan* chnGet(const wstring& uuid);
 
-    /// \brief Get Location index.
+    /// \brief Get Mod Channel index.
     ///
-    /// Returns the index of the Location that matches the specified UUID.
+    /// Returns the index of the Mod Channel that matches the specified UUID.
     ///
-    /// \param[in]  uuid     : Location UUID to search.
+    /// \param[in]  uuid     : Mod Channel UUID to search.
     ///
-    /// \return Location index or -1 if not found.
+    /// \return Mod Channel index or -1 if not found.
     ///
-    int locIndex(const wstring& uuid);
+    int chnIndex(const wstring& uuid);
 
-    /// \brief Sort Location list.
+    /// \brief Sort Mod Channel list.
     ///
-    /// Sort Location list according Location ordering index.
+    /// Sort Mod Channel list according Mod Channel ordering index.
     ///
-    void locSort();
+    void chnSort();
 
-    /// \brief Select Location.
+    /// \brief Select Mod Channel.
     ///
-    /// Sets the specified Location as active one.
+    /// Sets the specified Mod Channel as active one.
     ///
-    /// \param[in]  i       : Location index or -1 to unselect.
+    /// \param[in]  i       : Mod Channel index or -1 to unselect.
     ///
     /// \return True if operation succeed, false if id is out of bound.
     ///
-    bool locSel(int i);
+    bool chnSel(int i);
 
-    /// \brief Select Location.
+    /// \brief Select Mod Channel.
     ///
-    /// Sets the specified Location as active one.
+    /// Sets the specified Mod Channel as active one.
     ///
-    /// \param[in]  uuid    : Location UUID to select.
+    /// \param[in]  uuid    : Mod Channel UUID to select.
     ///
-    /// \return True if operation succeed, false if Location with such UUID does not exists.
+    /// \return True if operation succeed, false if Mod Channel with such UUID does not exists.
     ///
-    bool locSel(const wstring& uuid);
+    bool chnSel(const wstring& uuid);
 
-    /// \brief Get active Location.
+    /// \brief Get active Mod Channel.
     ///
-    /// Returns current active Location.
+    /// Returns current active Mod Channel.
     ///
-    /// \return Current active Location or nullptr if none is active.
+    /// \return Current active Mod Channel or nullptr if none is active.
     ///
-    OmLocation* locCur() {
-      return _locCur >= 0 ? _locLs[_locCur] : nullptr;
+    OmModChan* chnCur() {
+      return _chnCur >= 0 ? _chnLs[_chnCur] : nullptr;
     }
 
-    /// \brief Get active Location index.
+    /// \brief Get active Mod Channel index.
     ///
-    /// Returns index of the current active Location.
+    /// Returns index of the current active Mod Channel.
     ///
-    /// \return Index of the active Location.
+    /// \return Index of the active Mod Channel.
     ///
-    int locCurId() const {
-      return _locCur;
+    int chnCurIndex() const {
+      return _chnCur;
     }
 
-    /// \brief Make new Location.
+    /// \brief Make new Mod Channel.
     ///
-    /// Creates a new Location within the Context.
+    /// Creates a new Mod Channel within the Context.
     ///
-    /// \param[in]  title     : Title of new Location to be created.
+    /// \param[in]  title     : Title of new Mod Channel to be created.
     /// \param[in]  install   : Package installation destination folder path.
     /// \param[in]  library   : Custom package Library folder path.
     /// \param[in]  backup    : Custom package Backup folder path.
     ///
     /// \return True if operation succeed, false otherwise.
     ///
-    bool locAdd(const wstring& title, const wstring& install, const wstring& library, const wstring& backup);
+    bool chnAdd(const wstring& title, const wstring& install, const wstring& library, const wstring& backup);
 
-    /// \brief Purge existing Location.
+    /// \brief Purge existing Mod Channel.
     ///
-    /// Cleanup and removes a Location. Notice that this operation actually delete
-    /// the Location folder and configuration files.
+    /// Cleanup and removes a Mod Channel. Notice that this operation actually delete
+    /// the Mod Channel folder and configuration files.
     ///
-    /// \param[in]  i           : Location index to be removed.
+    /// \param[in]  i           : Mod Channel index to be removed.
     ///
     /// \return True if operation succeed, false otherwise.
     ///
-    bool locRem(unsigned i);
+    bool chnRem(unsigned i);
 
     /// \brief Get Context Batch count.
     ///
@@ -290,7 +290,7 @@ class OmContext
 
     /// \brief Sort Batches list.
     ///
-    /// Sort Batches list according Location ordering index.
+    /// Sort Batches list according Mod Channel ordering index.
     ///
     void batSort();
 
@@ -354,9 +354,9 @@ class OmContext
 
     HICON               _icon;
 
-    vector<OmLocation*> _locLs;
+    vector<OmModChan*>  _chnLs;
 
-    int                 _locCur;
+    int                 _chnCur;
 
     vector<OmBatch*>    _batLs;
 

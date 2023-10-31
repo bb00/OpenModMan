@@ -14,21 +14,20 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPLOCNET_H
-#define OMUIPROPLOCNET_H
+#ifndef OMUIPROPCTXCHN_H
+#define OMUIPROPCTXCHN_H
 
-#include <OmDialog.h>
+#include "OmDialog.h"
 
-#define LOC_PROP_NET_ONUPGRADE   0
-#define LOC_PROP_NET_WARNINGS    1
+#define CTX_PROP_CHN_ORDER   0
 
-/// \brief Location Properties / Network tab child
+/// \brief Context Properties / Mod Channel tab child
 ///
-/// OmDialog class derived for Location Properties / Network tab child dialog window
+/// OmDialog class derived for Context Properties / Mod Channel tab child dialog window
 ///
-class OmUiPropLocNet : public OmDialog
+class OmUiPropCtxChn : public OmDialog
 {
-  public: ///         - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  public:
 
     /// \brief Constructor.
     ///
@@ -36,13 +35,14 @@ class OmUiPropLocNet : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropLocNet(HINSTANCE hins);
+    OmUiPropCtxChn(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropLocNet();
+    ~OmUiPropCtxChn();
+
     /// \brief Get resource id.
     ///
     /// Returns dialog window resource id.
@@ -78,17 +78,29 @@ class OmUiPropLocNet : public OmDialog
 
     bool                _chParam[8];
 
-    void                _onLbReplsSel();
+    void                _delChn_init(int id);
 
-    void                _onBcAddRepo();
+    void                _delChn_stop();
 
-    void                _onBcChkRepo();
+    void*               _delChn_hth;
 
-    void                _onBcDelRepo();
+    static DWORD WINAPI _delChn_fth(void*);
 
-    void                _onBcRadUpg();
+    static bool         _delChn_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data);
 
-    void                _onCkBoxWrn();
+    int                 _delChn_id;
+
+    void                _onLbLoclsSel();
+
+    void                _onBcUpChn();
+
+    void                _onBcDnChn();
+
+    void                _onBcDelChn();
+
+    void                _onBcEdiChn();
+
+    void                _onBcAddChn();
 
     void                _onInit();
 
@@ -99,4 +111,4 @@ class OmUiPropLocNet : public OmDialog
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPLOCNET_H
+#endif // OMUIPROPCTXCHN_H

@@ -53,8 +53,7 @@ class OmUiPropCtx : public OmDialogProp
 
     /// \brief Get associated Context.
     ///
-    /// Returns associated Context object previously defined
-    /// via OmUiPropLoc.setContext
+    /// Returns associated Context object
     ///
     /// \return Associated Context or nullptr if none.
     ///

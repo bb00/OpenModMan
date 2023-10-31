@@ -134,14 +134,14 @@ class OmManager
       return _ctxCur;
     }
 
-    /// \brief Get active Location from active Context.
+    /// \brief Get active Mod Channel from active Context.
     ///
-    /// Returns current active Location from active Context.
+    /// Returns current active Mod Channel from active Context.
     ///
-    /// \return Current active Location or null.
+    /// \return Current active Mod Channel or null.
     ///
-    OmLocation* locCur() const {
-      return _ctxCur >= 0 ? _ctxLs[_ctxCur]->locCur() : nullptr;
+    OmModChan* chnCur() const {
+      return _ctxCur >= 0 ? _ctxLs[_ctxCur]->chnCur() : nullptr;
     }
 
     /// \brief Save configuration window RECT.

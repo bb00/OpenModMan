@@ -23,7 +23,7 @@
 
 #include "OmUiWizCtxBeg.h"
 #include "OmUiWizCtxCfg.h"
-#include "OmUiWizCtxLoc.h"
+#include "OmUiWizCtxChn.h"
 #include "OmUiMgr.h"
 
 #include "OmUtilDlg.h"
@@ -40,7 +40,7 @@ OmUiWizCtx::OmUiWizCtx(HINSTANCE hins) : OmDialogWiz(hins)
   // create wizard pages
   this->_addPage(new OmUiWizCtxBeg(hins));
   this->_addPage(new OmUiWizCtxCfg(hins));
-  this->_addPage(new OmUiWizCtxLoc(hins));
+  this->_addPage(new OmUiWizCtxChn(hins));
 }
 
 
@@ -72,8 +72,8 @@ bool OmUiWizCtx::_onWizNext()
   case 1: // Context parameters Wizard page
     return static_cast<OmUiWizCtxCfg*>(this->childById(IDD_WIZ_CTX_CFG))->hasValidParams();
     break;
-  case 2: // Location parameters Wizard page
-    return static_cast<OmUiWizCtxLoc*>(this->childById(IDD_WIZ_CTX_LOC))->hasValidParams();
+  case 2: // Mod Channel parameters Wizard page
+    return static_cast<OmUiWizCtxChn*>(this->childById(IDD_WIZ_CTX_CHN))->hasValidParams();
     break;
   default:
     return true;
@@ -91,24 +91,24 @@ void OmUiWizCtx::_onWizFinish()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
   OmUiWizCtxCfg* pUiWizCtxCfg = static_cast<OmUiWizCtxCfg*>(this->childById(IDD_WIZ_CTX_CFG));
-  OmUiWizCtxLoc* pUiWizLocCfg = static_cast<OmUiWizCtxLoc*>(this->childById(IDD_WIZ_CTX_LOC));
+  OmUiWizCtxChn* pUiWizLocCfg = static_cast<OmUiWizCtxChn*>(this->childById(IDD_WIZ_CTX_CHN));
 
   // Retrieve Context parameters
   wstring ctx_name, ctx_home;
   pUiWizCtxCfg->getItemText(IDC_EC_INP01, ctx_name);
   pUiWizCtxCfg->getItemText(IDC_EC_INP02, ctx_home);
 
-  // Retrieve Location parameters
-  wstring loc_name, loc_dst, loc_lib, loc_bck;
-  pUiWizLocCfg->getItemText(IDC_EC_INP01, loc_name);
-  pUiWizLocCfg->getItemText(IDC_EC_INP02, loc_dst);
+  // Retrieve Mod Channel parameters
+  wstring chn_name, chn_dst, chn_lib, chn_bck;
+  pUiWizLocCfg->getItemText(IDC_EC_INP01, chn_name);
+  pUiWizLocCfg->getItemText(IDC_EC_INP02, chn_dst);
 
   if(pUiWizLocCfg->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
-    pUiWizLocCfg->getItemText(IDC_EC_INP03, loc_lib);
+    pUiWizLocCfg->getItemText(IDC_EC_INP03, chn_lib);
   }
 
   if(pUiWizLocCfg->msgItem(IDC_BC_CKBX2, BM_GETCHECK)) {
-    pUiWizLocCfg->getItemText(IDC_EC_INP04, loc_bck);
+    pUiWizLocCfg->getItemText(IDC_EC_INP04, chn_bck);
   }
 
   this->quit();
@@ -117,16 +117,16 @@ void OmUiWizCtx::_onWizFinish()
   if(pMgr->ctxNew(ctx_name, ctx_home, true)) {
     // get current selected Context (the just created one)
     OmContext* pCtx = pMgr->ctxCur();
-    // create new Location in Context
-    if(!pCtx->locAdd(loc_name, loc_dst, loc_lib, loc_bck)) {
-      Om_dlgBox_okl(this->_hwnd, L"Modding Hub Wizard", IDI_ERR,
-                    L"Channel creation error", L"Channel "
+    // create new Mod Channel in Context
+    if(!pCtx->chnAdd(chn_name, chn_dst, chn_lib, chn_bck)) {
+      Om_dlgBox_okl(this->_hwnd, L"Mod Hub Wizard", IDI_ERR,
+                    L"Mod Channel creation error", L"Mod Channel "
                     "creation failed because of the following error:",
                     pCtx->lastError());
     }
   } else {
-    Om_dlgBox_okl(this->_hwnd, L"Modding Hub Wizard", IDI_ERR,
-                  L"Hub creation error", L"Hub "
+    Om_dlgBox_okl(this->_hwnd, L"Mod Hub Wizard", IDI_ERR,
+                  L"Mod Hub creation error", L"Mod Hub "
                   "creation failed because of the following error:",
                   pMgr->lastError());
   }

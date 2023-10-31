@@ -160,24 +160,24 @@ bool OmUiPropBat::applyChanges()
 
   if(pUiPropBatLst->hasChParam(BAT_PROP_STG_INSLS)) {  //< parameter for Batch install list
 
-    // build the per-Location hash lists
-    OmLocation* pLoc;
+    // build the per-Mod Channel hash lists
+    OmModChan* pChn;
     OmPackage* pPkg;
 
-    for(size_t k = 0; k < pCtx->locCount(); ++k) {
+    for(size_t k = 0; k < pCtx->chnCount(); ++k) {
 
-      pLoc = pCtx->locGet(k);
+      pChn = pCtx->chnGet(k);
 
       // clear previous install list
-      this->_pBat->instClear(pLoc);
+      this->_pBat->instClear(pChn);
 
       for(size_t i = 0; i < pUiPropBatLst->incCount(k); ++i) {
 
         // get package from stored index
-        pPkg = pLoc->pkgGet(pUiPropBatLst->incGet(k, i));
+        pPkg = pChn->pkgGet(pUiPropBatLst->incGet(k, i));
 
         // add Package to install list
-        this->_pBat->instAdd(pLoc, pPkg);
+        this->_pBat->instAdd(pChn, pPkg);
       }
     }
 

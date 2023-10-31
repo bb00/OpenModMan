@@ -27,7 +27,7 @@
 #include "OmContext.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmLocation.h"
+#include "OmModChan.h"
 
 
 /// \brief Package name comparison callback
@@ -873,7 +873,7 @@ static size_t __rmt_get_old_required(vector<OmPackage*>& out_ls, const vector<Om
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmLocation::OmLocation(OmContext* pCtx) :
+OmModChan::OmModChan(OmContext* pCtx) :
   _context(pCtx), _config(), _uuid(), _title(), _index(0), _home(), _path(),
   _dstDir(), _libDir(), _libDirCust(false), _libDevMode(true), _libShowHidden(false), _bckDir(),
   _bckDirCust(false), _pkgLs(), _bckZipLevel(0), _pkgSorting(LS_SORT_NAME),
@@ -888,7 +888,7 @@ OmLocation::OmLocation(OmContext* pCtx) :
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmLocation::~OmLocation()
+OmModChan::~OmModChan()
 {
   this->close();
 }
@@ -897,7 +897,7 @@ OmLocation::~OmLocation()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::libSetSorting(OmLocLsSort sorting)
+void OmModChan::libSetSorting(OmModChanSort sorting)
 {
   // we check if the requested sorting kind is the same as the currently
   // used, in this case, this mean the sorting order must be reversed
@@ -936,7 +936,7 @@ void OmLocation::libSetSorting(OmLocLsSort sorting)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setLibDevMode(bool enable)
+void OmModChan::setLibDevMode(bool enable)
 {
   this->_libDevMode = enable;
 
@@ -960,7 +960,7 @@ void OmLocation::setLibDevMode(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setLibShowHidden(bool enable)
+void OmModChan::setLibShowHidden(bool enable)
 {
   this->_libShowHidden = enable;
 
@@ -984,7 +984,7 @@ void OmLocation::setLibShowHidden(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setWarnOverlaps(bool enable)
+void OmModChan::setWarnOverlaps(bool enable)
 {
   this->_warnOverlaps = enable;
 
@@ -1012,7 +1012,7 @@ void OmLocation::setWarnOverlaps(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setWarnExtraInst(bool enable)
+void OmModChan::setWarnExtraInst(bool enable)
 {
   this->_warnExtraInst = enable;
 
@@ -1040,7 +1040,7 @@ void OmLocation::setWarnExtraInst(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setWarnMissDeps(bool enable)
+void OmModChan::setWarnMissDeps(bool enable)
 {
   this->_warnMissDeps = enable;
 
@@ -1068,7 +1068,7 @@ void OmLocation::setWarnMissDeps(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setWarnExtraUnin(bool enable)
+void OmModChan::setWarnExtraUnin(bool enable)
 {
   this->_warnExtraUnin = enable;
 
@@ -1095,52 +1095,52 @@ void OmLocation::setWarnExtraUnin(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::open(const wstring& path)
+bool OmModChan::open(const wstring& path)
 {
   this->close();
 
   // try to open and parse the XML file
-  if(!this->_config.open(path, OMM_XMAGIC_LOC)) {
+  if(!this->_config.open(path, OMM_XMAGIC_CHN)) {
     this->_error = Om_errParse(L"Definition file", Om_getFilePart(path), this->_config.lastErrorStr());
-    this->log(0, L"Location(<anonymous>) Open", this->_error);
+    this->log(0, L"ModChan(<anonymous>) Open", this->_error);
     return false;
   }
 
   // check for the presence of <uuid> entry
   if(!this->_config.xml().hasChild(L"uuid")) {
     this->_error =  L"\""+Om_getFilePart(path)+L"\" invalid definition: <uuid> node missing.";
-    log(0, L"Location(<anonymous>) Open", this->_error);
+    log(0, L"ModChan(<anonymous>) Open", this->_error);
     return false;
   }
 
   // check for the presence of <title> entry
   if(!this->_config.xml().hasChild(L"title")) {
     this->_error =  L"\""+Om_getFilePart(path)+L"\" invalid definition: <title> node missing.";
-    log(0, L"Location(<anonymous>) Open", this->_error);
+    log(0, L"ModChan(<anonymous>) Open", this->_error);
     return false;
   }
 
-  // at this point the Location may be valid
+  // at this point the Mod Channel may be valid
   this->_path = path;
   this->_home = Om_getDirPart(this->_path);
   this->_uuid = this->_config.xml().child(L"uuid").content();
   this->_title = this->_config.xml().child(L"title").content();
   this->_index = this->_config.xml().child(L"title").attrAsInt(L"index");
 
-  this->log(2, L"Location("+this->_title+L") Open", L"Definition parsed.");
+  this->log(2, L"ModChan("+this->_title+L") Open", L"Definition parsed.");
 
   // check for the presence of <install> entry
   if(this->_config.xml().hasChild(L"install")) {
     // we check whether target path is valid
     this->_dstDir = this->_config.xml().child(L"install").content();
     if(!Om_isDir(this->_dstDir)) {
-      this->log(1, L"Location("+this->_title+L") Open", Om_errIsDir(L"Target oath", this->_dstDir));
+      this->log(1, L"ModChan("+this->_title+L") Open", Om_errIsDir(L"Target oath", this->_dstDir));
     } else {
-      this->log(2, L"Location("+this->_title+L") Open", L"Using target path: \""+this->_dstDir+L"\".");
+      this->log(2, L"ModChan("+this->_title+L") Open", L"Using target path: \""+this->_dstDir+L"\".");
     }
   } else {
     this->_error = L"Invalid definition: <install> node missing.";
-    this->log(0, L"Location("+this->_title+L") Open", this->_error);
+    this->log(0, L"ModChan("+this->_title+L") Open", this->_error);
     this->close();
     return false;
   }
@@ -1152,9 +1152,9 @@ bool OmLocation::open(const wstring& path)
     // notify we use a custom Library path
     this->_libDirCust = true;
     if(!Om_isDir(this->_libDir)) {
-      this->log(1, L"Location("+this->_title+L") Open", Om_errIsDir(L"Custom Library folder", this->_libDir));
+      this->log(1, L"ModChan("+this->_title+L") Open", Om_errIsDir(L"Custom Library folder", this->_libDir));
     } else {
-      this->log(2, L"Location("+this->_title+L") Open", L"Using custom library folder: \""+this->_libDir+L"\".");
+      this->log(2, L"ModChan("+this->_title+L") Open", L"Using custom library folder: \""+this->_libDir+L"\".");
     }
   } else {
     // no <library> node in config, use default settings
@@ -1163,12 +1163,12 @@ bool OmLocation::open(const wstring& path)
       int result = Om_dirCreate(this->_libDir);
       if(result != 0) {
         this->_error = Om_errCreate(L"Library folder", this->_libDir, result);
-        this->log(0, L"Location("+this->_title+L") Open", this->_error);
+        this->log(0, L"ModChan("+this->_title+L") Open", this->_error);
         this->close();
         return false;
       }
     }
-    this->log(2, L"Location("+this->_title+L") Open", L"Using default library folder: \""+this->_libDir+L"\".");
+    this->log(2, L"ModChan("+this->_title+L") Open", L"Using default library folder: \""+this->_libDir+L"\".");
   }
 
   // check for the presence of <backup> entry for custom Backup path
@@ -1178,9 +1178,9 @@ bool OmLocation::open(const wstring& path)
     // notify we use a custom Backup path
     this->_bckDirCust = true;
     if(!Om_isDir(this->_bckDir)) {
-      this->log(1, L"Location("+this->_title+L") Open", Om_errIsDir(L"Custom Backup folder", this->_bckDir));
+      this->log(1, L"ModChan("+this->_title+L") Open", Om_errIsDir(L"Custom Backup folder", this->_bckDir));
     } else {
-      this->log(2, L"Location("+this->_title+L") Open", L"Using custom backup folder: \""+this->_bckDir+L"\".");
+      this->log(2, L"ModChan("+this->_title+L") Open", L"Using custom backup folder: \""+this->_bckDir+L"\".");
     }
   } else {
     // no <backup> node in config, use default settings
@@ -1189,12 +1189,12 @@ bool OmLocation::open(const wstring& path)
       int result = Om_dirCreate(this->_bckDir);
       if(result != 0) {
         this->_error = Om_errCreate(L"Backup folder", this->_bckDir, result);
-        this->log(0, L"Location("+this->_title+L") Open", this->_error);
+        this->log(0, L"ModChan("+this->_title+L") Open", this->_error);
         this->close();
         return false;
       }
     }
-    this->log(2, L"Location("+this->_title+L") Open", L"Using default backup folder: \""+this->_bckDir+L"\".");
+    this->log(2, L"ModChan("+this->_title+L") Open", L"Using default backup folder: \""+this->_bckDir+L"\".");
   }
 
   // we check for backup compression level
@@ -1292,7 +1292,7 @@ bool OmLocation::open(const wstring& path)
       pRep = new OmRepository(this);
       if(pRep->init(xml_rep_list[i].attrAsString(L"base"), xml_rep_list[i].attrAsString(L"name"))) {
         this->_repLs.push_back(pRep);
-        this->log(2, L"Location("+this->_title+L") Load", L"Configured Repository: \""+pRep->url()+L"\".");
+        this->log(2, L"ModChan("+this->_title+L") Load", L"Configured Repository: \""+pRep->url()+L"\".");
         // check for saved title (description)
         if(xml_rep_list[i].hasAttr(L"title"))
           pRep->setTitle(xml_rep_list[i].attrAsString(L"title"));
@@ -1341,7 +1341,7 @@ bool OmLocation::open(const wstring& path)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::close()
+void OmModChan::close()
 {
   wstring title = this->_title;
 
@@ -1369,7 +1369,7 @@ void OmLocation::close()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::dstDirAccess(bool rw)
+bool OmModChan::dstDirAccess(bool rw)
 {
   bool access_ok = true;
 
@@ -1408,13 +1408,13 @@ bool OmLocation::dstDirAccess(bool rw)
       // To avoid wrong permissions issues, we bypass check but emit a warning
       // in log
 
-      this->log(1, L"Location("+this->_title+L") Target path access",
+      this->log(1, L"ModChan("+this->_title+L") Target path access",
                 L"Access denied ignored because \""+this->_dstDir+L"\" is a "
                 "network folder and permissions may not be properly evaluated; "
                 "Please be aware of this in case of file write or read error.");
       return true;
     } else {
-      this->log(0, L"Location("+this->_title+L") Target path access", this->_error);
+      this->log(0, L"ModChan("+this->_title+L") Target path access", this->_error);
       return false;
     }
   }
@@ -1426,7 +1426,7 @@ bool OmLocation::dstDirAccess(bool rw)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::libDirAccess(bool rw)
+bool OmModChan::libDirAccess(bool rw)
 {
   bool access_ok = true;
 
@@ -1473,13 +1473,13 @@ bool OmLocation::libDirAccess(bool rw)
       // To avoid wrong permissions issues, we bypass check but emit a warning
       // in log
 
-      this->log(1, L"Location("+this->_title+L") Library access",
+      this->log(1, L"ModChan("+this->_title+L") Library access",
                 L"Access denied ignored because \""+this->_libDir+L"\" is a "
                 "network folder and permissions may not be properly evaluated; "
                 "Please be aware of this in case of file write or read error.");
       return true;
     } else {
-      this->log(0, L"Location("+this->_title+L") Library access", this->_error);
+      this->log(0, L"ModChan("+this->_title+L") Library access", this->_error);
       return false;
     }
   }
@@ -1491,7 +1491,7 @@ bool OmLocation::libDirAccess(bool rw)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::bckDirAccess(bool rw)
+bool OmModChan::bckDirAccess(bool rw)
 {
   bool access_ok = true;
 
@@ -1538,13 +1538,13 @@ bool OmLocation::bckDirAccess(bool rw)
       // To avoid wrong permissions issues, we bypass check but emit a warning
       // in log
 
-      this->log(1, L"Location("+this->_title+L") Backup access",
+      this->log(1, L"ModChan("+this->_title+L") Backup access",
                 L"Access denied ignored because \""+this->_bckDir+L"\" is a "
                 "network folder and permissions may not be properly evaluated; "
                 "Please be aware of this in case of file write or read error.");
       return true;
     } else {
-      this->log(0, L"Location("+this->_title+L") Backup access", this->_error);
+      this->log(0, L"ModChan("+this->_title+L") Backup access", this->_error);
       return false;
     }
   }
@@ -1556,7 +1556,7 @@ bool OmLocation::bckDirAccess(bool rw)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::libClear()
+bool OmModChan::libClear()
 {
   if(!this->_pkgLs.empty()) {
 
@@ -1575,11 +1575,11 @@ bool OmLocation::libClear()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::libRefresh()
+bool OmModChan::libRefresh()
 {
   if(!this->libDirAccess(false)) { // check for read access
     #ifdef DEBUG
-    std::cout << "DEBUG => OmLocation::libRefresh X\n";
+    std::cout << "DEBUG => OmModChan::libRefresh X\n";
     #endif
     return this->libClear();
   }
@@ -1784,7 +1784,7 @@ bool OmLocation::libRefresh()
     this->_pkgSort();
 
   #ifdef DEBUG
-  std::cout << "DEBUG => OmLocation::libRefresh " << (changed ? "+-" : "==") << "\n";
+  std::cout << "DEBUG => OmModChan::libRefresh " << (changed ? "+-" : "==") << "\n";
   #endif
 
   return changed;
@@ -1794,7 +1794,7 @@ bool OmLocation::libRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::libClean()
+bool OmModChan::libClean()
 {
   OmPackage* pPkg;
   bool changed = false;
@@ -1813,7 +1813,7 @@ bool OmLocation::libClean()
   }
 
   #ifdef DEBUG
-  std::cout << "DEBUG => OmLocation::libClean " << (changed ? "+-" : "==") << "\n";
+  std::cout << "DEBUG => OmModChan::libClean " << (changed ? "+-" : "==") << "\n";
   #endif
 
   return changed;
@@ -1822,7 +1822,7 @@ bool OmLocation::libClean()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setTitle(const wstring& title)
+void OmModChan::setTitle(const wstring& title)
 {
   if(this->_config.valid()) {
 
@@ -1842,7 +1842,7 @@ void OmLocation::setTitle(const wstring& title)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setIndex(unsigned index)
+void OmModChan::setIndex(unsigned index)
 {
   if(this->_config.valid()) {
 
@@ -1860,7 +1860,7 @@ void OmLocation::setIndex(unsigned index)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setDstDir(const wstring& path)
+void OmModChan::setDstDir(const wstring& path)
 {
   if(this->_config.valid()) {
 
@@ -1880,7 +1880,7 @@ void OmLocation::setDstDir(const wstring& path)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setCustLibDir(const wstring& path)
+void OmModChan::setCustLibDir(const wstring& path)
 {
   if(this->_config.valid()) {
 
@@ -1905,7 +1905,7 @@ void OmLocation::setCustLibDir(const wstring& path)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::remCustLibDir()
+void OmModChan::remCustLibDir()
 {
   if(this->_config.valid()) {
 
@@ -1928,7 +1928,7 @@ void OmLocation::remCustLibDir()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setCustBckDir(const wstring& path)
+void OmModChan::setCustBckDir(const wstring& path)
 {
   if(this->_config.valid()) {
 
@@ -1953,7 +1953,7 @@ void OmLocation::setCustBckDir(const wstring& path)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::remCustBckDir()
+void OmModChan::remCustBckDir()
 {
   if(this->_config.valid()) {
 
@@ -1976,7 +1976,7 @@ void OmLocation::remCustBckDir()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setBckZipLevel(int level)
+void OmModChan::setBckZipLevel(int level)
 {
   if(this->_config.valid()) {
 
@@ -1996,7 +1996,7 @@ void OmLocation::setBckZipLevel(int level)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setUpgdRename(bool enable)
+void OmModChan::setUpgdRename(bool enable)
 {
   if(this->_config.valid()) {
 
@@ -2020,59 +2020,59 @@ void OmLocation::setUpgdRename(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::renameHome(const wstring& name)
+bool OmModChan::renameHome(const wstring& name)
 {
   wstring title = this->_title;
   wstring old_path = this->_path;
   wstring old_home = this->_home;
 
-  // Close Location to safe rename and reload it after
+  // Close Mod Channel to safe rename and reload it after
   this->close();
 
   bool has_error = false;
 
-  // compose new Location definition file name
+  // compose new Mod Channel definition file name
   wstring new_file = name;
   new_file += L".";
   new_file += OMM_LOC_DEF_FILE_EXT;
 
-  // Rename Location definition file
+  // Rename Mod Channel definition file
   int result = Om_fileMove(old_path, old_home + L"\\" + new_file);
   if(result != 0) {
     this->_error = Om_errRename(L"Definition file", old_path, result);
-    this->log(0, L"Location("+title+L") Rename", this->_error);
-    // get back the old file name to restore Location properly
+    this->log(0, L"ModChan("+title+L") Rename", this->_error);
+    // get back the old file name to restore Mod Channel properly
     new_file = Om_getFilePart(old_path);
     has_error = true;
   } else {
-    this->log(2, L"Location("+title+L") Rename", L"Definition file renamed to \""+new_file+L"\"");
+    this->log(2, L"ModChan("+title+L") Rename", L"Definition file renamed to \""+new_file+L"\"");
   }
 
-  // compose new Location home folder
+  // compose new Mod Channel home folder
   wstring new_home = old_home.substr(0, old_home.find_last_of(L"\\") + 1);
   new_home += name;
 
   #ifdef DEBUG
-  std::wcout << "DEBUG => OmLocation::renameHome : " << new_home << L"\n";
+  std::wcout << "DEBUG => OmModChan::renameHome : " << new_home << L"\n";
   #endif
 
-  // Rename Location home folder
+  // Rename Mod Channel home folder
   result = Om_fileMove(old_home, new_home);
   if(result != 0) {
     this->_error = Om_errRename(L"Home folder", old_home, result);
-    this->log(0, L"Location("+title+L") Rename", this->_error);
-    // get back the old home folder to restore Location properly
+    this->log(0, L"ModChan("+title+L") Rename", this->_error);
+    // get back the old home folder to restore Mod Channel properly
     new_home = old_home;
     has_error = true;
   } else {
-    this->log(2, L"Location("+title+L") Rename", L"Home folder renamed to \""+new_home+L"\"");
+    this->log(2, L"ModChan("+title+L") Rename", L"Home folder renamed to \""+new_home+L"\"");
   }
 
   // Reload location
   this->open(new_home + L"\\" + new_file);
 
   if(!has_error) {
-    this->log(2, L"Location("+title+L") Rename", L"Success");
+    this->log(2, L"ModChan("+title+L") Rename", L"Success");
   }
 
   return !has_error;
@@ -2082,7 +2082,7 @@ bool OmLocation::renameHome(const wstring& name)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::bckHasData()
+bool OmModChan::bckHasData()
 {
   for(size_t i = 0; i < _pkgLs.size(); ++i) {
     if(_pkgLs[i]->hasBck()) return true;
@@ -2094,18 +2094,18 @@ bool OmLocation::bckHasData()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::bckPurge(Om_progressCb progress_cb, void* user_ptr)
+bool OmModChan::bckPurge(Om_progressCb progress_cb, void* user_ptr)
 {
   // checks for access to backup folder
   if(!this->bckDirAccess(true)) { //< check for read and write
     this->_error =  L"Backup folder \""+this->_bckDir+L"\" access error.";
-    this->log(0, L"Location("+this->_title+L") Purge backups", this->_error);
+    this->log(0, L"ModChan("+this->_title+L") Purge backups", this->_error);
     return false;
   }
   // checks for access to Target path
   if(!this->dstDirAccess(true)) { //< check for read and write
     this->_error =  L"Target path \""+this->_dstDir+L"\" access error.";
-    this->log(0, L"Location("+this->_title+L") Purge backups", this->_error);
+    this->log(0, L"ModChan("+this->_title+L") Purge backups", this->_error);
     return false;
   }
 
@@ -2139,7 +2139,7 @@ bool OmLocation::bckPurge(Om_progressCb progress_cb, void* user_ptr)
 
   bool has_error = false;
 
-  this->log(2, L"Location("+this->_title+L") Purge backups", L"Uninstalling "+to_wstring(unin_ls.size())+L" packages.");
+  this->log(2, L"ModChan("+this->_title+L") Purge backups", L"Uninstalling "+to_wstring(unin_ls.size())+L" packages.");
 
   unsigned n = 0;
 
@@ -2159,7 +2159,7 @@ bool OmLocation::bckPurge(Om_progressCb progress_cb, void* user_ptr)
     } else {
       this->_error = L"Package \""+unin_ls[i]->ident()+L"\" uninstall failed: ";
       this->_error += unin_ls[i]->lastError();
-      this->log(0, L"Location("+this->_title+L") Purge backups", this->_error);
+      this->log(0, L"ModChan("+this->_title+L") Purge backups", this->_error);
       has_error = true;
     }
 
@@ -2171,7 +2171,7 @@ bool OmLocation::bckPurge(Om_progressCb progress_cb, void* user_ptr)
   // refresh library
   this->libRefresh();
 
-  this->log(2, L"Location("+this->_title+L") Purge backups", to_wstring(n)+L" backups successfully restored.");
+  this->log(2, L"ModChan("+this->_title+L") Purge backups", to_wstring(n)+L" backups successfully restored.");
 
   return !has_error;
 }
@@ -2179,7 +2179,7 @@ bool OmLocation::bckPurge(Om_progressCb progress_cb, void* user_ptr)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::bckMove(const wstring& path, Om_progressCb progress_cb, void* user_ptr)
+bool OmModChan::bckMove(const wstring& path, Om_progressCb progress_cb, void* user_ptr)
 {
   if(path == this->_bckDir)
     return true;
@@ -2187,7 +2187,7 @@ bool OmLocation::bckMove(const wstring& path, Om_progressCb progress_cb, void* u
   // verify backup folder access
   if(!this->bckDirAccess(true)) { //< check for read and write
     this->_error =  L"Backup folder \""+this->_bckDir+L"\" access error.";
-    this->log(0, L"Location("+this->_title+L") Move backups", this->_error);
+    this->log(0, L"ModChan("+this->_title+L") Move backups", this->_error);
     return false;
   }
 
@@ -2206,7 +2206,7 @@ bool OmLocation::bckMove(const wstring& path, Om_progressCb progress_cb, void* u
 
   bool has_error = false;
 
-  this->log(2, L"Location("+this->_title+L") Purge backups", L"Moving "+to_wstring(path_ls.size())+L" elements.");
+  this->log(2, L"ModChan("+this->_title+L") Purge backups", L"Moving "+to_wstring(path_ls.size())+L" elements.");
 
   unsigned n = 0;
   int result;
@@ -2229,7 +2229,7 @@ bool OmLocation::bckMove(const wstring& path, Om_progressCb progress_cb, void* u
     result = Om_fileMove(src, dst);
     if(result != 0) {
       this->_error = Om_errMove(L"Backup data", src, result);
-      this->log(0, L"Location("+this->_title+L") Move backups", this->_error);
+      this->log(0, L"ModChan("+this->_title+L") Move backups", this->_error);
       has_error = true;
     } else {
       n++; //< increase counter
@@ -2244,7 +2244,7 @@ bool OmLocation::bckMove(const wstring& path, Om_progressCb progress_cb, void* u
   this->libClear();
   this->libRefresh();
 
-  this->log(2, L"Location("+this->_title+L") Move backups", to_wstring(n)+L" elements successfully transfered.");
+  this->log(2, L"ModChan("+this->_title+L") Move backups", to_wstring(n)+L" elements successfully transfered.");
 
   return !has_error;
 }
@@ -2253,12 +2253,12 @@ bool OmLocation::bckMove(const wstring& path, Om_progressCb progress_cb, void* u
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::bckDcard(Om_progressCb progress_cb, void* user_ptr)
+bool OmModChan::bckDcard(Om_progressCb progress_cb, void* user_ptr)
 {
   // verify backup folder access
   if(!this->bckDirAccess(true)) { //< check for read and write
     this->_error =  L"Backup folder \""+this->_bckDir+L"\" access error.";
-    this->log(0, L"Location("+this->_title+L") Move backups", this->_error);
+    this->log(0, L"ModChan("+this->_title+L") Move backups", this->_error);
     return false;
   }
 
@@ -2284,7 +2284,7 @@ bool OmLocation::bckDcard(Om_progressCb progress_cb, void* user_ptr)
 
   bool has_error = false;
 
-  this->log(2, L"Location("+this->_title+L") Purge backups", L"Discarding "+to_wstring(pkg_ls.size())+L" backups.");
+  this->log(2, L"ModChan("+this->_title+L") Purge backups", L"Discarding "+to_wstring(pkg_ls.size())+L" backups.");
 
   unsigned n = 0;
 
@@ -2304,7 +2304,7 @@ bool OmLocation::bckDcard(Om_progressCb progress_cb, void* user_ptr)
     } else {
       this->_error =  L"Backup data \""+pkg_ls[i]->name()+L"\"";
       this->_error += L" discard failed: "+pkg_ls[i]->lastError();
-      this->log(0, L"Location("+this->_title+L") Discard backups", this->_error);
+      this->log(0, L"ModChan("+this->_title+L") Discard backups", this->_error);
       has_error = true;
     }
 
@@ -2316,7 +2316,7 @@ bool OmLocation::bckDcard(Om_progressCb progress_cb, void* user_ptr)
   // refresh library
   this->libRefresh();
 
-  this->log(2, L"Location("+this->_title+L") Move backups", to_wstring(n)+L" backup successfully discarded.");
+  this->log(2, L"ModChan("+this->_title+L") Move backups", to_wstring(n)+L" backup successfully discarded.");
 
   return !has_error;
 }
@@ -2325,7 +2325,7 @@ bool OmLocation::bckDcard(Om_progressCb progress_cb, void* user_ptr)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::pkgPrepareInst(vector<OmPackage*>& ins_ls, vector<OmPackage*>& ovr_ls, vector<OmPackage*>& dps_ls, vector<wstring>& mis_ls, const vector<OmPackage*>& sel_ls) const
+void OmModChan::pkgPrepareInst(vector<OmPackage*>& ins_ls, vector<OmPackage*>& ovr_ls, vector<OmPackage*>& dps_ls, vector<wstring>& mis_ls, const vector<OmPackage*>& sel_ls) const
 {
   // gather dependencies and create missing lists
   vector<wstring> idt_ls;
@@ -2390,7 +2390,7 @@ void OmLocation::pkgPrepareInst(vector<OmPackage*>& ins_ls, vector<OmPackage*>& 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::bckPrepareUnin(vector<OmPackage*>& uns_ls, vector<OmPackage*>& ovr_ls,  vector<OmPackage*>& dpt_ls, const vector<OmPackage*>& sel_ls) const
+void OmModChan::bckPrepareUnin(vector<OmPackage*>& uns_ls, vector<OmPackage*>& ovr_ls,  vector<OmPackage*>& dpt_ls, const vector<OmPackage*>& sel_ls) const
 {
   // get overlapping packages list to be uninstalled before selection
   for(size_t i = 0; i < sel_ls.size(); ++i) {
@@ -2414,7 +2414,7 @@ void OmLocation::bckPrepareUnin(vector<OmPackage*>& uns_ls, vector<OmPackage*>& 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::bckPrepareClns(vector<OmPackage*>& cln_ls, vector<OmPackage*>& ovr_ls,  vector<OmPackage*>& dpt_ls, vector<OmPackage*>& dps_ls, const vector<OmPackage*>& sel_ls) const
+void OmModChan::bckPrepareClns(vector<OmPackage*>& cln_ls, vector<OmPackage*>& ovr_ls,  vector<OmPackage*>& dpt_ls, vector<OmPackage*>& dps_ls, const vector<OmPackage*>& sel_ls) const
 {
   // get list of extra dependencies to clean uninstall
   for(size_t i = 0; i < sel_ls.size(); ++i) {
@@ -2454,7 +2454,7 @@ void OmLocation::bckPrepareClns(vector<OmPackage*>& cln_ls, vector<OmPackage*>& 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmLocation::pkgFindOverlaps(vector<OmPackage*>& pkg_list, const OmPackage* pkg) const
+size_t OmModChan::pkgFindOverlaps(vector<OmPackage*>& pkg_list, const OmPackage* pkg) const
 {
   size_t n = 0;
 
@@ -2474,7 +2474,7 @@ size_t OmLocation::pkgFindOverlaps(vector<OmPackage*>& pkg_list, const OmPackage
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmLocation::pkgFindOverlaps(vector<uint64_t>& hash_list, const OmPackage* pkg) const
+size_t OmModChan::pkgFindOverlaps(vector<uint64_t>& hash_list, const OmPackage* pkg) const
 {
   size_t n = 0;
 
@@ -2494,7 +2494,7 @@ size_t OmLocation::pkgFindOverlaps(vector<uint64_t>& hash_list, const OmPackage*
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmLocation::pkgGetDepends(vector<OmPackage*>& dep_ls, vector<wstring>& mis_ls, const OmPackage* pkg) const
+size_t OmModChan::pkgGetDepends(vector<OmPackage*>& dep_ls, vector<wstring>& mis_ls, const OmPackage* pkg) const
 {
   return __src_get_dependencies(dep_ls, mis_ls, this->_pkgLs, pkg);
 }
@@ -2503,7 +2503,7 @@ size_t OmLocation::pkgGetDepends(vector<OmPackage*>& dep_ls, vector<wstring>& mi
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::pkgChkDepends(const OmPackage* pkg) const
+bool OmModChan::pkgChkDepends(const OmPackage* pkg) const
 {
   return __src_chk_dependencies(this->_pkgLs, pkg);
 }
@@ -2512,7 +2512,7 @@ bool OmLocation::pkgChkDepends(const OmPackage* pkg) const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmLocation::bckGetOverlaps(vector<OmPackage*>& ovr_ls, const OmPackage* pkg) const
+size_t OmModChan::bckGetOverlaps(vector<OmPackage*>& ovr_ls, const OmPackage* pkg) const
 {
   return __bck_get_overlaps(ovr_ls, this->_pkgLs, pkg);
 }
@@ -2521,7 +2521,7 @@ size_t OmLocation::bckGetOverlaps(vector<OmPackage*>& ovr_ls, const OmPackage* p
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmLocation::bckGetDependents(vector<OmPackage*>& dpt_ls, const OmPackage* pkg) const
+size_t OmModChan::bckGetDependents(vector<OmPackage*>& dpt_ls, const OmPackage* pkg) const
 {
   return __bck_get_dependents(dpt_ls, this->_pkgLs, pkg);
 }
@@ -2530,7 +2530,7 @@ size_t OmLocation::bckGetDependents(vector<OmPackage*>& dpt_ls, const OmPackage*
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::bckChkDependents(const OmPackage* pkg) const
+bool OmModChan::bckChkDependents(const OmPackage* pkg) const
 {
   return __bck_chk_dependents(this->_pkgLs, pkg);
 }
@@ -2539,7 +2539,7 @@ bool OmLocation::bckChkDependents(const OmPackage* pkg) const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmLocation::bckGetRelations(vector<OmPackage*>& rel_ls, vector<OmPackage*>& ovr_ls, vector<OmPackage*>& dep_ls, const OmPackage* pkg) const
+size_t OmModChan::bckGetRelations(vector<OmPackage*>& rel_ls, vector<OmPackage*>& ovr_ls, vector<OmPackage*>& dep_ls, const OmPackage* pkg) const
 {
   return __bck_get_relations(rel_ls, ovr_ls, dep_ls, this->_pkgLs, pkg);
 }
@@ -2548,7 +2548,7 @@ size_t OmLocation::bckGetRelations(vector<OmPackage*>& rel_ls, vector<OmPackage*
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::bckItemExists(const wstring& path, OmPkgItemDest dest) const
+bool OmModChan::bckItemExists(const wstring& path, OmPkgItemDest dest) const
 {
   for(size_t i = 0; i < _pkgLs.size(); ++i) {
 
@@ -2564,7 +2564,7 @@ bool OmLocation::bckItemExists(const wstring& path, OmPkgItemDest dest) const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::repAdd(const wstring& base, const wstring& name)
+bool OmModChan::repAdd(const wstring& base, const wstring& name)
 {
   if(this->_config.valid()) {
 
@@ -2584,7 +2584,7 @@ bool OmLocation::repAdd(const wstring& base, const wstring& name)
       if(base == xml_rep_ls[i].attrAsString(L"base")) {
         if(name == xml_rep_ls[i].attrAsString(L"name")) {
           this->_error = L"Repository with same parameters already exists";
-          this->log(1, L"Location("+this->_title+L") Add Repository", this->_error);
+          this->log(1, L"ModChan("+this->_title+L") Add Repository", this->_error);
           return false;
         }
       }
@@ -2602,7 +2602,7 @@ bool OmLocation::repAdd(const wstring& base, const wstring& name)
 
     // set repository parameters
     if(!pRep->init(base, name)) {
-      this->log(0, L"Location("+this->_title+L") Add Repository", pRep->lastError());
+      this->log(0, L"ModChan("+this->_title+L") Add Repository", pRep->lastError());
       delete pRep;
       return false;
     }
@@ -2618,7 +2618,7 @@ bool OmLocation::repAdd(const wstring& base, const wstring& name)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::repRem(unsigned i)
+void OmModChan::repRem(unsigned i)
 {
   if(i >= this->_repLs.size())
     return;
@@ -2668,7 +2668,7 @@ void OmLocation::repRem(unsigned i)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::repQuery(unsigned i)
+bool OmModChan::repQuery(unsigned i)
 {
   // check whether we have something to proceed
   if(i >= this->_repLs.size())
@@ -2678,11 +2678,11 @@ bool OmLocation::repQuery(unsigned i)
 
   bool has_error = false;
 
-  this->log(2, L"Location("+this->_title+L") Query repository", pRep->url()+L"-"+pRep->name());
+  this->log(2, L"ModChan("+this->_title+L") Query repository", pRep->url()+L"-"+pRep->name());
 
   if(!pRep->query()) {
     this->_error = L"Repository query failed: "+this->_repLs[i]->lastError();
-    this->log(0, L"Location("+this->_title+L") Query repository", this->_error);
+    this->log(0, L"ModChan("+this->_title+L") Query repository", this->_error);
     has_error = true;
   }
 
@@ -2712,7 +2712,7 @@ bool OmLocation::repQuery(unsigned i)
 
   // add/merge remote packages to list
   unsigned c = pRep->rmtMerge(this->_rmtLs);
-  this->log(2, L"Location("+this->_title+L") Query repository", to_wstring(c)+L" new remote packages merged.");
+  this->log(2, L"ModChan("+this->_title+L") Query repository", to_wstring(c)+L" new remote packages merged.");
 
   // force refresh
   this->rmtRefresh(true);
@@ -2725,7 +2725,7 @@ bool OmLocation::repQuery(unsigned i)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setWarnExtraDnld(bool enable)
+void OmModChan::setWarnExtraDnld(bool enable)
 {
   this->_warnExtraDnld = enable;
 
@@ -2753,7 +2753,7 @@ void OmLocation::setWarnExtraDnld(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setWarnMissDnld(bool enable)
+void OmModChan::setWarnMissDnld(bool enable)
 {
   this->_warnMissDnld = enable;
 
@@ -2781,7 +2781,7 @@ void OmLocation::setWarnMissDnld(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::setWarnUpgdBrkDeps(bool enable)
+void OmModChan::setWarnUpgdBrkDeps(bool enable)
 {
   this->_warnUpgdBrkDeps = enable;
 
@@ -2809,7 +2809,7 @@ void OmLocation::setWarnUpgdBrkDeps(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::rmtSetSorting(OmLocLsSort sorting)
+void OmModChan::rmtSetSorting(OmModChanSort sorting)
 {
   // we check if the requested sorting kind is the same as the currently
   // used, in this case, this mean the sorting order must be reversed
@@ -2848,7 +2848,7 @@ void OmLocation::rmtSetSorting(OmLocLsSort sorting)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::rmtClear()
+void OmModChan::rmtClear()
 {
   for(size_t i = 0; i < this->_rmtLs.size(); ++i)
     delete this->_rmtLs[i];
@@ -2860,7 +2860,7 @@ void OmLocation::rmtClear()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmLocation::rmtRefresh(bool force)
+bool OmModChan::rmtRefresh(bool force)
 {
   bool changed = false;
 
@@ -2941,7 +2941,7 @@ bool OmLocation::rmtRefresh(bool force)
     this->_rmtSort();
 
   #ifdef DEBUG
-  std::cout << "DEBUG => OmLocation::rmtRefresh " << (changed ? "+-" : "==") << "\n";
+  std::cout << "DEBUG => OmModChan::rmtRefresh " << (changed ? "+-" : "==") << "\n";
   #endif
 
   return changed;
@@ -2950,7 +2950,7 @@ bool OmLocation::rmtRefresh(bool force)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::rmtPrepareDown(vector<OmRemote*>& dnl_ls, vector<OmRemote*>& dep_ls, vector<wstring>& mis_ls, vector<OmPackage*>& old_ls, const vector<OmRemote*>& sel_ls) const
+void OmModChan::rmtPrepareDown(vector<OmRemote*>& dnl_ls, vector<OmRemote*>& dep_ls, vector<wstring>& mis_ls, vector<OmPackage*>& old_ls, const vector<OmRemote*>& sel_ls) const
 {
   // gather dependencies and create missing lists
   vector<wstring> idt_ls;
@@ -2996,7 +2996,7 @@ void OmLocation::rmtPrepareDown(vector<OmRemote*>& dnl_ls, vector<OmRemote*>& de
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmLocation::rmtGetDepends(vector<OmRemote*>& dep_ls, vector<wstring>& mis_ls, const OmRemote* rmt) const
+size_t OmModChan::rmtGetDepends(vector<OmRemote*>& dep_ls, vector<wstring>& mis_ls, const OmRemote* rmt) const
 {
   return __rmt_get_dependencies(dep_ls, mis_ls, this->_rmtLs, this->_pkgLs, rmt);
 }
@@ -3005,7 +3005,7 @@ size_t OmLocation::rmtGetDepends(vector<OmRemote*>& dep_ls, vector<wstring>& mis
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmLocation::log(unsigned level, const wstring& head, const wstring& detail)
+void OmModChan::log(unsigned level, const wstring& head, const wstring& detail)
 {
   wstring log_str = L"Context("; log_str.append(this->_context->title());
   log_str.append(L"):: "); log_str.append(head);
@@ -3018,7 +3018,7 @@ void OmLocation::log(unsigned level, const wstring& head, const wstring& detail)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-inline void OmLocation::_pkgSort()
+inline void OmModChan::_pkgSort()
 {
  if(this->_pkgSorting & LS_SORT_STAT) //< sorting by status
     std::sort(this->_pkgLs.begin(), this->_pkgLs.end(), __pkg_sort_stat_fn);
@@ -3042,7 +3042,7 @@ inline void OmLocation::_pkgSort()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-inline void OmLocation::_rmtSort()
+inline void OmModChan::_rmtSort()
 {
  if(this->_rmtSorting & LS_SORT_STAT) //< sorting by status
     std::sort(this->_rmtLs.begin(), this->_rmtLs.end(), __rmt_sort_stat_fn);

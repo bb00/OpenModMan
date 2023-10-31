@@ -20,7 +20,7 @@
 #include "OmBaseApp.h"
 
 #include "OmManager.h"
-#include "OmLocation.h"
+#include "OmModChan.h"
 
 #include "OmUtilFs.h"
 #include "OmUtilHsh.h"
@@ -31,17 +31,17 @@
 #include "OmContext.h"
 
 
-/// \brief Location index comparison callback
+/// \brief Mod Channel index comparison callback
 ///
-/// std::sort callback comparison function for sorting Locations
+/// std::sort callback comparison function for sorting Mod Channels
 /// by index number order.
 ///
-/// \param[in]  a     : Left Location.
-/// \param[in]  b     : Right Location.
+/// \param[in]  a     : Left Mod Channel.
+/// \param[in]  b     : Right Mod Channel.
 ///
-/// \return True if Location a is "before" Location b, false otherwise
+/// \return True if Mod Channel a is "before" Mod Channel b, false otherwise
 ///
-static bool __loc_sort_index_fn(const OmLocation* a, const OmLocation* b)
+static bool __chn_sort_index_fn(const OmModChan* a, const OmModChan* b)
 {
   return (a->index() < b->index());
 }
@@ -49,7 +49,7 @@ static bool __loc_sort_index_fn(const OmLocation* a, const OmLocation* b)
 
 /// \brief OmBatch index comparison callback
 ///
-/// std::sort callback comparison function for sorting Locations
+/// std::sort callback comparison function for sorting Mod Batches
 /// by index number order.
 ///
 /// \param[in]  a     : Left OmBatch.
@@ -70,7 +70,7 @@ static bool __bat_sort_index_fn(const OmBatch* a, const OmBatch* b)
 ///
 OmContext::OmContext(OmManager* pMgr) :
   _manager(pMgr), _config(), _path(), _uuid(), _title(), _home(), _icon(nullptr),
-  _locLs(), _locCur(-1), _batLs(), _batQuietMode(true), _valid(false), _error()
+  _chnLs(), _chnCur(-1), _batLs(), _batQuietMode(true), _valid(false), _error()
 {
 
 }
@@ -153,7 +153,7 @@ bool OmContext::open(const wstring& path)
     this->setBatQuietMode(this->_batQuietMode); //< create default
   }
 
-  // load Locations for this Context
+  // load Mod Channels for this Context
   vector<wstring> file_ls;
   vector<wstring> subdir_ls;
   Om_lsDir(&subdir_ls, this->_home, false);
@@ -164,7 +164,7 @@ bool OmContext::open(const wstring& path)
 
     for(size_t i = 0; i < subdir_ls.size(); ++i) {
 
-      // check for presence of Target Location definition file
+      // check for presence of Mod Channel definition file
       file_ls.clear();
       Om_lsFileFiltered(&file_ls, this->_home+L"\\"+subdir_ls[i], L"*." OMM_LOC_DEF_FILE_EXT, true);
 
@@ -172,15 +172,15 @@ bool OmContext::open(const wstring& path)
       if(file_ls.size()) {
 
         this->log(2, L"Context("+this->_title+L") Open",
-                  L"Linking Location \""+Om_getFilePart(file_ls[0])+L"\"");
+                  L"Linking Mod Channel \""+Om_getFilePart(file_ls[0])+L"\"");
 
         // we use the first file we found
-        OmLocation* pLoc = new OmLocation(this);
+        OmModChan* pChn = new OmModChan(this);
 
-        if(pLoc->open(file_ls[0])) {
-          this->_locLs.push_back(pLoc);
+        if(pChn->open(file_ls[0])) {
+          this->_chnLs.push_back(pChn);
         } else {
-          delete pLoc;
+          delete pChn;
         }
       }
     }
@@ -210,17 +210,17 @@ bool OmContext::open(const wstring& path)
     }
   }
 
-  // sort Locations by index
-  if(this->_locLs.size() > 1)
-    sort(this->_locLs.begin(), this->_locLs.end(), __loc_sort_index_fn);
+  // sort Mod Channel by index
+  if(this->_chnLs.size() > 1)
+    sort(this->_chnLs.begin(), this->_chnLs.end(), __chn_sort_index_fn);
 
   // sort Batches by index
   if(this->_batLs.size() > 1)
     sort(this->_batLs.begin(), this->_batLs.end(), __bat_sort_index_fn);
 
   // the first location in list become the default active one
-  if(this->_locLs.size()) {
-    this->locSel(0);
+  if(this->_chnLs.size()) {
+    this->chnSel(0);
   }
 
   return true;
@@ -245,12 +245,12 @@ void OmContext::close()
 
     this->_config.close();
 
-    for(size_t i = 0; i < this->_locLs.size(); ++i)
-      delete this->_locLs[i];
+    for(size_t i = 0; i < this->_chnLs.size(); ++i)
+      delete this->_chnLs[i];
 
-    this->_locLs.clear();
+    this->_chnLs.clear();
 
-    this->_locCur = -1;
+    this->_chnCur = -1;
 
     for(size_t i = 0; i < this->_batLs.size(); ++i)
       delete this->_batLs[i];
@@ -335,11 +335,11 @@ void OmContext::setIcon(const wstring& src)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmLocation* OmContext::locGet(const wstring& uuid)
+OmModChan* OmContext::chnGet(const wstring& uuid)
 {
-  for(size_t i = 0; i < this->_locLs.size(); ++i) {
-    if(uuid == this->_locLs[i]->uuid())
-      return this->_locLs[i];
+  for(size_t i = 0; i < this->_chnLs.size(); ++i) {
+    if(uuid == this->_chnLs[i]->uuid())
+      return this->_chnLs[i];
   }
 
   return nullptr;
@@ -348,28 +348,28 @@ OmLocation* OmContext::locGet(const wstring& uuid)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmContext::locSort()
+void OmContext::chnSort()
 {
-  if(this->_locLs.size() > 1)
-    sort(this->_locLs.begin(), this->_locLs.end(), __loc_sort_index_fn);
+  if(this->_chnLs.size() > 1)
+    sort(this->_chnLs.begin(), this->_chnLs.end(), __chn_sort_index_fn);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmContext::locSel(int i)
+bool OmContext::chnSel(int i)
 {
   if(i >= 0) {
-    if(i < (int)this->_locLs.size()) {
-      this->_locCur = i;
-      this->log(2, L"Context("+this->_title+L") Select Location",
-                L"\""+this->_locLs[_locCur]->title()+L"\".");
+    if(i < (int)this->_chnLs.size()) {
+      this->_chnCur = i;
+      this->log(2, L"Context("+this->_title+L") Select Mod Channel",
+                L"\""+this->_chnLs[_chnCur]->title()+L"\".");
     } else {
       return false;
     }
   } else {
-    this->_locCur = -1;
+    this->_chnCur = -1;
   }
 
   return true;
@@ -379,13 +379,13 @@ bool OmContext::locSel(int i)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmContext::locSel(const wstring& uuid)
+bool OmContext::chnSel(const wstring& uuid)
 {
-  for(size_t i = 0; i < this->_locLs.size(); ++i) {
-    if(uuid == this->_locLs[i]->uuid()) {
-      this->_locCur = i;
-      this->log(2, L"Context("+this->_title+L") Select Location",
-                L"\""+this->_locLs[_locCur]->title()+L"\".");
+  for(size_t i = 0; i < this->_chnLs.size(); ++i) {
+    if(uuid == this->_chnLs[i]->uuid()) {
+      this->_chnCur = i;
+      this->log(2, L"Context("+this->_title+L") Select Mod Channel",
+                L"\""+this->_chnLs[_chnCur]->title()+L"\".");
       return true;
     }
   }
@@ -397,10 +397,10 @@ bool OmContext::locSel(const wstring& uuid)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-int OmContext::locIndex(const wstring& uuid)
+int OmContext::chnIndex(const wstring& uuid)
 {
-  for(size_t i = 0; i < this->_locLs.size(); ++i) {
-    if(uuid == this->_locLs[i]->uuid()) {
+  for(size_t i = 0; i < this->_chnLs.size(); ++i) {
+    if(uuid == this->_chnLs[i]->uuid()) {
       return i;
     }
   }
@@ -412,119 +412,119 @@ int OmContext::locIndex(const wstring& uuid)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmContext::locAdd(const wstring& title, const wstring& install, const wstring& library, const wstring& backup)
+bool OmContext::chnAdd(const wstring& title, const wstring& install, const wstring& library, const wstring& backup)
 {
   // this theoretically can't happen, but we check to be sure
   if(!this->isValid()) {
     this->_error = L"Context is empty.";
-    this->log(0, L"Context(<anonymous>) Create Location", this->_error);
+    this->log(0, L"Context(<anonymous>) Create Mod Channel", this->_error);
     return false;
   }
 
   int result;
 
-  // compose Location home path
-  wstring loc_home = this->_home + L"\\" + title;
+  // compose Mod Channel home path
+  wstring chn_home = this->_home + L"\\" + title;
 
-  // create Location sub-folder
-  if(!Om_isDir(loc_home)) {
-    result = Om_dirCreate(loc_home);
+  // create Mod Channel sub-folder
+  if(!Om_isDir(chn_home)) {
+    result = Om_dirCreate(chn_home);
     if(result != 0) {
-      this->_error = Om_errCreate(L"Location home", loc_home, result);
-      this->log(0, L"Context("+this->_title+L") Create Location", this->_error);
+      this->_error = Om_errCreate(L"Mod Channel home", chn_home, result);
+      this->log(0, L"Context("+this->_title+L") Create Mod Channel", this->_error);
       return false;
     }
   } else {
-    this->log(1, L"Context("+this->_title+L") Create Location",
-              Om_errExists(L"Location home",loc_home));
+    this->log(1, L"Context("+this->_title+L") Create Mod Channel",
+              Om_errExists(L"Mod Channel home",chn_home));
   }
 
-  // compose Location definition file name
-  wstring loc_def_path = loc_home + L"\\" + title;
-  loc_def_path += L"."; loc_def_path += OMM_LOC_DEF_FILE_EXT;
+  // compose Mod Channel definition file name
+  wstring chn_def_path = chn_home + L"\\" + title;
+  chn_def_path += L"."; chn_def_path += OMM_LOC_DEF_FILE_EXT;
 
   // check whether definition file already exists and delete it
-  if(Om_isFile(loc_def_path)) {
+  if(Om_isFile(chn_def_path)) {
 
-    this->log(1, L"Context("+this->_title+L") Create Location",
-              Om_errExists(L"Definition file",loc_def_path));
+    this->log(1, L"Context("+this->_title+L") Create Mod Channel",
+              Om_errExists(L"Definition file",chn_def_path));
 
-    int result = Om_fileDelete(loc_def_path);
+    int result = Om_fileDelete(chn_def_path);
     if(result != 0) {
-      this->_error = Om_errDelete(L"Old definition file", loc_def_path, result);
-      this->log(0, L"Context("+this->_title+L") Create Location", this->_error);
+      this->_error = Om_errDelete(L"Old definition file", chn_def_path, result);
+      this->log(0, L"Context("+this->_title+L") Create Mod Channel", this->_error);
       return false;
     }
   }
 
   // initialize new definition file
-  OmConfig loc_def;
-  if(!loc_def.init(loc_def_path, OMM_XMAGIC_LOC)) {
-    this->_error = Om_errInit(L"Definition file", loc_def_path, loc_def.lastErrorStr());
-    this->log(0, L"Context("+this->_title+L") Create Location", this->_error);
+  OmConfig chn_def;
+  if(!chn_def.init(chn_def_path, OMM_XMAGIC_CHN)) {
+    this->_error = Om_errInit(L"Definition file", chn_def_path, chn_def.lastErrorStr());
+    this->log(0, L"Context("+this->_title+L") Create Mod Channel", this->_error);
     return false;
   }
 
-  // Generate a new UUID for this Location
+  // Generate a new UUID for this Mod Channel
   wstring uuid = Om_genUUID();
 
   // Get XML document instance
-  OmXmlNode loc_xml = loc_def.xml();
+  OmXmlNode chn_xml = chn_def.xml();
 
   // define uuid and title in definition file
-  loc_xml.addChild(L"uuid").setContent(uuid);
-  loc_xml.addChild(L"title").setContent(title);
+  chn_xml.addChild(L"uuid").setContent(uuid);
+  chn_xml.addChild(L"title").setContent(title);
 
   // define ordering index in definition file
-  loc_xml.child(L"title").setAttr(L"index", static_cast<int>(this->_locLs.size()));
+  chn_xml.child(L"title").setAttr(L"index", static_cast<int>(this->_chnLs.size()));
 
   // define installation destination folder in definition file
-  loc_xml.addChild(L"install").setContent(install);
+  chn_xml.addChild(L"install").setContent(install);
 
   // checks whether we have custom Backup folder
   if(backup.empty()) {
     // Create the default backup sub-folder
-    Om_dirCreate(loc_home + L"\\Backup");
+    Om_dirCreate(chn_home + L"\\Backup");
   } else {
     // check whether custom Library folder exists
     if(!Om_isDir(backup)) {
-      this->log(1, L"Context("+this->_title+L") Create Location",
+      this->log(1, L"Context("+this->_title+L") Create Mod Channel",
                 Om_errIsDir(L"Custom Backup folder", backup));
     }
     // add custom backup in definition
-    loc_xml.addChild(L"backup").setContent(backup);
+    chn_xml.addChild(L"backup").setContent(backup);
   }
 
   // checks whether we have custom Library folder
   if(library.empty()) {
     // Create the default library sub-folder
-    Om_dirCreate(loc_home + L"\\Library");
+    Om_dirCreate(chn_home + L"\\Library");
   } else {
     // check whether custom Library folder exists
     if(!Om_isDir(library)) {
-      this->log(1, L"Context("+this->_title+L") Create Location",
+      this->log(1, L"Context("+this->_title+L") Create Mod Channel",
                 Om_errIsDir(L"Custom Library folder", library));
     }
     // add custom library in definition
-    loc_xml.addChild(L"library").setContent(library);
+    chn_xml.addChild(L"library").setContent(library);
   }
 
   // save and close definition file
-  loc_def.save();
-  loc_def.close();
+  chn_def.save();
+  chn_def.close();
 
-  this->log(2, L"Context("+this->_title+L") Create Location", L"Location \""+title+L")\" created.");
+  this->log(2, L"Context("+this->_title+L") Create Mod Channel", L"Mod Channel \""+title+L")\" created.");
 
-  // load the newly created Location
-  OmLocation* pLoc = new OmLocation(this);
-  pLoc->open(loc_def_path);
-  this->_locLs.push_back(pLoc);
+  // load the newly created Mod Channel
+  OmModChan* pChn = new OmModChan(this);
+  pChn->open(chn_def_path);
+  this->_chnLs.push_back(pChn);
 
   // sort locations by index
-  this->locSort();
+  this->chnSort();
 
   // select the last added location
-  this->locSel(this->_locLs.size() - 1);
+  this->chnSel(this->_chnLs.size() - 1);
 
   return true;
 }
@@ -533,100 +533,100 @@ bool OmContext::locAdd(const wstring& title, const wstring& install, const wstri
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmContext::locRem(unsigned id)
+bool OmContext::chnRem(unsigned id)
 {
-  if(id >= this->_locLs.size())
+  if(id >= this->_chnLs.size())
     return false;
 
-  OmLocation* pLoc = this->_locLs[id];
+  OmModChan* pChn = this->_chnLs[id];
 
-  if(pLoc->bckHasData()) {
+  if(pChn->bckHasData()) {
     this->_error = L"Aborted: Still have backup data to be restored.";
-    this->log(0, L"Context("+this->_title+L") Delete Location", this->_error);
+    this->log(0, L"Context("+this->_title+L") Delete Mod Channel", this->_error);
     return false;
   }
 
   bool has_error = false;
 
-  // keep Location paths
-  wstring loc_title = pLoc->title();
-  wstring loc_home = pLoc->home();
-  wstring loc_path = pLoc->path();
+  // keep Mod Channel paths
+  wstring chn_name = pChn->title();
+  wstring chn_home = pChn->home();
+  wstring chn_path = pChn->path();
 
-  // close Location
-  pLoc->close();
+  // close Mod Channel
+  pChn->close();
 
   // remove the default backup folder
-  wstring bck_path = loc_home + L"\\Backup";
+  wstring bck_path = chn_home + L"\\Backup";
   if(Om_isDir(bck_path)) {
     // this will fails if folder not empty, this is intended
     int result = Om_dirDelete(bck_path);
     if(result != 0) {
-      this->log(1, L"Context("+this->_title+L") Delete Location",
+      this->log(1, L"Context("+this->_title+L") Delete Mod Channel",
                 Om_errDelete(L"Backup folder", bck_path, result));
     }
   }
 
   // remove the default Library folder
-  wstring lib_path = loc_home + L"\\Library";
+  wstring lib_path = chn_home + L"\\Library";
   if(Om_isDir(lib_path)) {
     // this will fails if folder not empty, this is intended
     if(Om_isDirEmpty(lib_path)) {
       int result = Om_dirDelete(lib_path);
       if(result != 0) {
-        this->log(1, L"Context("+this->_title+L") Delete Location",
+        this->log(1, L"Context("+this->_title+L") Delete Mod Channel",
                   Om_errDelete(L"Library folder", lib_path, result));
       }
     } else {
-      this->log(1, L"Context("+this->_title+L") Delete Location",
+      this->log(1, L"Context("+this->_title+L") Delete Mod Channel",
               L"Non-empty Library folder will not be deleted");
     }
   }
 
   // remove the definition file
-  if(Om_isFile(loc_path)) {
+  if(Om_isFile(chn_path)) {
     // close the definition file
     this->_config.close();
-    int result = Om_fileDelete(loc_path);
+    int result = Om_fileDelete(chn_path);
     if(result != 0) {
-      this->_error = Om_errDelete(L"Definition file", loc_path, result);
-      this->log(1, L"Context("+this->_title+L") Delete Location", this->_error);
+      this->_error = Om_errDelete(L"Definition file", chn_path, result);
+      this->log(1, L"Context("+this->_title+L") Delete Mod Channel", this->_error);
       has_error = true; //< this is considered as a real error
     }
   }
 
   // check if location home folder is empty, if yes, we delete it
-  if(Om_isDirEmpty(loc_home)) {
-    int result = Om_dirDelete(loc_home);
+  if(Om_isDirEmpty(chn_home)) {
+    int result = Om_dirDelete(chn_home);
     if(result != 0) {
-      this->_error = Om_errDelete(L"Home folder", loc_home, result);
-      this->log(1, L"Context("+this->_title+L") Delete Location", this->_error);
+      this->_error = Om_errDelete(L"Home folder", chn_home, result);
+      this->log(1, L"Context("+this->_title+L") Delete Mod Channel", this->_error);
       has_error = true; //< this is considered as a real error
     }
   } else {
-    this->log(1, L"Context("+this->_title+L") Delete Location",
-              L"Non-empty home folder \""+loc_home+L"\" will not be deleted");
+    this->log(1, L"Context("+this->_title+L") Delete Mod Channel",
+              L"Non-empty home folder \""+chn_home+L"\" will not be deleted");
   }
 
-  this->log(2, L"Context("+this->_title+L") Delete Location",
-            L"Location \""+loc_title+L"\" deleted.");
+  this->log(2, L"Context("+this->_title+L") Delete Mod Channel",
+            L"Mod Channel \""+chn_name+L"\" deleted.");
 
   // delete object
-  delete pLoc;
+  delete pChn;
 
   // remove from list
-  this->_locLs.erase(this->_locLs.begin()+id);
+  this->_chnLs.erase(this->_chnLs.begin()+id);
 
   // update locations order indexing
-  for(size_t i = 0; i < this->_locLs.size(); ++i) {
-    this->_locLs[i]->setIndex(i);
+  for(size_t i = 0; i < this->_chnLs.size(); ++i) {
+    this->_chnLs[i]->setIndex(i);
   }
 
-  // sort Locations by index
-  this->locSort();
+  // sort Mod Channels by index
+  this->chnSort();
 
   // select the first available location
-  this->locSel(0);
+  this->chnSel(0);
 
   return !has_error;
 }

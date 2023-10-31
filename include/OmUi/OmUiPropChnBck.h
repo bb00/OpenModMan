@@ -14,22 +14,20 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPLOCLIB_H
-#define OMUIPROPLOCLIB_H
+#ifndef OMUIPROPCHNBCK_H
+#define OMUIPROPCHNBCK_H
 
 #include "OmDialog.h"
 
-#define LOC_PROP_LIB_DEVMODE     0
-#define LOC_PROP_LIB_WARNINGS    1
-#define LOC_PROP_LIB_SHOWHIDDEN  2
+#define CHN_PROP_BCK_COMP_LEVEL   0
 
-/// \brief Manager Options / Packages tab child
+/// \brief Mod Channel Properties / Backups tab child
 ///
-/// OmDialog class derived for Manager Options / Packages tab child dialog window
+/// OmDialog class derived for Mod Channel Properties / Backups tab child dialog window
 ///
-class OmUiPropLocLib : public OmDialog
+class OmUiPropChnBck : public OmDialog
 {
-  public:
+  public: ///         - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     /// \brief Constructor.
     ///
@@ -37,13 +35,13 @@ class OmUiPropLocLib : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropLocLib(HINSTANCE hins);
+    OmUiPropChnBck(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropLocLib();
+    ~OmUiPropChnBck();
 
     /// \brief Get resource id.
     ///
@@ -80,11 +78,19 @@ class OmUiPropLocLib : public OmDialog
 
     bool                _chParam[8];
 
-    void                _onCkBoxDev();
+    void                _onCkBoxZip();
 
-    void                _onCkBoxWrn();
+    void                _onBcDelBck();
 
-    void                _onCkBoxHid();
+    void                _delBck_init();
+
+    void                _delBck_stop();
+
+    void*               _delBck_hth;
+
+    static DWORD WINAPI _delBck_fth(void*);
+
+    static bool         _delBck_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data);
 
     void                _onInit();
 
@@ -93,4 +99,4 @@ class OmUiPropLocLib : public OmDialog
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPLOCLIB_H
+#endif // OMUIPROPCHNBCK_H

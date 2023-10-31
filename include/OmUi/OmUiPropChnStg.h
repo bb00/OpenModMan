@@ -14,21 +14,21 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPLOCSTG_H
-#define OMUIPROPLOCSTG_H
+#ifndef OMUIPROPCHNSTG_H
+#define OMUIPROPCHNSTG_H
 
 #include "OmDialog.h"
 
-#define LOC_PROP_STG_TITLE     0
-#define LOC_PROP_STG_INSTALL   1
-#define LOC_PROP_STG_LIBRARY   2
-#define LOC_PROP_STG_BACKUP    3
+#define CHN_PROP_STG_TITLE     0
+#define CHN_PROP_STG_INSTALL   1
+#define CHN_PROP_STG_LIBRARY   2
+#define CHN_PROP_STG_BACKUP    3
 
-/// \brief Location Properties / Settings tab child
+/// \brief Mod Channel Properties / Settings tab child
 ///
-/// OmDialog class derived for Location Properties / Settings tab child dialog window
+/// OmDialog class derived for Mod Channel Properties / Settings tab child dialog window
 ///
-class OmUiPropLocStg : public OmDialog
+class OmUiPropChnStg : public OmDialog
 {
   public: ///         - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -38,13 +38,13 @@ class OmUiPropLocStg : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropLocStg(HINSTANCE hins);
+    OmUiPropChnStg(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropLocStg();
+    ~OmUiPropChnStg();
 
     /// \brief Get resource id.
     ///
@@ -100,4 +100,4 @@ class OmUiPropLocStg : public OmDialog
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPLOCSTG_H
+#endif // OMUIPROPCHNSTG_H

@@ -22,7 +22,7 @@
 #include "OmConfig.h"
 
 class OmContext;
-class OmLocation;
+class OmModChan;
 class OmPackage;
 
 /// \brief Batch object.
@@ -151,30 +151,30 @@ class OmBatch
     ///
     void setInstallOnly(bool enable);
 
-    /// \brief Get Target Location count
+    /// \brief Get Mod Channel count
     ///
-    /// Returns count of referenced Target Location in this instance.
+    /// Returns count of referenced Mod Channel in this instance.
     ///
-    /// \return Count of referenced Target Location
+    /// \return Count of referenced Mod Channel
     ///
-    size_t locCount();
+    size_t chnCount();
 
-    /// \brief Get Target Location uuid
+    /// \brief Get Mod Channel UUID
     ///
-    /// Returns referenced Target Location UUID at specified index.
+    /// Returns referenced Mod Channel UUID at specified index.
     ///
-    /// \param[in]  i    : Target Location index.
+    /// \param[in]  i    : Mod Channel index.
     ///
-    /// \return Target Location's UUID.
+    /// \return Mod Channel's UUID.
     ///
     wstring locUuid(unsigned i);
 
-    /// \brief Discard Target Location
+    /// \brief Discard Mod Channel
     ///
-    /// Removes reference and install list of the  Target Location
+    /// Removes reference and install list of the  Mod Channel
     /// with the specified UUID.
     ///
-    /// \param[in]  uuid : Target Location UUID.
+    /// \param[in]  uuid : Mod Channel UUID.
     ///
     /// \return True if operation succeed, false if reference not found.
     ///
@@ -182,70 +182,70 @@ class OmBatch
 
     /// \brief Clear install list.
     ///
-    /// Clear the install list of the specified Target Location, if Target
-    /// Location has no reference in the current Batch this operation has
+    /// Clear the install list of the specified Mod Channel, if
+    /// Mod Channel has no reference in the current Batch this operation has
     /// no effect.
     ///
-    /// \param[in]  pLoc    : Pointer to Target Location.
+    /// \param[in]  pChn    : Pointer to Mod Channel.
     ///
-    void instClear(const OmLocation* pLoc);
+    void instClear(const OmModChan* pChn);
 
     /// \brief Add package to install list.
     ///
     /// Add the given Package references to the installation list of the
-    /// specified Target Location.
+    /// specified Mod Channel.
     ///
-    /// \param[in]  pLoc    : Pointer to Target Location object.
+    /// \param[in]  pChn    : Pointer to Mod Channel object.
     /// \param[in]  pPkg    : Pointer to Package object to reference.
     ///
-    void instAdd(const OmLocation* pLoc, const OmPackage* pPkg);
+    void instAdd(const OmModChan* pChn, const OmPackage* pPkg);
 
     /// \brief Remove package from install list.
     ///
     /// Remove the specified Package references from the installation list of
-    /// the specified Target Location.
+    /// the specified Mod Channel.
     ///
-    /// \param[in]  pLoc    : Pointer to Target Location object.
+    /// \param[in]  pChn    : Pointer to Mod Channel object.
     /// \param[in]  ident   : Package identity to search and remove.
     ///
     /// \return true if reference was removed, false otherwise
     ///
-    bool instRem(const OmLocation* pLoc, const wstring ident);
+    bool instRem(const OmModChan* pChn, const wstring ident);
 
     /// \brief Get install list size.
     ///
-    /// Returns size of the install list for the specified Target Location.
+    /// Returns size of the install list for the specified Mod Channel.
     ///
-    /// \param[in]  pLoc    : Pointer to Target Location object.
+    /// \param[in]  pChn    : Pointer to Mod Channel object.
     ///
-    /// \return Size of install list or 0 if Target Location not found.
+    /// \return Size of install list or 0 if Mod Channel not found.
     ///
-    size_t instSize(const OmLocation* pLoc);
+    size_t instSize(const OmModChan* pChn);
 
     /// \brief Get install list package
     ///
-    /// Returns the found package, in the given Target Location, corresponding
+    /// Returns the found package, in the given Mod Channel, corresponding
     /// to the referenced item in the install list.
     ///
-    /// \param[in]  pLoc    : Pointer to Target Location object.
+    /// \param[in]  pChn    : Pointer to Mod Channel object.
     /// \param[in]  i       : Index of reference in install list.
     ///
     /// \return Pointer to Package object or nullptr if not found.
     ///
-    OmPackage* instGet(const OmLocation* pLoc, unsigned i);
+    OmPackage* instGet(const OmModChan* pChn, unsigned i);
 
 
     /// \brief Get install list
     ///
-    /// Returns the list of packages, in the given Target Location,
+    /// Returns the list of packages, in the given Mod Channel,
     /// corresponding to referenced install list items.
     ///
-    /// \param[in]  pLoc    : Pointer to Target Location object.
+    /// \param[in]  pChn    : Pointer to Mod Channel object.
     /// \param[in]  pkg_ls  : Array that receive list of Package objects.
     ///
     /// \return Count of found item.
     ///
-    size_t instGetList(const OmLocation* pLoc, vector<OmPackage*>& pkg_ls);
+    size_t instGetList(const OmModChan* pChn, vector<OmPackage*>& pkg_ls);
 
     /// \brief Repair config.
     ///

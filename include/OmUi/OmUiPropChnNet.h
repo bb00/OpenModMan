@@ -14,18 +14,19 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPLOCBCK_H
-#define OMUIPROPLOCBCK_H
+#ifndef OMUIPROPCHNNET_H
+#define OMUIPROPCHNNET_H
 
-#include "OmDialog.h"
+#include <OmDialog.h>
 
-#define LOC_PROP_BCK_COMP_LEVEL   0
+#define CHN_PROP_NET_ONUPGRADE   0
+#define CHN_PROP_NET_WARNINGS    1
 
-/// \brief Location Properties / Backups tab child
+/// \brief Mod Channel Properties / Network tab child
 ///
-/// OmDialog class derived for Location Properties / Backups tab child dialog window
+/// OmDialog class derived for Mod Channel Properties / Network tab child dialog window
 ///
-class OmUiPropLocBck : public OmDialog
+class OmUiPropChnNet : public OmDialog
 {
   public: ///         - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -35,14 +36,13 @@ class OmUiPropLocBck : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropLocBck(HINSTANCE hins);
+    OmUiPropChnNet(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropLocBck();
-
+    ~OmUiPropChnNet();
     /// \brief Get resource id.
     ///
     /// Returns dialog window resource id.
@@ -78,25 +78,25 @@ class OmUiPropLocBck : public OmDialog
 
     bool                _chParam[8];
 
-    void                _onCkBoxZip();
+    void                _onLbReplsSel();
 
-    void                _onBcDelBck();
+    void                _onBcAddRepo();
 
-    void                _delBck_init();
+    void                _onBcChkRepo();
 
-    void                _delBck_stop();
+    void                _onBcDelRepo();
 
-    void*               _delBck_hth;
+    void                _onBcRadUpg();
 
-    static DWORD WINAPI _delBck_fth(void*);
-
-    static bool         _delBck_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data);
+    void                _onCkBoxWrn();
 
     void                _onInit();
 
     void                _onResize();
 
+    void                _onRefresh();
+
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPLOCBCK_H
+#endif // OMUIPROPCHNNET_H

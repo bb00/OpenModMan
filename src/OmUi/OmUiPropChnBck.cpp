@@ -21,14 +21,14 @@
 #include "OmManager.h"
 
 #include "OmUiMgr.h"
-#include "OmUiPropLoc.h"
+#include "OmUiPropChn.h"
 #include "OmUiProgress.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilWin.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiPropLocBck.h"
+#include "OmUiPropChnBck.h"
 
 
 /// \brief Custom window Message
@@ -41,7 +41,7 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropLocBck::OmUiPropLocBck(HINSTANCE hins) : OmDialog(hins),
+OmUiPropChnBck::OmUiPropChnBck(HINSTANCE hins) : OmDialog(hins),
   _delBck_hth(nullptr)
 {
   // modified parameters flags
@@ -53,7 +53,7 @@ OmUiPropLocBck::OmUiPropLocBck(HINSTANCE hins) : OmDialog(hins),
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropLocBck::~OmUiPropLocBck()
+OmUiPropChnBck::~OmUiPropChnBck()
 {
 
 }
@@ -62,16 +62,16 @@ OmUiPropLocBck::~OmUiPropLocBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiPropLocBck::id() const
+long OmUiPropChnBck::id() const
 {
-  return IDD_PROP_LOC_BCK;
+  return IDD_PROP_CHN_BCK;
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocBck::setChParam(unsigned i, bool en)
+void OmUiPropChnBck::setChParam(unsigned i, bool en)
 {
   _chParam[i] = en;
   static_cast<OmDialogProp*>(this->_parent)->checkChanges();
@@ -81,25 +81,25 @@ void OmUiPropLocBck::setChParam(unsigned i, bool en)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocBck::_onCkBoxZip()
+void OmUiPropChnBck::_onCkBoxZip()
 {
   bool bm_chk = this->msgItem(IDC_BC_CKBX1, BM_GETCHECK);
 
   this->enableItem(IDC_SC_LBL01, bm_chk);
   this->enableItem(IDC_CB_LVL, bm_chk);
 
-  this->setChParam(LOC_PROP_BCK_COMP_LEVEL, true);
+  this->setChParam(CHN_PROP_BCK_COMP_LEVEL, true);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocBck::_onBcDelBck()
+void OmUiPropChnBck::_onBcDelBck()
 {
   // warns the user before committing the irreparable
   if(!Om_dlgBox_ca(this->_hwnd, L"Channel properties", IDI_QRY,
-            L"Discard Channel backup data", L"This will permanently "
+            L"Discard Mod Channel backup data", L"This will permanently "
             "delete all existing backup data without restoring them (which "
             "should never be done except in emergency situation)."))
   {
@@ -114,7 +114,7 @@ void OmUiPropLocBck::_onBcDelBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocBck::_delBck_init()
+void OmUiPropChnBck::_delBck_init()
 {
   // To prevent crash during operation we unselect location in the main dialog
   static_cast<OmUiMgr*>(this->root())->safemode(true);
@@ -133,7 +133,7 @@ void OmUiPropLocBck::_delBck_init()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocBck::_delBck_stop()
+void OmUiPropChnBck::_delBck_stop()
 {
   DWORD exitCode;
 
@@ -162,19 +162,19 @@ void OmUiPropLocBck::_delBck_stop()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-DWORD WINAPI OmUiPropLocBck::_delBck_fth(void* arg)
+DWORD WINAPI OmUiPropChnBck::_delBck_fth(void* arg)
 {
-  OmUiPropLocBck* self = static_cast<OmUiPropLocBck*>(arg);
+  OmUiPropChnBck* self = static_cast<OmUiPropChnBck*>(arg);
 
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(self->_parent)->locCur();
+  OmModChan* pChn = static_cast<OmUiPropChn*>(self->_parent)->chnCur();
 
-  if(pLoc == nullptr)
+  if(pChn == nullptr)
     return 1;
 
   DWORD exitCode = 0;
 
   // launch backups data deletion process
-  if(!pLoc->bckDcard(&self->_delBck_progress_cb, self->siblingById(IDD_PROGRESS))) {
+  if(!pChn->bckDcard(&self->_delBck_progress_cb, self->siblingById(IDD_PROGRESS))) {
     exitCode = 1;
   }
 
@@ -188,7 +188,7 @@ DWORD WINAPI OmUiPropLocBck::_delBck_fth(void* arg)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiPropLocBck::_delBck_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data)
+bool OmUiPropChnBck::_delBck_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data)
 {
   OmUiProgress* pUiProgress = reinterpret_cast<OmUiProgress*>(ptr);
 
@@ -205,7 +205,7 @@ bool OmUiPropLocBck::_delBck_progress_cb(void* ptr, size_t tot, size_t cur, uint
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocBck::_onInit()
+void OmUiPropChnBck::_onInit()
 {
   // define controls tool-tips
   this->_createTooltip(IDC_BC_CKBX1,  L"Store backup data as zip archives");
@@ -221,10 +221,10 @@ void OmUiPropLocBck::_onInit()
   this->msgItem(IDC_CB_LVL, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Normal ( slow )"));
   this->msgItem(IDC_CB_LVL, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Best ( very slow )"));
 
-  OmLocation* pLoc = static_cast<OmUiPropLoc*>(this->_parent)->locCur();
-  if(!pLoc) return;
+  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  if(!pChn) return;
 
-  int comp_levl = pLoc->bckZipLevel();
+  int comp_levl = pChn->bckZipLevel();
 
   if(comp_levl >= 0) {
 
@@ -263,7 +263,7 @@ void OmUiPropLocBck::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropLocBck::_onResize()
+void OmUiPropChnBck::_onResize()
 {
   // Compressed Backup CheckBox
   this->_setItemPos(IDC_BC_CKBX1, 50, 20, 120, 9);
@@ -282,12 +282,12 @@ void OmUiPropLocBck::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropLocBck::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropChnBck::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  // UWM_BACKDISCARD_DONE is a custom message sent from Location backups discard thread
+  // UWM_BACKDISCARD_DONE is a custom message sent from Mod Channel backups discard thread
   // function, to notify the progress dialog ended is job.
   if(uMsg == UWM_BACKDISCARD_DONE) {
-    // end the Location backups deletion process
+    // end the Mod Channel backups deletion process
     this->_delBck_stop();
   }
 
@@ -301,7 +301,7 @@ INT_PTR OmUiPropLocBck::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case IDC_CB_LVL: //< Backup compression level ComboBox
       if(HIWORD(wParam) == CBN_SELCHANGE)
-        this->setChParam(LOC_PROP_BCK_COMP_LEVEL, true);
+        this->setChParam(CHN_PROP_BCK_COMP_LEVEL, true);
       break;
 
     case IDC_BC_DEL: //< "Discard backups" Button

@@ -21,12 +21,12 @@
 #include "OmManager.h"
 
 #include "OmUiMgr.h"
-#include "OmUiAddLoc.h"
-#include "OmUiPropLoc.h"
+#include "OmUiAddChn.h"
+#include "OmUiPropChn.h"
 #include "OmUiAddBat.h"
 #include "OmUiPropBat.h"
 #include "OmUiPropCtxStg.h"
-#include "OmUiPropCtxLoc.h"
+#include "OmUiPropCtxChn.h"
 #include "OmUiPropCtxBat.h"
 #include "OmUiProgress.h"
 
@@ -45,14 +45,14 @@ OmUiPropCtx::OmUiPropCtx(HINSTANCE hins) : OmDialogProp(hins),
 {
   // create child tab dialogs
   this->_addPage(L"Settings", new OmUiPropCtxStg(hins));
-  this->_addPage(L"Channels", new OmUiPropCtxLoc(hins));
+  this->_addPage(L"Channels", new OmUiPropCtxChn(hins));
   this->_addPage(L"Scripts", new OmUiPropCtxBat(hins));
 
-  this->addChild(new OmUiAddLoc(hins));     //< Dialog for Location creation
+  this->addChild(new OmUiAddChn(hins));     //< Dialog for Mod Channel creation
   this->addChild(new OmUiAddBat(hins));     //< Dialog for Batch creation
-  this->addChild(new OmUiPropLoc(hins));    //< Dialog for Location properties
-  this->addChild(new OmUiPropBat(hins));    //< Dialog for Location properties
-  this->addChild(new OmUiProgress(hins));   //< for Location backup cleaning
+  this->addChild(new OmUiPropChn(hins));    //< Dialog for Mod Channel properties
+  this->addChild(new OmUiPropBat(hins));    //< Dialog for Mod Channel properties
+  this->addChild(new OmUiProgress(hins));   //< for Mod Channel backup cleaning
 }
 
 
@@ -83,7 +83,7 @@ bool OmUiPropCtx::checkChanges()
     return false;
 
   OmUiPropCtxStg* pUiPropCtxStg  = static_cast<OmUiPropCtxStg*>(this->childById(IDD_PROP_CTX_STG));
-  OmUiPropCtxLoc* pUiPropCtxLoc  = static_cast<OmUiPropCtxLoc*>(this->childById(IDD_PROP_CTX_LOC));
+  OmUiPropCtxChn* pUiPropCtxLoc  = static_cast<OmUiPropCtxChn*>(this->childById(IDD_PROP_CTX_CHN));
   OmUiPropCtxBat* pUiPropCtxBat  = static_cast<OmUiPropCtxBat*>(this->childById(IDD_PROP_CTX_BAT));
 
   bool changed = false;
@@ -103,7 +103,7 @@ bool OmUiPropCtx::checkChanges()
     changed = true;
   }
 
-  if(pUiPropCtxLoc->hasChParam(CTX_PROP_LOC_ORDER)) { // parameter for Location index order
+  if(pUiPropCtxLoc->hasChParam(CTX_PROP_CHN_ORDER)) { // parameter for Mod Channel index order
     changed = true;
   }
 
@@ -134,7 +134,7 @@ bool OmUiPropCtx::applyChanges()
     return false;
 
   OmUiPropCtxStg* pUiPropCtxStg  = static_cast<OmUiPropCtxStg*>(this->childById(IDD_PROP_CTX_STG));
-  OmUiPropCtxLoc* pUiPropCtxLoc  = static_cast<OmUiPropCtxLoc*>(this->childById(IDD_PROP_CTX_LOC));
+  OmUiPropCtxChn* pUiPropCtxLoc  = static_cast<OmUiPropCtxChn*>(this->childById(IDD_PROP_CTX_CHN));
   OmUiPropCtxBat* pUiPropCtxBat  = static_cast<OmUiPropCtxBat*>(this->childById(IDD_PROP_CTX_BAT));
 
   wstring ctx_name, ico_path;
@@ -142,7 +142,7 @@ bool OmUiPropCtx::applyChanges()
   // Step 1, verify everything
   if(pUiPropCtxStg->hasChParam(CTX_PROP_STG_TITLE)) { //< parameter for Context title
     pUiPropCtxStg->getItemText(IDC_EC_INP03, ctx_name);
-    if(!Om_dlgValidName(this->_hwnd, L"Modding Hub name", ctx_name))
+    if(!Om_dlgValidName(this->_hwnd, L"Mod Hub name", ctx_name))
       return false;
   }
 
@@ -166,44 +166,44 @@ bool OmUiPropCtx::applyChanges()
     pUiPropCtxStg->setChParam(CTX_PROP_STG_ICON, false);
   }
 
-  if(pUiPropCtxLoc->hasChParam(CTX_PROP_LOC_ORDER)) { // parameter for Location index order
+  if(pUiPropCtxLoc->hasChParam(CTX_PROP_CHN_ORDER)) { // parameter for Mod Channel index order
 
     // To prevent inconsistency we unselect location in the main dialog
     static_cast<OmUiMgr*>(this->root())->safemode(true);
 
-    unsigned n = pUiPropCtxLoc->msgItem(IDC_LB_LOC, LB_GETCOUNT);
+    unsigned n = pUiPropCtxLoc->msgItem(IDC_LB_CHN, LB_GETCOUNT);
     for(unsigned i = 0; i < n; ++i) {
-      // set new index number of Location according current List-Box order
-      this->_pCtx->locGet(pUiPropCtxLoc->msgItem(IDC_LB_LOC, LB_GETITEMDATA, i))->setIndex(i);
+      // set new index number of Mod Channel according current List-Box order
+      this->_pCtx->chnGet(pUiPropCtxLoc->msgItem(IDC_LB_CHN, LB_GETITEMDATA, i))->setIndex(i);
     }
 
-    // unselect Location in context
-    this->_pCtx->locSel(-1);
-    // sort Location list
-    this->_pCtx->locSort();
+    // unselect Mod Channel in context
+    this->_pCtx->chnSel(-1);
+    // sort Mod Channel list
+    this->_pCtx->chnSort();
     // select the first location in list
-    this->_pCtx->locSel(0);
+    this->_pCtx->chnSel(0);
 
     // restore main dialog to normal state
     static_cast<OmUiMgr*>(this->root())->safemode(false);
 
     // Reset parameter as unmodified
-    pUiPropCtxLoc->setChParam(CTX_PROP_LOC_ORDER, false);
+    pUiPropCtxLoc->setChParam(CTX_PROP_CHN_ORDER, false);
   }
 
   if(pUiPropCtxBat->hasChParam(CTX_PROP_BAT_ORDER)) { // parameter for Batches index order
 
     unsigned n = pUiPropCtxBat->msgItem(IDC_LB_BAT, LB_GETCOUNT);
     for(unsigned i = 0; i < n; ++i) {
-      // set new index number of Location according current List-Box order
+      // set new index number of Mod Channel according current List-Box order
       this->_pCtx->batGet(pUiPropCtxBat->msgItem(IDC_LB_BAT, LB_GETITEMDATA,i))->setIndex(i);
     }
 
-    // sort Location list
+    // sort Mod Channel list
     this->_pCtx->batSort();
 
     // Reset parameter as unmodified
-    pUiPropCtxBat->setChParam(CTX_PROP_LOC_ORDER, false);
+    pUiPropCtxBat->setChParam(CTX_PROP_CHN_ORDER, false);
   }
 
   if(pUiPropCtxBat->hasChParam(CTX_PROP_BAT_QUIETMODE)) { // parameter for Batch Quiet Mode

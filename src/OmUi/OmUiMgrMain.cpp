@@ -189,8 +189,8 @@ void OmUiMgrMain::_onShow()
 void OmUiMgrMain::_onResize()
 {
   /*
-  // Location ListView
-  this->_setItemPos(IDC_LV_LOC, 1, 1, this->cliUnitX()-160, 46);
+  // Mod Channel ListView
+  this->_setItemPos(IDC_LV_CHN, 1, 1, this->cliUnitX()-160, 46);
 
   // Main Tab Control
   this->_setItemPos(IDC_TC_MAIN, -1, 80, this->width()+2, this->height()-48, true);

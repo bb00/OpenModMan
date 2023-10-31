@@ -22,10 +22,11 @@
 				<Option type="1" />
 				<Option compiler="gcc_mingw-w64_x86_64" />
 				<Compiler>
-					<Add option="-g" />
 					<Add option="-m64" />
+					<Add option="-g" />
 					<Add option="-DDEBUG" />
 					<Add directory="include/OmUi" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-m64" />
@@ -41,9 +42,10 @@
 				<Option compiler="gcc_mingw-w64_x86_64" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-m64" />
 					<Add option="-Wextra" />
+					<Add option="-m64" />
 					<Add directory="include/OmUi" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -63,6 +65,7 @@
 					<Add option="-g" />
 					<Add option="-DDEBUG" />
 					<Add directory="include/OmUi" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-m32" />
@@ -78,9 +81,10 @@
 				<Option compiler="gcc_mingw-w64_i686" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-m32" />
 					<Add option="-Wextra" />
+					<Add option="-m32" />
 					<Add directory="include/OmUi" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -166,6 +170,7 @@
 			<Add directory="3rdparty/png" />
 			<Add directory="3rdparty/gif" />
 			<Add directory="3rdparty/zlib" />
+			<Add directory="3rdparty/zlib-ng" />
 			<Add directory="3rdparty/md4c" />
 			<Add directory="plugins" />
 			<Add directory="plugins/md4c-rtf" />
@@ -421,13 +426,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="3rdparty/md4c/entity.h" />
-		<Unit filename="3rdparty/md4c/md4c-html.c">
-			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="3rdparty/md4c/md4c-html.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="3rdparty/md4c/md4c.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -567,14 +565,14 @@
 		<Unit filename="include/OmDialogProp.h" />
 		<Unit filename="include/OmDialogWiz.h" />
 		<Unit filename="include/OmImage.h" />
-		<Unit filename="include/OmLocation.h" />
 		<Unit filename="include/OmManager.h" />
+		<Unit filename="include/OmModChan.h" />
 		<Unit filename="include/OmPackage.h" />
 		<Unit filename="include/OmRemote.h" />
 		<Unit filename="include/OmRepository.h" />
 		<Unit filename="include/OmSocket.h" />
 		<Unit filename="include/OmUi/OmUiAddBat.h" />
-		<Unit filename="include/OmUi/OmUiAddLoc.h" />
+		<Unit filename="include/OmUi/OmUiAddChn.h" />
 		<Unit filename="include/OmUi/OmUiAddRep.h" />
 		<Unit filename="include/OmUi/OmUiHelpAbt.h" />
 		<Unit filename="include/OmUi/OmUiHelpLog.h" />
@@ -592,15 +590,15 @@
 		<Unit filename="include/OmUi/OmUiPropBat.h" />
 		<Unit filename="include/OmUi/OmUiPropBatLst.h" />
 		<Unit filename="include/OmUi/OmUiPropBatStg.h" />
+		<Unit filename="include/OmUi/OmUiPropChn.h" />
+		<Unit filename="include/OmUi/OmUiPropChnBck.h" />
+		<Unit filename="include/OmUi/OmUiPropChnLib.h" />
+		<Unit filename="include/OmUi/OmUiPropChnNet.h" />
+		<Unit filename="include/OmUi/OmUiPropChnStg.h" />
 		<Unit filename="include/OmUi/OmUiPropCtx.h" />
 		<Unit filename="include/OmUi/OmUiPropCtxBat.h" />
-		<Unit filename="include/OmUi/OmUiPropCtxLoc.h" />
+		<Unit filename="include/OmUi/OmUiPropCtxChn.h" />
 		<Unit filename="include/OmUi/OmUiPropCtxStg.h" />
-		<Unit filename="include/OmUi/OmUiPropLoc.h" />
-		<Unit filename="include/OmUi/OmUiPropLocBck.h" />
-		<Unit filename="include/OmUi/OmUiPropLocLib.h" />
-		<Unit filename="include/OmUi/OmUiPropLocNet.h" />
-		<Unit filename="include/OmUi/OmUiPropLocStg.h" />
 		<Unit filename="include/OmUi/OmUiPropMgr.h" />
 		<Unit filename="include/OmUi/OmUiPropMgrGle.h" />
 		<Unit filename="include/OmUi/OmUiPropPkg.h" />
@@ -613,7 +611,7 @@
 		<Unit filename="include/OmUi/OmUiWizCtx.h" />
 		<Unit filename="include/OmUi/OmUiWizCtxBeg.h" />
 		<Unit filename="include/OmUi/OmUiWizCtxCfg.h" />
-		<Unit filename="include/OmUi/OmUiWizCtxLoc.h" />
+		<Unit filename="include/OmUi/OmUiWizCtxChn.h" />
 		<Unit filename="include/OmUtil/OmUtilB64.h" />
 		<Unit filename="include/OmUtil/OmUtilDlg.h" />
 		<Unit filename="include/OmUtil/OmUtilErr.h" />
@@ -652,14 +650,14 @@
 		<Unit filename="src/OmDialogProp.cpp" />
 		<Unit filename="src/OmDialogWiz.cpp" />
 		<Unit filename="src/OmImage.cpp" />
-		<Unit filename="src/OmLocation.cpp" />
 		<Unit filename="src/OmManager.cpp" />
+		<Unit filename="src/OmModChan.cpp" />
 		<Unit filename="src/OmPackage.cpp" />
 		<Unit filename="src/OmRemote.cpp" />
 		<Unit filename="src/OmRepository.cpp" />
 		<Unit filename="src/OmSocket.cpp" />
 		<Unit filename="src/OmUi/OmUiAddBat.cpp" />
-		<Unit filename="src/OmUi/OmUiAddLoc.cpp" />
+		<Unit filename="src/OmUi/OmUiAddChn.cpp" />
 		<Unit filename="src/OmUi/OmUiAddRep.cpp" />
 		<Unit filename="src/OmUi/OmUiHelpAbt.cpp" />
 		<Unit filename="src/OmUi/OmUiHelpLog.cpp" />
@@ -677,15 +675,15 @@
 		<Unit filename="src/OmUi/OmUiPropBat.cpp" />
 		<Unit filename="src/OmUi/OmUiPropBatLst.cpp" />
 		<Unit filename="src/OmUi/OmUiPropBatStg.cpp" />
+		<Unit filename="src/OmUi/OmUiPropChn.cpp" />
+		<Unit filename="src/OmUi/OmUiPropChnBck.cpp" />
+		<Unit filename="src/OmUi/OmUiPropChnLib.cpp" />
+		<Unit filename="src/OmUi/OmUiPropChnNet.cpp" />
+		<Unit filename="src/OmUi/OmUiPropChnStg.cpp" />
 		<Unit filename="src/OmUi/OmUiPropCtx.cpp" />
 		<Unit filename="src/OmUi/OmUiPropCtxBat.cpp" />
-		<Unit filename="src/OmUi/OmUiPropCtxLoc.cpp" />
+		<Unit filename="src/OmUi/OmUiPropCtxChn.cpp" />
 		<Unit filename="src/OmUi/OmUiPropCtxStg.cpp" />
-		<Unit filename="src/OmUi/OmUiPropLoc.cpp" />
-		<Unit filename="src/OmUi/OmUiPropLocBck.cpp" />
-		<Unit filename="src/OmUi/OmUiPropLocLib.cpp" />
-		<Unit filename="src/OmUi/OmUiPropLocNet.cpp" />
-		<Unit filename="src/OmUi/OmUiPropLocStg.cpp" />
 		<Unit filename="src/OmUi/OmUiPropMgr.cpp" />
 		<Unit filename="src/OmUi/OmUiPropMgrGle.cpp" />
 		<Unit filename="src/OmUi/OmUiPropPkg.cpp" />
@@ -698,7 +696,7 @@
 		<Unit filename="src/OmUi/OmUiWizCtx.cpp" />
 		<Unit filename="src/OmUi/OmUiWizCtxBeg.cpp" />
 		<Unit filename="src/OmUi/OmUiWizCtxCfg.cpp" />
-		<Unit filename="src/OmUi/OmUiWizCtxLoc.cpp" />
+		<Unit filename="src/OmUi/OmUiWizCtxChn.cpp" />
 		<Unit filename="src/OmUtil/OmUtilB64.cpp" />
 		<Unit filename="src/OmUtil/OmUtilDlg.cpp" />
 		<Unit filename="src/OmUtil/OmUtilErr.cpp" />

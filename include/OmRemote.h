@@ -58,7 +58,7 @@ enum OmRmtHash : unsigned {
 ///
 class OmRemote
 {
-  friend class OmLocation;
+  friend class OmModChan;
   friend class OmRepository;
 
   public:
