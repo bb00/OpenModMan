@@ -142,7 +142,7 @@ bool OmUiPropMgr::applyChanges()
     pUiPropManGle->setChParam(MGR_PROP_GLE_NO_MDPARSE, false);
   }
 
-  // Parameter: Open Context(s) at startup
+  // Parameter: Open Mod Hub(s) at startup
   if(pUiPropManGle->hasChParam(MGR_PROP_GLE_START_LIST)) {
 
     bool bm_chk = pUiPropManGle->msgItem(IDC_BC_CKBX2, BM_GETCHECK);
@@ -159,7 +159,7 @@ bool OmUiPropMgr::applyChanges()
       }
     }
 
-    pMgr->saveStartContexts(bm_chk, path_ls);
+    pMgr->saveStartHubs(bm_chk, path_ls);
 
     // Reset parameter as unmodified
     pUiPropManGle->setChParam(MGR_PROP_GLE_START_LIST, false);

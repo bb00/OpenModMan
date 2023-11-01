@@ -20,19 +20,19 @@
 
 #include "OmManager.h"
 
-#include "OmUiPropCtx.h"
+#include "OmUiPropHub.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilWin.h"
 #include "OmUtilStr.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiPropCtxStg.h"
+#include "OmUiPropHubStg.h"
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropCtxStg::OmUiPropCtxStg(HINSTANCE hins) : OmDialog(hins)
+OmUiPropHubStg::OmUiPropHubStg(HINSTANCE hins) : OmDialog(hins)
 {
   // modified parameters flags
   for(unsigned i = 0; i < 8; ++i) {
@@ -44,7 +44,7 @@ OmUiPropCtxStg::OmUiPropCtxStg(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropCtxStg::~OmUiPropCtxStg()
+OmUiPropHubStg::~OmUiPropHubStg()
 {
 
 }
@@ -53,7 +53,7 @@ OmUiPropCtxStg::~OmUiPropCtxStg()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiPropCtxStg::id() const
+long OmUiPropHubStg::id() const
 {
   return IDD_PROP_CTX_STG;
 }
@@ -62,7 +62,7 @@ long OmUiPropCtxStg::id() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxStg::setChParam(unsigned i, bool en)
+void OmUiPropHubStg::setChParam(unsigned i, bool en)
 {
   this->_chParam[i] = en;
   static_cast<OmDialogProp*>(this->_parent)->checkChanges();
@@ -72,7 +72,7 @@ void OmUiPropCtxStg::setChParam(unsigned i, bool en)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxStg::_onBcBrwIcon()
+void OmUiPropHubStg::_onBcBrwIcon()
 {
   wstring start, result;
 
@@ -108,7 +108,7 @@ void OmUiPropCtxStg::_onBcBrwIcon()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxStg::_onBcDelIcon()
+void OmUiPropHubStg::_onBcDelIcon()
 {
   HICON hIc = Om_getShellIcon(SIID_APPLICATION, true);
   this->msgItem(IDC_SB_ICON, STM_SETICON, reinterpret_cast<WPARAM>(hIc));
@@ -123,24 +123,24 @@ void OmUiPropCtxStg::_onBcDelIcon()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxStg::_onInit()
+void OmUiPropHubStg::_onInit()
 {
   // add icon to buttons
   this->setBmIcon(IDC_BC_BRW01, Om_getResIcon(this->_hins, IDI_BT_OPN));
   this->setBmIcon(IDC_BC_DEL, Om_getResIcon(this->_hins, IDI_BT_REM));
 
   // define controls tool-tips
-  this->_createTooltip(IDC_EC_INP01,  L"Context home folder path");
-  this->_createTooltip(IDC_EC_INP03,  L"Context name, to identify it");
-  this->_createTooltip(IDC_BC_BRW01,  L"Browse to select an icon to associate with Context");
+  this->_createTooltip(IDC_EC_INP01,  L"Mod Hub home folder path");
+  this->_createTooltip(IDC_EC_INP03,  L"Mod Hub name, to identify it");
+  this->_createTooltip(IDC_BC_BRW01,  L"Browse to select an icon to associate with Mod Hub");
   this->_createTooltip(IDC_BC_DEL,    L"Remove the associated icon");
 
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
-  this->setItemText(IDC_EC_INP01, pCtx->home());
-  this->setItemText(IDC_EC_INP02, pCtx->uuid());
-  this->setItemText(IDC_EC_INP03, pCtx->title());
+  this->setItemText(IDC_EC_INP01, pModHub->home());
+  this->setItemText(IDC_EC_INP02, pModHub->uuid());
+  this->setItemText(IDC_EC_INP03, pModHub->title());
 
   this->setItemText(IDC_EC_INP04, L"<none>"); //< hidden icon path
 
@@ -152,7 +152,7 @@ void OmUiPropCtxStg::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxStg::_onResize()
+void OmUiPropHubStg::_onResize()
 {
   // home location Label & EditControl
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 180, 9);
@@ -174,10 +174,10 @@ void OmUiPropCtxStg::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxStg::_onRefresh()
+void OmUiPropHubStg::_onRefresh()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   HICON hIc = nullptr;
   wstring ico_path;
@@ -188,9 +188,9 @@ void OmUiPropCtxStg::_onRefresh()
     // reload the last selected icon
     ExtractIconExW(ico_path.c_str(), 0, &hIc, nullptr, 1);
   } else {
-    // check whether Context already have an icon configured
-    if(pCtx->icon())
-      hIc = pCtx->icon();
+    // check whether Mod Hub already have an icon configured
+    if(pModHub->icon())
+      hIc = pModHub->icon();
   }
 
   if(!hIc) {
@@ -210,7 +210,7 @@ void OmUiPropCtxStg::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropCtxStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropHubStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
@@ -218,16 +218,16 @@ INT_PTR OmUiPropCtxStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch(LOWORD(wParam))
     {
-    case IDC_EC_INP03: //< Entry for Context title
+    case IDC_EC_INP03: //< Entry for Mod Hub title
       // user modified parameter, notify it
       this->setChParam(CTX_PROP_STG_TITLE, true);
       break;
 
-    case IDC_BC_BRW01: //< Brows Button for Context icon
+    case IDC_BC_BRW01: //< Brows Button for Mod Hub icon
       this->_onBcBrwIcon();
       break;
 
-    case IDC_BC_DEL: //< Remove Button for Context icon
+    case IDC_BC_DEL: //< Remove Button for Mod Hub icon
       this->_onBcDelIcon();
       break;
     }

@@ -57,8 +57,8 @@ class OmUiPropChn : public OmDialogProp
     ///
     /// \return Associated Mod Channel or nullptr if none.
     ///
-    OmModChan* chnCur() const {
-      return _pChn;
+    OmModChan* modChan() const {
+      return _modChan;
     }
 
     /// \brief Set associated Mod Channel.
@@ -67,10 +67,10 @@ class OmUiPropChn : public OmDialogProp
     /// work with and on. A valid Mod Channel must be set in order before
     /// opening the dialog.
     ///
-    /// \param[in]  pChn  : Mod Channel object to associate.
+    /// \param[in]  pModChan  : Mod Channel object to associate.
     ///
-    void chnSet(OmModChan* pChn) {
-      _pChn = pChn;
+    void setModChan(OmModChan* pModChan) {
+      this->_modChan = pModChan;
     }
 
     /// \brief Check for properties changes
@@ -88,7 +88,7 @@ class OmUiPropChn : public OmDialogProp
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmModChan*         _pChn;
+    OmModChan*          _modChan;
 
     void*               _movBck_hth;
 

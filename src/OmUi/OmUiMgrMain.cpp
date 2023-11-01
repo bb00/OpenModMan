@@ -230,7 +230,7 @@ void OmUiMgrMain::_onRefresh()
   #endif
 
   //OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  //OmContext* pCtx = pMgr->ctxCur();
+  //OmModHub* pModHub = pMgr->modHubCur();
 }
 
 
@@ -323,7 +323,7 @@ INT_PTR OmUiMgrMain::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       return false;
 
     //OmManager* pMgr = static_cast<OmManager*>(this->_data);
-    //OmContext* pCtx = pMgr->ctxCur();
+    //OmModHub* pModHub = pMgr->modHubCur();
 
     // Menus and Shortcuts Messages
     switch(LOWORD(wParam))

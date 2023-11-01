@@ -22,7 +22,7 @@
 #include <ProcessThreadsApi.h>
 
 #include "OmManager.h"
-#include "OmContext.h"
+#include "OmModHub.h"
 #include "OmModChan.h"
 #include "OmPackage.h"
 #include "OmImage.h"
@@ -344,12 +344,12 @@ void OmRemote::clear()
 ///
 void OmRemote::log(unsigned level, const wstring& head, const wstring& detail)
 {
-  if(this->_repository->pChn() != nullptr) {
+  if(this->_repository->modChan() != nullptr) {
 
-    wstring log_str = L"ModChan("; log_str.append(this->_repository->pChn()->title());
+    wstring log_str = L"ModChan("; log_str.append(this->_repository->modChan()->title());
     log_str.append(L"):: "); log_str.append(head);
 
-    this->_repository->pChn()->log(level, log_str, detail);
+    this->_repository->modChan()->log(level, log_str, detail);
   }
 }
 
@@ -450,8 +450,8 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
       // manage previous packages supersedes
       if(self->_downl_spsd) {
 
-        OmModChan* pChn = self->_repository->pChn();
-        OmContext* pCtx = pChn->pCtx();
+        OmModChan* pModChan = self->_repository->modChan();
+        OmModHub* pModHub = pModChan->pModHub();
         OmPackage* pPkg;
 
         bool install = false;
@@ -473,7 +473,7 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
         vector<wstring> remid_ls; // removed/renamed packages ident list
 
         // prepare packages uninstall and backups restoration
-        pChn->bckPrepareUnin(unin_ls, over_ls, dpnd_ls, pkg_ls);
+        pModChan->bckPrepareUnin(unin_ls, over_ls, dpnd_ls, pkg_ls);
 
         // clean uninstall with proper overlaps and dependencies management
         for(size_t i = 0; i < unin_ls.size(); ++i) {
@@ -497,7 +497,7 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
             // add to removed packages ident list
             remid_ls.push_back(pkg_iden);
 
-            if(pChn->upgdRename()) {
+            if(pModChan->upgdRename()) {
               // rename source with .old extension
               Om_fileMove(pkg_path, pkg_path + L".old");
               log =  L"Previous Package \""+pkg_iden+L"\" renamed as .old";
@@ -521,12 +521,12 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
 
           for(size_t i = 0; i < ident_ls.size(); ++i) {
             // find additional uninstalled packages to be reinstalled
-            pPkg = pChn->pkgFind(ident_ls[i], PKG_TYPE_ZIP);
+            pPkg = pModChan->pkgFind(ident_ls[i], PKG_TYPE_ZIP);
             if(pPkg) pkg_ls.push_back(pPkg);
           }
 
           // add this new version to be installed
-          pPkg = pChn->pkgFind(self->ident(), PKG_TYPE_ZIP);
+          pPkg = pModChan->pkgFind(self->ident(), PKG_TYPE_ZIP);
           if(pPkg) pkg_ls.push_back(pPkg);
 
           vector<OmPackage*> inst_ls; //< final install list
@@ -535,24 +535,24 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
           vector<wstring> miss_ls;    //< missing dependencies lists
 
           // prepare package installation
-          pChn->pkgPrepareInst(inst_ls, over_ls, dpcs_ls, miss_ls, pkg_ls);
+          pModChan->pkgPrepareInst(inst_ls, over_ls, dpcs_ls, miss_ls, pkg_ls);
 
           for(size_t i = 0; i < inst_ls.size(); ++i) {
-            inst_ls[i]->install(pChn->bckZipLevel(), nullptr, nullptr);
+            inst_ls[i]->install(pModChan->bckZipLevel(), nullptr, nullptr);
           }
         }
 
         OmBatch* pBat;
 
         // find our new version package
-        pPkg = pChn->pkgFind(self->ident(), PKG_TYPE_ZIP);
+        pPkg = pModChan->pkgFind(self->ident(), PKG_TYPE_ZIP);
 
         bool add_new;
 
         // remove package references from existing batches
-        for(size_t i = 0; i < pCtx->batCount(); ++i) {
+        for(size_t i = 0; i < pModHub->batCount(); ++i) {
 
-          pBat = pCtx->batGet(i);
+          pBat = pModHub->batGet(i);
 
           add_new = false;
 
@@ -560,12 +560,12 @@ DWORD WINAPI OmRemote::_downl_fth(void* ptr)
           for(size_t j = 0; j < remid_ls.size(); ++j) {
 
             // search for package reference in batch, then remove
-            if(pBat->instRem(pChn, remid_ls[j]))
+            if(pBat->instRem(pModChan, remid_ls[j]))
               add_new = true;
           }
 
           // old reference was found, add reference to the new version
-          if(add_new) pBat->instAdd(pChn, pPkg);
+          if(add_new) pBat->instAdd(pModChan, pPkg);
         }
       }
     }

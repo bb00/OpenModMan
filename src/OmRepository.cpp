@@ -28,8 +28,8 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmRepository::OmRepository(OmModChan* pChn) :
-  _pChn(pChn),_base(),_name(),_url(),_valid(false),_error()
+OmRepository::OmRepository(OmModChan* pModChan) :
+  _modChan(pModChan),_base(),_name(),_url(),_valid(false),_error()
 {
 
 }
@@ -264,11 +264,11 @@ void OmRepository::clear()
 ///
 void OmRepository::log(unsigned level, const wstring& head, const wstring& detail)
 {
-  if(this->_pChn != nullptr) {
+  if(this->_modChan != nullptr) {
 
-    wstring log_str = L"ModChan("; log_str.append(this->_pChn->title());
+    wstring log_str = L"ModChan("; log_str.append(this->_modChan->title());
     log_str.append(L"):: "); log_str.append(head);
 
-    this->_pChn->log(level, log_str, detail);
+    this->_modChan->log(level, log_str, detail);
   }
 }

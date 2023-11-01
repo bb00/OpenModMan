@@ -22,7 +22,7 @@
 
 #include "OmUiMgr.h"
 #include "OmUiAddChn.h"
-#include "OmUiPropCtx.h"
+#include "OmUiPropHub.h"
 #include "OmUiPropChn.h"
 #include "OmUiProgress.h"
 
@@ -30,7 +30,7 @@
 #include "OmUtilWin.h"         //< Om_getResIcon
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiPropCtxChn.h"
+#include "OmUiPropHubChn.h"
 
 /// \brief Custom window Message
 ///
@@ -43,7 +43,7 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropCtxChn::OmUiPropCtxChn(HINSTANCE hins) : OmDialog(hins),
+OmUiPropHubChn::OmUiPropHubChn(HINSTANCE hins) : OmDialog(hins),
   _delChn_hth(nullptr),
   _delChn_id(-1)
 {
@@ -57,7 +57,7 @@ OmUiPropCtxChn::OmUiPropCtxChn(HINSTANCE hins) : OmDialog(hins),
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropCtxChn::~OmUiPropCtxChn()
+OmUiPropHubChn::~OmUiPropHubChn()
 {
 
 }
@@ -66,7 +66,7 @@ OmUiPropCtxChn::~OmUiPropCtxChn()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiPropCtxChn::id() const
+long OmUiPropHubChn::id() const
 {
   return IDD_PROP_CTX_CHN;
 }
@@ -75,7 +75,7 @@ long OmUiPropCtxChn::id() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::setChParam(unsigned i, bool en)
+void OmUiPropHubChn::setChParam(unsigned i, bool en)
 {
   this->_chParam[i] = en;
   static_cast<OmDialogProp*>(this->_parent)->checkChanges();
@@ -85,24 +85,24 @@ void OmUiPropCtxChn::setChParam(unsigned i, bool en)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_delChn_init(int id)
+void OmUiPropHubChn::_delChn_init(int id)
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   // store Mod Channel id
   this->_delChn_id = id;
-  OmModChan* pChn = pCtx->chnGet(id);
+  OmModChan* pModChan = pModHub->modChanGet(id);
 
   // To prevent crash during operation we unselect location in the main dialog
   static_cast<OmUiMgr*>(this->root())->safemode(true);
 
   // unselect location
-  pCtx->chnSel(-1);
+  pModHub->modChanSelect(-1);
 
   // if Mod Channel does not have backup data, we can bypass the purge and
   // do directly to the end
-  if(pChn->bckHasData()) {
+  if(pModChan->bckHasData()) {
 
     OmUiProgress* pUiProgress = static_cast<OmUiProgress*>(this->siblingById(IDD_PROGRESS));
 
@@ -124,7 +124,7 @@ void OmUiPropCtxChn::_delChn_init(int id)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_delChn_stop()
+void OmUiPropHubChn::_delChn_stop()
 {
   DWORD exitCode;
 
@@ -138,8 +138,8 @@ void OmUiPropCtxChn::_delChn_stop()
   // quit the progress dialog
   static_cast<OmUiProgress*>(this->siblingById(IDD_PROGRESS))->quit();
 
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   wstring msg;
 
@@ -147,7 +147,7 @@ void OmUiPropCtxChn::_delChn_stop()
   if(exitCode == 0) {
 
     // backup data purged, now delete Mod Channel
-    if(!pCtx->chnRem(this->_delChn_id)) {
+    if(!pModHub->modChanDelete(this->_delChn_id)) {
       Om_dlgBox_ok(this->_hwnd, L"Hub properties", IDI_WRN,
                 L"Channel remove error", L"Channel "
                 "remove process encountered error(s), some file may "
@@ -163,7 +163,7 @@ void OmUiPropCtxChn::_delChn_stop()
   }
 
   // select the first location in list
-  pCtx->chnSel(0);
+  pModHub->modChanSelect(0);
 
   // Back to main dialog window to normal state
   static_cast<OmUiMgr*>(this->root())->safemode(false);
@@ -176,18 +176,18 @@ void OmUiPropCtxChn::_delChn_stop()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-DWORD WINAPI OmUiPropCtxChn::_delChn_fth(void* arg)
+DWORD WINAPI OmUiPropHubChn::_delChn_fth(void* arg)
 {
-  OmUiPropCtxChn* self = static_cast<OmUiPropCtxChn*>(arg);
+  OmUiPropHubChn* self = static_cast<OmUiPropHubChn*>(arg);
 
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(self->_parent)->ctxCur();
-  if(!pCtx) return 1;
-  OmModChan* pChn = pCtx->chnGet(self->_delChn_id);
-  if(!pChn) return 1;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(self->_parent)->modHubCur();
+  if(!pModHub) return 1;
+  OmModChan* pModChan = pModHub->modChanGet(self->_delChn_id);
+  if(!pModChan) return 1;
 
   DWORD exitCode = 0;
 
-  if(!pChn->bckPurge(&self->_delChn_progress_cb, self->siblingById(IDD_PROGRESS))) {
+  if(!pModChan->bckPurge(&self->_delChn_progress_cb, self->siblingById(IDD_PROGRESS))) {
     exitCode = 1; //< report error
   }
 
@@ -201,7 +201,7 @@ DWORD WINAPI OmUiPropCtxChn::_delChn_fth(void* arg)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiPropCtxChn::_delChn_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data)
+bool OmUiPropHubChn::_delChn_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data)
 {
   OmUiProgress* pUiProgress = reinterpret_cast<OmUiProgress*>(ptr);
 
@@ -218,21 +218,21 @@ bool OmUiPropCtxChn::_delChn_progress_cb(void* ptr, size_t tot, size_t cur, uint
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onLbLoclsSel()
+void OmUiPropHubChn::_onLbLoclsSel()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
   int chn_id = this->msgItem(IDC_LB_CHN, LB_GETITEMDATA, lb_sel);
 
   if(chn_id >= 0) {
 
-    OmModChan* pChn = pCtx->chnGet(chn_id);
+    OmModChan* pModChan = pModHub->modChanGet(chn_id);
 
-    this->setItemText(IDC_EC_READ2, pChn->dstDir());
-    this->setItemText(IDC_EC_READ3, pChn->libDir());
-    this->setItemText(IDC_EC_READ4, pChn->bckDir());
+    this->setItemText(IDC_EC_READ2, pModChan->dstDir());
+    this->setItemText(IDC_EC_READ3, pModChan->libDir());
+    this->setItemText(IDC_EC_READ4, pModChan->bckDir());
 
     this->enableItem(IDC_SC_LBL02, true);
     this->enableItem(IDC_EC_READ2, true);
@@ -271,7 +271,7 @@ void OmUiPropCtxChn::_onLbLoclsSel()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onBcUpChn()
+void OmUiPropHubChn::_onBcUmodChan()
 {
   // get selected item (index)
   int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
@@ -303,7 +303,7 @@ void OmUiPropCtxChn::_onBcUpChn()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onBcDnChn()
+void OmUiPropHubChn::_onBcDnChn()
 {
   // get selected item (index)
   int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
@@ -338,27 +338,27 @@ void OmUiPropCtxChn::_onBcDnChn()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onBcDelChn()
+void OmUiPropHubChn::_onBcDelChn()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
   int chn_id = this->msgItem(IDC_LB_CHN, LB_GETITEMDATA, lb_sel);
 
   if(chn_id < 0) return;
 
-  OmModChan* pChn = pCtx->chnGet(chn_id);
+  OmModChan* pModChan = pModHub->modChanGet(chn_id);
 
   // warns the user before committing the irreparable
   if(!Om_dlgBox_ca(this->_hwnd, L"Mod Hub properties", IDI_QRY,
             L"Delete Mod Channel", L"The operation will permanently delete "
-            "the Mod Channel \""+pChn->title()+L"\" and its associated data."))
+            "the Mod Channel \""+pModChan->title()+L"\" and its associated data."))
   {
     return;
   }
 
-  if(pChn->bckHasData()) {
+  if(pModChan->bckHasData()) {
 
     if(!Om_dlgBox_ca(this->_hwnd, L"Mod Hub properties", IDI_QRY,
               L"Remaining backup data", L"The Mod Channel currently have "
@@ -377,10 +377,10 @@ void OmUiPropCtxChn::_onBcDelChn()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onBcEdiChn()
+void OmUiPropHubChn::_onBcEdiChn()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   int lb_sel = this->msgItem(IDC_LB_CHN, LB_GETCURSEL);
   int chn_id = this->msgItem(IDC_LB_CHN, LB_GETITEMDATA, lb_sel);
@@ -388,7 +388,7 @@ void OmUiPropCtxChn::_onBcEdiChn()
   if(chn_id >= 0) {
     // open the Mod Channel Properties dialog
     OmUiPropChn* pUiPropLoc = static_cast<OmUiPropChn*>(this->siblingById(IDD_PROP_CHN));
-    pUiPropLoc->chnSet(pCtx->chnGet(chn_id));
+    pUiPropLoc->setModChan(pModHub->modChanGet(chn_id));
     pUiPropLoc->open();
   }
 }
@@ -397,14 +397,14 @@ void OmUiPropCtxChn::_onBcEdiChn()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onBcAddChn()
+void OmUiPropHubChn::_onBcAddChn()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   // open add Mod Channel dialog
   OmUiAddChn* pUiNewLoc = static_cast<OmUiAddChn*>(this->siblingById(IDD_ADD_CHN));
-  pUiNewLoc->ctxSet(pCtx);
+  pUiNewLoc->ctxSet(pModHub);
   pUiNewLoc->open(true);
 }
 
@@ -412,7 +412,7 @@ void OmUiPropCtxChn::_onBcAddChn()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onInit()
+void OmUiPropHubChn::_onInit()
 {
   // Set buttons inner icons
   this->setBmIcon(IDC_BC_ADD, Om_getResIcon(this->_hins, IDI_BT_ADD));
@@ -437,7 +437,7 @@ void OmUiPropCtxChn::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onResize()
+void OmUiPropHubChn::_onResize()
 {
   // Mod Channel list Label & ListBox
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 64, 9);
@@ -465,15 +465,15 @@ void OmUiPropCtxChn::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxChn::_onRefresh()
+void OmUiPropHubChn::_onRefresh()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   this->msgItem(IDC_LB_CHN, LB_RESETCONTENT);
 
-  for(unsigned i = 0; i < pCtx->chnCount(); ++i) {
-    this->msgItem(IDC_LB_CHN, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(pCtx->chnGet(i)->title().c_str()));
+  for(unsigned i = 0; i < pModHub->modChanCount(); ++i) {
+    this->msgItem(IDC_LB_CHN, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(pModHub->modChanGet(i)->title().c_str()));
     this->msgItem(IDC_LB_CHN, LB_SETITEMDATA, i, i); // for Mod Channel index reordering
   }
 
@@ -500,7 +500,7 @@ void OmUiPropCtxChn::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropCtxChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropHubChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   // UWM_BACKPURGE_DONE is a custom message sent from Mod Channel backups purge thread
   // function, to notify the progress dialog ended is job.
@@ -518,7 +518,7 @@ INT_PTR OmUiPropCtxChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       break;
 
     case IDC_BC_UP: //< Up Buttn
-      this->_onBcUpChn();
+      this->_onBcUmodChan();
       break;
 
     case IDC_BC_DN: //< Down Buttn

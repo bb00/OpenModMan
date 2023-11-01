@@ -20,16 +20,16 @@
 
 #include "OmManager.h"
 
-#include "OmUiWizCtx.h"
+#include "OmUiWizHub.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiWizCtxBeg.h"
+#include "OmUiWizHubBeg.h"
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtxBeg::OmUiWizCtxBeg(HINSTANCE hins) : OmDialog(hins)
+OmUiWizHubBeg::OmUiWizHubBeg(HINSTANCE hins) : OmDialog(hins)
 {
 
 }
@@ -38,7 +38,7 @@ OmUiWizCtxBeg::OmUiWizCtxBeg(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtxBeg::~OmUiWizCtxBeg()
+OmUiWizHubBeg::~OmUiWizHubBeg()
 {
 
 }
@@ -47,7 +47,7 @@ OmUiWizCtxBeg::~OmUiWizCtxBeg()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiWizCtxBeg::id() const
+long OmUiWizHubBeg::id() const
 {
   return IDD_WIZ_CTX_BEG;
 }
@@ -56,7 +56,7 @@ long OmUiWizCtxBeg::id() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxBeg::_onInit()
+void OmUiWizHubBeg::_onInit()
 {
 
 }
@@ -65,7 +65,7 @@ void OmUiWizCtxBeg::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxBeg::_onShow()
+void OmUiWizHubBeg::_onShow()
 {
   // enable the Wizard Next button
   static_cast<OmDialogWiz*>(this->_parent)->setNextAllowed(true);
@@ -75,7 +75,7 @@ void OmUiWizCtxBeg::_onShow()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxBeg::_onResize()
+void OmUiWizHubBeg::_onResize()
 {
   // Intro paragraph
   this->_setItemPos(IDC_SC_INTRO, 10, 5, 190, 60);
@@ -85,7 +85,7 @@ void OmUiWizCtxBeg::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxBeg::_onRefresh()
+void OmUiWizHubBeg::_onRefresh()
 {
 
 }
@@ -94,7 +94,7 @@ void OmUiWizCtxBeg::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxBeg::_onQuit()
+void OmUiWizHubBeg::_onQuit()
 {
 
 }
@@ -103,7 +103,7 @@ void OmUiWizCtxBeg::_onQuit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiWizCtxBeg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiWizHubBeg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   return false;
 }

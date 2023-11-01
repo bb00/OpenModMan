@@ -20,7 +20,7 @@
 #include "OmBase.h"
 
 #include "OmConfig.h"
-#include "OmContext.h"
+#include "OmModHub.h"
 
 // maximum count of recent file path to store
 #define OM_MANAGER_MAX_RECENT     10
@@ -69,7 +69,8 @@ class OmManager
     ///
     /// Initializes the application, load or create initial configuration.
     ///
-    /// \param[in]  arg : Optional command line arguments string.
+    /// \param[in]  hwnd  : Main Windows handle.
+    /// \param[in]  arg   : Optional command line arguments string.
     ///
     /// \return True if operation succeed, false otherwise.
     ///
@@ -83,65 +84,92 @@ class OmManager
     ///
     bool quit();
 
-    /// \brief Get Context count.
+    /// \brief Create new Mod Hub.
     ///
-    /// Returns loaded Context count.
+    /// Create a new Mod Hub configuration in the specified path.
     ///
-    /// \return Loaded Context count.
+    /// \param[in]  title     : New Mod Hub title.
+    /// \param[in]  path      : Path where to create Mod Hub.
+    /// \param[in]  open      : Open newly created Mod Hub after creation.
     ///
-    size_t ctxCount() const {
-      return _ctxLs.size();
+    bool modHubCreate(const wstring& title, const wstring& path, bool open = true);
+
+    /// \brief Open Mod Hub.
+    ///
+    /// Open a Mod Hub configuration at the specified path.
+    ///
+    /// \param[in]  path      : Mod Hub file path.
+    /// \param[in]  select    : Select the opened Mod Hub.
+    ///
+    bool modHubLoad(const wstring& path, bool select = true);
+
+    /// \brief Close current Mod Hub.
+    ///
+    /// Close Mod Hub.
+    ///
+    /// \param[in]  i         : Mod Hub index to close, or -1 to close current selected.
+    ///
+    void modHubClose(int i = -1);
+
+    /// \brief Get Mod Hub count.
+    ///
+    /// Returns loaded Mod Hub count.
+    ///
+    /// \return Loaded Mod Hub count.
+    ///
+    size_t modHubCount() const {
+      return _modHubLs.size();
     }
 
-    /// \brief Get Context.
+    /// \brief Get Mod Hub.
     ///
-    /// Returns loaded Context instance at index.
+    /// Returns loaded Mod Hub instance at index.
     ///
-    /// \param[in]  i     : Context index.
+    /// \param[in]  i     : Mod Hub index.
     ///
-    /// \return Loaded Context instance.
+    /// \return Loaded Mod Hub instance.
     ///
-    OmContext* ctxGet(unsigned i) {
-      return _ctxLs[i];
+    OmModHub* modHubGet(unsigned i) {
+      return _modHubLs[i];
     }
 
-    /// \brief Set selected Context.
+    /// \brief Set selected Mod Hub.
     ///
-    /// Select the specified Context at index. The selected Context will be
-    /// available by via the OmManager.ctxCur Context.
+    /// Select the specified Mod Hub at index. The selected Mod Hub will be
+    /// available by via the OmManager.ctxCur Mod Hub.
     ///
-    /// \param[in]  i     : Index of Context to select or -1 to unselect.
+    /// \param[in]  i     : Index of Mod Hub to select or -1 to unselect.
     ///
-    void ctxSel(int i);
+    void modHubSel(int i);
 
-    /// \brief Get active Context.
+    /// \brief Get active Mod Hub.
     ///
-    /// Returns current active Context.
+    /// Returns current active Mod Hub.
     ///
-    /// \return Current active Context.
+    /// \return Current active Mod Hub.
     ///
-    OmContext* ctxCur() const {
-      return _ctxCur >= 0 ? _ctxLs[_ctxCur] : nullptr;
+    OmModHub* modHubCur() const {
+      return _modHubSl >= 0 ? _modHubLs[_modHubSl] : nullptr;
     }
 
-    /// \brief Get active Context index.
+    /// \brief Get active Mod Hub index.
     ///
-    /// Returns current active Context index.
+    /// Returns current active Mod Hub index.
     ///
-    /// \return Current active Context index.
+    /// \return Current active Mod Hub index.
     ///
-    int ctxCurId() const {
-      return _ctxCur;
+    int modHubCurIdx() const {
+      return _modHubSl;
     }
 
-    /// \brief Get active Mod Channel from active Context.
+    /// \brief Get active Mod Channel from active Mod Hub.
     ///
-    /// Returns current active Mod Channel from active Context.
+    /// Returns current active Mod Channel from active Mod Hub.
     ///
     /// \return Current active Mod Channel or null.
     ///
-    OmModChan* chnCur() const {
-      return _ctxCur >= 0 ? _ctxLs[_ctxCur]->chnCur() : nullptr;
+    OmModChan* modChanCur() const {
+      return _modHubSl >= 0 ? _modHubLs[_modHubSl]->modChanCur() : nullptr;
     }
 
     /// \brief Save configuration window RECT.
@@ -202,36 +230,36 @@ class OmManager
     ///
     /// Saves the default working location path in configuration file.
     ///
-    /// \param[in]  path    : last used Context path.
+    /// \param[in]  path    : last used Mod Hub path.
     ///
     void saveDefaultLocation(const wstring& path);
 
     /// \brief Get default working location
     ///
     /// Retrieve best default save location path, according last created
-    /// Context and or environment variables.
+    /// Mod Hub and or environment variables.
     ///
     /// \param[in]  path    : Reference to wide string array to get path.
     ///
     void getDefaultLocation(wstring& path);
 
-    /// \brief Save configuration startup Context.
+    /// \brief Save configuration startup Mod Hub.
     ///
-    /// Stores startup Context path.
+    /// Stores startup Mod Hub path.
     ///
     /// \param[in]  enable  : enable auto-load.
-    /// \param[in]  path    : startup Context(s) file path list.
+    /// \param[in]  path    : startup Mod Hub(s) file path list.
     ///
-    void saveStartContexts(bool enable, const vector<wstring>& path);
+    void saveStartHubs(bool enable, const vector<wstring>& path);
 
-    /// \brief Load configuration startup Context(s) path.
+    /// \brief Load configuration startup Mod Hub(s) path.
     ///
-    /// Retrieve path to Context(s) to be loaded at application start.
+    /// Retrieve path to Mod Hub(s) to be loaded at application start.
     ///
     /// \param[in]  path    : Pointer to boolean to get auto-load.
     /// \param[in]  path    : Reference to wide string to get path.
     ///
-    void getStartContexts(bool* enable, vector<wstring>& path);
+    void getStartHubs(bool* enable, vector<wstring>& path);
 
     /// \brief Get icons size option.
     ///
@@ -269,33 +297,6 @@ class OmManager
     ///
     void setNoMarkdown(bool enable);
 
-    /// \brief Create new Context.
-    ///
-    /// Create a new Context configuration in the specified path.
-    ///
-    /// \param[in]  title     : New Context title.
-    /// \param[in]  path      : Path where to create Context.
-    /// \param[in]  open      : Open newly created Context after creation.
-    ///
-    bool ctxNew(const wstring& title, const wstring& path, bool open = true);
-
-    /// \brief Open Context.
-    ///
-    /// Open a Context configuration at the specified path.
-    ///
-    /// \param[in]  path      : Context file path.
-    /// \param[in]  select    : Select the opened Context.
-    ///
-    bool ctxOpen(const wstring& path, bool select = true);
-
-    /// \brief Close current Context.
-    ///
-    /// Close Context.
-    ///
-    /// \param[in]  i         : Context index to close, or -1 to close current selected.
-    ///
-    void ctxClose(int i = -1);
-
     /// \brief Set log output.
     ///
     /// Defines an Edit Control to output log in real time.
@@ -316,9 +317,9 @@ class OmManager
 
     OmConfig            _config;
 
-    vector<OmContext*>  _ctxLs;
+    vector<OmModHub*>   _modHubLs;
 
-    int                 _ctxCur;
+    int                 _modHubSl;
 
     // general options
     unsigned            _iconsSize;
@@ -347,6 +348,8 @@ class OmManager
     void*               _logHwnd;
 
     void*               _logFile;
+
+    bool                _migrate();
 
 };
 

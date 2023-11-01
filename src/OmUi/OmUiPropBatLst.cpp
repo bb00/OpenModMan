@@ -19,7 +19,7 @@
 
 #include "OmBaseUi.h"
 
-#include "OmContext.h"
+#include "OmModHub.h"
 #include "OmBatch.h"
 #include "OmDialogProp.h"
 
@@ -79,15 +79,15 @@ void OmUiPropBatLst::_buildLbs()
 
   OmBatch* pBat = static_cast<OmUiPropBat*>(this->_parent)->batCur();
   if(!pBat) return;
-  OmContext* pCtx = pBat->pCtx();
-  if(!pCtx) return;
+  OmModHub* pModHub = pBat->pModHub();
+  if(!pModHub) return;
 
   // get current ComboBox selection first Mod Channel by default
   int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
   if(cb_sel < 0) return;
 
   // get Mod Channel corresponding to current selection
-  OmModChan* pChn = pCtx->chnGet(cb_sel);
+  OmModChan* pModChan = pModHub->modChanGet(cb_sel);
 
   unsigned p;
   OmPackage* pPkg;
@@ -97,7 +97,7 @@ void OmUiPropBatLst::_buildLbs()
   for(size_t i = 0; i < this->_excluded[cb_sel].size(); i++) {
 
     p = this->_excluded[cb_sel][i];
-    pPkg = pChn->pkgGet(p);
+    pPkg = pModChan->pkgGet(p);
 
     item_str = Om_getFilePart(pPkg->srcPath());
     this->msgItem(IDC_LB_EXC, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
@@ -111,7 +111,7 @@ void OmUiPropBatLst::_buildLbs()
   for(size_t i = 0; i < this->_included[cb_sel].size(); i++) {
 
     p = this->_included[cb_sel][i];
-    pPkg = pChn->pkgGet(p);
+    pPkg = pModChan->pkgGet(p);
 
     item_str = Om_getFilePart(pPkg->srcPath());
     this->msgItem(IDC_LB_INC, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
@@ -462,10 +462,10 @@ void OmUiPropBatLst::_onRefresh()
   OmBatch* pBat = static_cast<OmUiPropBat*>(this->_parent)->batCur();
   if(!pBat) return;
 
-  OmContext* pCtx = pBat->pCtx();
-  if(!pCtx) return;
+  OmModHub* pModHub = pBat->pModHub();
+  if(!pModHub) return;
 
-  OmModChan* pChn;
+  OmModChan* pModChan;
 
   // empty the ComboBox
   this->msgItem(IDC_CB_CHN, CB_RESETCONTENT);
@@ -478,13 +478,13 @@ void OmUiPropBatLst::_onRefresh()
   vector<OmPackage*> bat_ls;
 
   // add Mod Channel(s) to Combo-Box
-  for(unsigned i = 0; i < pCtx->chnCount(); ++i) {
+  for(unsigned i = 0; i < pModHub->modChanCount(); ++i) {
 
-    pChn = pCtx->chnGet(i);
+    pModChan = pModHub->modChanGet(i);
 
-    item_str = pChn->title();
+    item_str = pModChan->title();
     item_str += L" - ";
-    item_str += pChn->home();
+    item_str += pModChan->home();
 
     this->msgItem(IDC_CB_CHN, CB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
 
@@ -493,27 +493,27 @@ void OmUiPropBatLst::_onRefresh()
     this->_included.push_back(vector<int>());
 
     // get batch install list Packages
-    pBat->instGetList(pChn, bat_ls);
+    pBat->instGetList(pModChan, bat_ls);
 
     if(bat_ls.size()) {
 
       // fill the include list ordered as in the batch
       int p;
       for(size_t j = 0; j < bat_ls.size(); ++j) {
-        p = pChn->pkgIndex(bat_ls[j]);
+        p = pModChan->pkgIndex(bat_ls[j]);
         if(p >= 0) this->_included.back().push_back(p);
       }
 
       // fill the exclude list
-      for(size_t j = 0; j < pChn->pkgCount(); ++j) {
-        if(std::find(bat_ls.begin(), bat_ls.end(), pChn->pkgGet(j)) == bat_ls.end())
+      for(size_t j = 0; j < pModChan->pkgCount(); ++j) {
+        if(std::find(bat_ls.begin(), bat_ls.end(), pModChan->pkgGet(j)) == bat_ls.end())
           this->_excluded.back().push_back(j);
       }
 
     } else {
 
       // fill the exclude list
-      for(size_t j = 0; j < pChn->pkgCount(); ++j)
+      for(size_t j = 0; j < pModChan->pkgCount(); ++j)
         this->_excluded.back().push_back(j);
     }
   }

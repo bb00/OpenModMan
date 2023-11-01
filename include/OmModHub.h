@@ -15,8 +15,8 @@
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OMCONTEXT_H
-#define OMCONTEXT_H
+#ifndef OMMODHUB_H
+#define OMMODHUB_H
 
 #include "OmBase.h"
 #include "OmBaseWin.h"
@@ -27,11 +27,11 @@
 
 class OmManager;
 
-/// \brief OmManager Context object.
+/// \brief Mod Hub object.
 ///
-/// The Context object describe a global environment for package management.
+/// The Mod Hub object describe a global environment for package management.
 ///
-class OmContext
+class OmModHub
 {
   friend class OmModChan;
   friend class Package;
@@ -42,25 +42,25 @@ class OmContext
     ///
     /// Default constructor.
     ///
-    OmContext(OmManager* pMgr);
+    OmModHub(OmManager* pMgr);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmContext();
+    ~OmModHub();
 
-    /// \brief Open Context.
+    /// \brief Open Mod Hub.
     ///
-    /// Load Context from specified file.
+    /// Load Mod Hub from specified file.
     ///
-    /// \param[in]  path    : File path of Context to be loaded.
+    /// \param[in]  path    : File path of Mod Hub to be loaded.
     ///
     /// \return True if operation succeed, false otherwise.
     ///
     bool open(const wstring& path);
 
-    /// \brief Close Context.
+    /// \brief Close Mod Hub.
     ///
     /// Close and empty the current instance.
     ///
@@ -86,49 +86,49 @@ class OmContext
       return _valid;
     }
 
-    /// \brief Get Context file path.
+    /// \brief Get Mod Hub file path.
     ///
-    /// Returns Context file path.
+    /// Returns Mod Hub file path.
     ///
-    /// \return Context file path.
+    /// \return Mod Hub file path.
     ///
     const wstring& path() const {
       return _path;
     }
 
-    /// \brief Get Context UUID.
+    /// \brief Get Mod Hub UUID.
     ///
-    /// Returns Context UUID.
+    /// Returns Mod Hub UUID.
     ///
-    /// \return Context UUID.
+    /// \return Mod Hub UUID.
     ///
     const wstring& uuid() const {
       return _uuid;
     }
 
-    /// \brief Get Context title.
+    /// \brief Get Mod Hub title.
     ///
-    /// Returns Context title.
+    /// Returns Mod Hub title.
     ///
-    /// \return Context title.
+    /// \return Mod Hub title.
     ///
     const wstring& title() const {
       return _title;
     }
 
-    /// \brief Get Context home directory.
+    /// \brief Get Mod Hub home directory.
     ///
     /// Returns home directory.
     ///
-    /// \return Context home directory.
+    /// \return Mod Hub home directory.
     ///
     const wstring& home() const {
       return _home;
     }
 
-    /// \brief Get Context icon.
+    /// \brief Get Mod Hub icon.
     ///
-    /// Returns Context icon as icon handle.
+    /// Returns Mod Hub icon as icon handle.
     ///
     /// \return Banner bitmap handle.
     ///
@@ -136,17 +136,17 @@ class OmContext
       return _icon;
     }
 
-    /// \brief Set Context title.
+    /// \brief Set Mod Hub title.
     ///
-    /// Defines and save Context title.
+    /// Defines and save Mod Hub title.
     ///
     /// \param[in]  title   : Title to defines and save
     ///
     void setTitle(const wstring& title);
 
-    /// \brief Set Context icon.
+    /// \brief Set Mod Hub icon.
     ///
-    /// Defines the Context icon source file. This must be a valid path to
+    /// Defines the Mod Hub icon source file. This must be a valid path to
     /// an icon or executable file or empty string to remove current setting.
     ///
     /// \param[in]  src     : Path to file to extract or empty
@@ -154,97 +154,9 @@ class OmContext
     ///
     void setIcon(const wstring& src);
 
-    /// \brief Get Mod Channel count.
-    ///
-    /// Returns count of Mod Channel defined in the Context.
-    ///
-    /// \return Mod Channel count.
-    ///
-    size_t chnCount() {
-      return _chnLs.size();
-    }
-
-    /// \brief Get Mod Channel.
-    ///
-    /// Returns Mod Channel at index.
-    ///
-    /// \param[in]  i      : Mod Channel index.
-    ///
-    /// \return Mod Channel object at index or nullptr if index is out of bound.
-    ///
-    OmModChan* chnGet(unsigned i) {
-      return (i < _chnLs.size()) ? _chnLs[i] : nullptr;
-    }
-
-    /// \brief Get Mod Channel.
-    ///
-    /// Returns Mod Channel with specified UUID.
-    ///
-    /// \param[in]  uuid     : Mod Channel UUID to search.
-    ///
-    /// \return Mod Channel object or nullptr if not found.
-    ///
-    OmModChan* chnGet(const wstring& uuid);
-
-    /// \brief Get Mod Channel index.
-    ///
-    /// Returns the index of the Mod Channel that matches the specified UUID.
-    ///
-    /// \param[in]  uuid     : Mod Channel UUID to search.
-    ///
-    /// \return Mod Channel index or -1 if not found.
-    ///
-    int chnIndex(const wstring& uuid);
-
-    /// \brief Sort Mod Channel list.
-    ///
-    /// Sort Mod Channel list according Mod Channel ordering index.
-    ///
-    void chnSort();
-
-    /// \brief Select Mod Channel.
-    ///
-    /// Sets the specified Mod Channel as active one.
-    ///
-    /// \param[in]  i       : Mod Channel index or -1 to unselect.
-    ///
-    /// \return True if operation succeed, false if id is out of bound.
-    ///
-    bool chnSel(int i);
-
-    /// \brief Select Mod Channel.
-    ///
-    /// Sets the specified Mod Channel as active one.
-    ///
-    /// \param[in]  uuid    : Mod Channel UUID to select.
-    ///
-    /// \return True if operation succeed, false if Mod Channel with such UUID does not exists.
-    ///
-    bool chnSel(const wstring& uuid);
-
-    /// \brief Get active Mod Channel.
-    ///
-    /// Returns current active Mod Channel.
-    ///
-    /// \return Current active Mod Channel or nullptr if none is active.
-    ///
-    OmModChan* chnCur() {
-      return _chnCur >= 0 ? _chnLs[_chnCur] : nullptr;
-    }
-
-    /// \brief Get active Mod Channel index.
-    ///
-    /// Returns index of the current active Mod Channel.
-    ///
-    /// \return Index of the active Mod Channel.
-    ///
-    int chnCurIndex() const {
-      return _chnCur;
-    }
-
     /// \brief Make new Mod Channel.
     ///
-    /// Creates a new Mod Channel within the Context.
+    /// Creates a new Mod Channel within the Mod Hub.
     ///
     /// \param[in]  title     : Title of new Mod Channel to be created.
     /// \param[in]  install   : Package installation destination folder path.
@@ -253,7 +165,7 @@ class OmContext
     ///
     /// \return True if operation succeed, false otherwise.
     ///
-    bool chnAdd(const wstring& title, const wstring& install, const wstring& library, const wstring& backup);
+    bool modChanCreate(const wstring& title, const wstring& install, const wstring& library, const wstring& backup);
 
     /// \brief Purge existing Mod Channel.
     ///
@@ -264,19 +176,107 @@ class OmContext
     ///
     /// \return True if operation succeed, false otherwise.
     ///
-    bool chnRem(unsigned i);
+    bool modChanDelete(unsigned i);
 
-    /// \brief Get Context Batch count.
+    /// \brief Get Mod Channel count.
     ///
-    /// Returns count of Batch defined in the Context.
+    /// Returns count of Mod Channel defined in the Mod Hub.
     ///
-    /// \return Batch count.
+    /// \return Mod Channel count.
+    ///
+    size_t modChanCount() {
+      return _modChanLs.size();
+    }
+
+    /// \brief Get Mod Channel.
+    ///
+    /// Returns Mod Channel at index.
+    ///
+    /// \param[in]  i      : Mod Channel index.
+    ///
+    /// \return Mod Channel object at index or nullptr if index is out of bound.
+    ///
+    OmModChan* modChanGet(unsigned i) {
+      return (i < _modChanLs.size()) ? _modChanLs[i] : nullptr;
+    }
+
+    /// \brief Get Mod Channel.
+    ///
+    /// Returns Mod Channel with specified UUID.
+    ///
+    /// \param[in]  uuid     : Mod Channel UUID to search.
+    ///
+    /// \return Mod Channel object or nullptr if not found.
+    ///
+    OmModChan* modChanGet(const wstring& uuid);
+
+    /// \brief Get Mod Channel index.
+    ///
+    /// Returns the index of the Mod Channel that matches the specified UUID.
+    ///
+    /// \param[in]  uuid     : Mod Channel UUID to search.
+    ///
+    /// \return Mod Channel index or -1 if not found.
+    ///
+    int modChanIdx(const wstring& uuid);
+
+    /// \brief Sort Mod Channel list.
+    ///
+    /// Sort Mod Channel list according Mod Channel ordering index.
+    ///
+    void modChanSort();
+
+    /// \brief Select Mod Channel.
+    ///
+    /// Sets the specified Mod Channel as active one.
+    ///
+    /// \param[in]  i       : Mod Channel index or -1 to unselect.
+    ///
+    /// \return True if operation succeed, false if id is out of bound.
+    ///
+    bool modChanSelect(int i);
+
+    /// \brief Select Mod Channel.
+    ///
+    /// Sets the specified Mod Channel as active one.
+    ///
+    /// \param[in]  uuid    : Mod Channel UUID to select.
+    ///
+    /// \return True if operation succeed, false if Mod Channel with such UUID does not exists.
+    ///
+    bool modChanSelect(const wstring& uuid);
+
+    /// \brief Get active Mod Channel.
+    ///
+    /// Returns current active Mod Channel.
+    ///
+    /// \return Current active Mod Channel or nullptr if none is active.
+    ///
+    OmModChan* modChanCur() {
+      return _modChanSl >= 0 ? _modChanLs[_modChanSl] : nullptr;
+    }
+
+    /// \brief Get active Mod Channel index.
+    ///
+    /// Returns index of the current active Mod Channel.
+    ///
+    /// \return Index of the active Mod Channel.
+    ///
+    int modChanCurIdx() const {
+      return _modChanSl;
+    }
+
+    /// \brief Get Mod Hub Batch Scripts.
+    ///
+    /// Returns count of Scripts defined in the Mod Hub.
+    ///
+    /// \return Scripts count.
     ///
     size_t batCount() {
       return _batLs.size();
     }
 
-    /// \brief Get Batch.
+    /// \brief Get Script.
     ///
     /// Returns Batch at index.
     ///
@@ -296,7 +296,7 @@ class OmContext
 
     /// \brief Make new Batch.
     ///
-    /// Creates a new Batch within the Context.
+    /// Creates a new Batch within the Mod Hub.
     ///
     /// \param[in]  title         : Title of new Batch to be created.
     ///
@@ -354,9 +354,9 @@ class OmContext
 
     HICON               _icon;
 
-    vector<OmModChan*>  _chnLs;
+    vector<OmModChan*>  _modChanLs;
 
-    int                 _chnCur;
+    int                 _modChanSl;
 
     vector<OmBatch*>    _batLs;
 
@@ -365,6 +365,8 @@ class OmContext
     bool                _valid;
 
     wstring             _error;
+
+    bool                _migrate(const wstring& path);
 };
 
-#endif // OMCONTEXT_H
+#endif // OMMODHUB_H

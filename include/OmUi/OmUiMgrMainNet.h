@@ -82,7 +82,7 @@ class OmUiMgrMainNet : public OmDialog
     ///
     /// \param[in]  i     : Index of Mod Channel to select or -1 to select none.
     ///
-    void chnSel(int i);
+    void modChanSelect(int i);
 
     /// \brief Download selection
     ///

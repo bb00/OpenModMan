@@ -14,19 +14,16 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPCTXBAT_H
-#define OMUIPROPCTXBAT_H
+#ifndef OMUIWIZHUBCFG_H
+#define OMUIWIZHUBCFG_H
 
 #include "OmDialog.h"
 
-#define CTX_PROP_BAT_ORDER        0
-#define CTX_PROP_BAT_QUIETMODE    1
-
-/// \brief Context Properties / Batches tab child
+/// \brief New Mod Hub Wizard / Configuration page child
 ///
-/// OmDialog class derived for Context Properties / Batches tab child dialog window
+/// OmDialog class derived for New Mod Hub Wizard / Configuration page child dialog window
 ///
-class OmUiPropCtxBat : public OmDialog
+class OmUiWizHubCfg : public OmDialog
 {
   public:
 
@@ -36,13 +33,13 @@ class OmUiPropCtxBat : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropCtxBat(HINSTANCE hins);
+    OmUiWizHubCfg(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropCtxBat();
+    ~OmUiWizHubCfg();
 
     /// \brief Get resource id.
     ///
@@ -52,48 +49,24 @@ class OmUiPropCtxBat : public OmDialog
     ///
     long id() const;
 
-    /// \brief Check changed parameter
+    /// \brief Check valid parameters.
     ///
-    /// Checks whether the specified dialog related parameter has been
-    /// marked as changed, meaning it was modified by user.
+    /// Checks whether the dialog actually contain valid
+    /// parameters set by user.
     ///
-    /// \param[in]  i   : Dialog related parameter to check
+    /// \return True parameters set by user are valid, false otherwise.
     ///
-    /// \return True if the specified parameter is marked as changed,
-    ///         false otherwise
-    ///
-    bool hasChParam(unsigned i) const {
-      return _chParam[i];
-    }
-
-    /// \brief Set changed parameter
-    ///
-    /// Marks the specified dialog related parameter as changed or unchanged.
-    ///
-    /// \param[in]  i   : Dialog related parameter to mark
-    /// \param[in]  en  : Boolean value to enable or disable
-    ///
-    void setChParam(unsigned i, bool en);
+    bool hasValidParams() const;
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    bool                _chParam[8];
+    void                _onPathChange();
 
-    void                _onLbBatlsSel();
-
-    void                _onBcUpBat();
-
-    void                _onBcDnBat();
-
-    void                _onBcEdiBat();
-
-    void                _onBcDelBat();
-
-    void                _onBcAddBat();
-
-    void                _onCkBoxQuiet();
+    void                _onBcBrwHome();
 
     void                _onInit();
+
+    void                _onShow();
 
     void                _onResize();
 
@@ -104,4 +77,4 @@ class OmUiPropCtxBat : public OmDialog
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPCTXBAT_H
+#endif // OMUIWIZHUBCFG_H

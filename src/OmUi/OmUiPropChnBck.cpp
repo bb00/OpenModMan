@@ -166,15 +166,15 @@ DWORD WINAPI OmUiPropChnBck::_delBck_fth(void* arg)
 {
   OmUiPropChnBck* self = static_cast<OmUiPropChnBck*>(arg);
 
-  OmModChan* pChn = static_cast<OmUiPropChn*>(self->_parent)->chnCur();
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(self->_parent)->modChan();
 
-  if(pChn == nullptr)
+  if(pModChan == nullptr)
     return 1;
 
   DWORD exitCode = 0;
 
   // launch backups data deletion process
-  if(!pChn->bckDcard(&self->_delBck_progress_cb, self->siblingById(IDD_PROGRESS))) {
+  if(!pModChan->bckDcard(&self->_delBck_progress_cb, self->siblingById(IDD_PROGRESS))) {
     exitCode = 1;
   }
 
@@ -221,10 +221,10 @@ void OmUiPropChnBck::_onInit()
   this->msgItem(IDC_CB_LVL, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Normal ( slow )"));
   this->msgItem(IDC_CB_LVL, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Best ( very slow )"));
 
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  if(!pModChan) return;
 
-  int comp_levl = pChn->bckZipLevel();
+  int comp_levl = pModChan->bckZipLevel();
 
   if(comp_levl >= 0) {
 

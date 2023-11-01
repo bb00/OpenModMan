@@ -94,12 +94,12 @@ void OmUiPropChnNet::_onLbReplsSel()
 ///
 void OmUiPropChnNet::_onBcAddRepo()
 {
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  if(!pModChan) return;
 
   // Open new Repository dialog
   OmUiAddRep* pUiNewRep = static_cast<OmUiAddRep*>(this->siblingById(IDD_ADD_REP));
-  pUiNewRep->chnSet(pChn);
+  pUiNewRep->setModChan(pModChan);
   pUiNewRep->open(true);
 }
 
@@ -109,8 +109,8 @@ void OmUiPropChnNet::_onBcAddRepo()
 ///
 void OmUiPropChnNet::_onBcDelRepo()
 {
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  if(!pModChan) return;
 
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
   if(lb_sel >= 0) {
@@ -118,7 +118,7 @@ void OmUiPropChnNet::_onBcDelRepo()
     // warns the user before committing the irreparable
     if(!Om_dlgBox_ynl(this->_hwnd, L"Channel properties", IDI_QRY,
                 L"Remove Repository", L"Remove Repository from list ?",
-                pChn->repGet(lb_sel)->base()+L" - "+pChn->repGet(lb_sel)->name()))
+                pModChan->repGet(lb_sel)->base()+L" - "+pModChan->repGet(lb_sel)->name()))
     {
       return;
     }
@@ -134,8 +134,8 @@ void OmUiPropChnNet::_onBcDelRepo()
 ///
 void OmUiPropChnNet::_onBcChkRepo()
 {
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  if(!pModChan) return;
 
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
 
@@ -143,7 +143,7 @@ void OmUiPropChnNet::_onBcChkRepo()
 
     this->setItemText(IDC_SC_STATE, L"Pending...");
 
-    OmRepository* pRep = pChn->repGet(lb_sel);
+    OmRepository* pRep = pModChan->repGet(lb_sel);
 
     OmSocket sock;
 
@@ -264,30 +264,30 @@ void OmUiPropChnNet::_onResize()
 ///
 void OmUiPropChnNet::_onRefresh()
 {
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  if(!pModChan) return;
 
   this->msgItem(IDC_LB_REP, LB_RESETCONTENT);
-  if(pChn) {
+  if(pModChan) {
 
     wstring label;
     OmRepository* pRep;
 
-    for(unsigned i = 0; i < pChn->repCount(); ++i) {
-      pRep = pChn->repGet(i);
+    for(unsigned i = 0; i < pModChan->repCount(); ++i) {
+      pRep = pModChan->repGet(i);
       label = pRep->base() + L" - " + pRep->name();
       this->msgItem(IDC_LB_REP, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(label.c_str()));
     }
   }
 
   // set warning messages
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pChn->warnExtraDnld());
-  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pChn->warnMissDnld());
-  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pChn->warnUpgdBrkDeps());
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pModChan->warnExtraDnld());
+  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pModChan->warnMissDnld());
+  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pModChan->warnUpgdBrkDeps());
 
   // set Upgrade Rename
-  this->msgItem(IDC_BC_RAD01, BM_SETCHECK, !pChn->upgdRename());
-  this->msgItem(IDC_BC_RAD02, BM_SETCHECK, pChn->upgdRename());
+  this->msgItem(IDC_BC_RAD01, BM_SETCHECK, !pModChan->upgdRename());
+  this->msgItem(IDC_BC_RAD02, BM_SETCHECK, pModChan->upgdRename());
 
   // Set controls default states and parameters
   this->enableItem(IDC_SC_STATE, false);

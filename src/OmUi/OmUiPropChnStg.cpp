@@ -88,18 +88,18 @@ void OmUiPropChnStg::_onBcBrwDst()
 ///
 void OmUiPropChnStg::_onCkBoxLib()
 {
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  if(!pModChan) return;
 
   bool bm_chk = this->msgItem(IDC_BC_CKBX1, BM_GETCHECK);
 
   this->enableItem(IDC_EC_INP03, bm_chk);
   this->enableItem(IDC_BC_BRW03, bm_chk);
 
-  if(bm_chk && pChn->hasCustLibDir()) {
-    this->setItemText(IDC_EC_INP03, pChn->libDir());
+  if(bm_chk && pModChan->hasCustLibDir()) {
+    this->setItemText(IDC_EC_INP03, pModChan->libDir());
   } else {
-    this->setItemText(IDC_EC_INP03, pChn->home() + L"\\Library");
+    this->setItemText(IDC_EC_INP03, pModChan->home() + L"\\Library");
   }
 }
 
@@ -125,18 +125,18 @@ void OmUiPropChnStg::_onBcBrwLib()
 ///
 void OmUiPropChnStg::_onCkBoxBck()
 {
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  if(!pModChan) return;
 
   bool bm_chk = this->msgItem(IDC_BC_CKBX2, BM_GETCHECK);
 
   this->enableItem(IDC_EC_INP04, bm_chk);
   this->enableItem(IDC_BC_BRW04, bm_chk);
 
-  if(bm_chk && pChn->hasCustBckDir()) {
-    this->setItemText(IDC_EC_INP04, pChn->bckDir());
+  if(bm_chk && pModChan->hasCustBckDir()) {
+    this->setItemText(IDC_EC_INP04, pModChan->bckDir());
   } else {
-    this->setItemText(IDC_EC_INP04, pChn->home() + L"\\Backup");
+    this->setItemText(IDC_EC_INP04, pModChan->home() + L"\\Backup");
   }
 }
 
@@ -213,23 +213,23 @@ void OmUiPropChnStg::_onResize()
 ///
 void OmUiPropChnStg::_onRefresh()
 {
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
 
-  if(pChn == nullptr)
+  if(pModChan == nullptr)
     return;
 
-  this->setItemText(IDC_EC_INP01, pChn->title());
-  this->setItemText(IDC_EC_INP02, pChn->dstDir());
+  this->setItemText(IDC_EC_INP01, pModChan->title());
+  this->setItemText(IDC_EC_INP02, pModChan->dstDir());
 
-  this->setItemText(IDC_EC_INP03, pChn->libDir());
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pChn->hasCustLibDir());
-  this->enableItem(IDC_EC_INP03, pChn->hasCustLibDir());
-  this->enableItem(IDC_BC_BRW03, pChn->hasCustLibDir());
+  this->setItemText(IDC_EC_INP03, pModChan->libDir());
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pModChan->hasCustLibDir());
+  this->enableItem(IDC_EC_INP03, pModChan->hasCustLibDir());
+  this->enableItem(IDC_BC_BRW03, pModChan->hasCustLibDir());
 
-  this->setItemText(IDC_EC_INP04, pChn->bckDir());
-  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pChn->hasCustBckDir());
-  this->enableItem(IDC_EC_INP04, pChn->hasCustBckDir());
-  this->enableItem(IDC_BC_BRW04, pChn->hasCustBckDir());
+  this->setItemText(IDC_EC_INP04, pModChan->bckDir());
+  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pModChan->hasCustBckDir());
+  this->enableItem(IDC_EC_INP04, pModChan->hasCustBckDir());
+  this->enableItem(IDC_BC_BRW04, pModChan->hasCustBckDir());
 
   // reset modified parameters flags
   for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;

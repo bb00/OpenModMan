@@ -30,7 +30,7 @@
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 OmUiAddChn::OmUiAddChn(HINSTANCE hins) : OmDialog(hins),
-  _pCtx(nullptr)
+  _modHub(nullptr)
 {
 
 }
@@ -174,7 +174,7 @@ void OmUiAddChn::_onBcBrwBck()
 ///
 bool OmUiAddChn::_onBcOk()
 {
-  if(!this->_pCtx)
+  if(!this->_modHub)
     return false;
 
   wstring chn_name, chn_dst, chn_lib, chn_bck, msg;
@@ -209,13 +209,13 @@ bool OmUiAddChn::_onBcOk()
 
   this->quit();
 
-  // create new Mod Channel in Context
-  if(!this->_pCtx->chnAdd(chn_name, chn_dst, chn_lib, chn_bck)) {
+  // create new Mod Channel in Mod Hub
+  if(!this->_modHub->modChanCreate(chn_name, chn_dst, chn_lib, chn_bck)) {
 
     Om_dlgBox_okl(this->_hwnd, L"New Mod Channel", IDI_ERR,
                   L"Mod Channel creation error", L"Mod Channel "
                   "creation failed because of the following error:",
-                  this->_pCtx->lastError());
+                  this->_modHub->lastError());
   }
 
   // refresh all tree from the main dialog

@@ -23,7 +23,7 @@
 #include "OmPackage.h"
 #include "OmRepository.h"
 
-class OmContext;
+class OmModHub;
 
 /// \brief List sorting types
 ///
@@ -38,7 +38,7 @@ enum OmModChanSort : unsigned {
   LS_SORT_REVERSE = 0x100
 };
 
-/// \brief Mod Channel object for Context.
+/// \brief Mod Channel object for Mod Hub.
 ///
 /// The Mod Channel object defines environment for package installation
 /// destination, library and backup. The object provide interface to
@@ -55,7 +55,7 @@ class OmModChan
     ///
     /// Default constructor.
     ///
-    OmModChan(OmContext* pCtx);
+    OmModChan(OmModHub* pModHub);
 
     /// \brief Destructor.
     ///
@@ -1053,12 +1053,12 @@ class OmModChan
     ///
     size_t rmtGetDepends(vector<OmRemote*>& dep_ls, vector<wstring>& mis_ls, const OmRemote* rmt) const;
 
-    /// \brief Get Context
+    /// \brief Get Mod Hub
     ///
-    /// Return Mod Channel affiliated context.
+    /// Return affiliated Mod Hub.
     ///
-    OmContext* pCtx() const {
-      return _context;
+    OmModHub* pModHub() const {
+      return _modhub;
     }
 
     /// \brief Add log.
@@ -1073,7 +1073,7 @@ class OmModChan
 
     void                _rmtSort();
 
-    OmContext*          _context;
+    OmModHub*           _modhub;
 
     OmConfig            _config;
 

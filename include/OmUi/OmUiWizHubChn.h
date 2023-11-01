@@ -14,16 +14,16 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIWIZPGCTXBEG_H
-#define OMUIWIZPGCTXBEG_H
+#ifndef OMUIWIZHUBCHN_H
+#define OMUIWIZHUBCHN_H
 
 #include "OmDialog.h"
 
-/// \brief New Context Wizard / Introduction page child
+/// \brief New Mod Hub Wizard / Mod Channel page child
 ///
-/// OmDialog class derived for New Context Wizard / Introduction page child dialog window
+/// OmDialog class derived for New Mod Hub Wizard / Mod Channel page child dialog window
 ///
-class OmUiWizCtxBeg : public OmDialog
+class OmUiWizHubChn : public OmDialog
 {
   public:
 
@@ -33,13 +33,13 @@ class OmUiWizCtxBeg : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiWizCtxBeg(HINSTANCE hins);
+    OmUiWizHubChn(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiWizCtxBeg();
+    ~OmUiWizHubChn();
 
     /// \brief Get resource id.
     ///
@@ -49,7 +49,28 @@ class OmUiWizCtxBeg : public OmDialog
     ///
     long id() const;
 
+    /// \brief Check valid parameters.
+    ///
+    /// Checks whether the dialog actually contain valid
+    /// parameters set by user.
+    ///
+    /// \return True parameters set by user are valid, false otherwise.
+    ///
+    bool hasValidParams() const;
+
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    void                _onTitleChange();
+
+    void                _onBcBrwDst();
+
+    void                _onCkBoxLib();
+
+    void                _onBcBrwLib();
+
+    void                _onCkBoxBck();
+
+    void                _onBcBrwBck();
 
     void                _onInit();
 
@@ -64,4 +85,4 @@ class OmUiWizCtxBeg : public OmDialog
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIWIZPGCTXBEG_H
+#endif // OMUIWIZHUBCHN_H

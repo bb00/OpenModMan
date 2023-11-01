@@ -14,16 +14,16 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIWIZNEWCTX_H
-#define OMUIWIZNEWCTX_H
+#ifndef OMUIWIZHUB_H
+#define OMUIWIZHUB_H
 
 #include "OmDialogWiz.h"
 
-/// \brief New Context Wizard parent dialog
+/// \brief New Mod Hub Wizard parent dialog
 ///
-/// OmDialogWiz class derived for New Context Wizard parent dialog window
+/// OmDialogWiz class derived for New Mod Hub Wizard parent dialog window
 ///
-class OmUiWizCtx : public OmDialogWiz
+class OmUiWizHub : public OmDialogWiz
 {
   public:
 
@@ -33,13 +33,13 @@ class OmUiWizCtx : public OmDialogWiz
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiWizCtx(HINSTANCE hins);
+    OmUiWizHub(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiWizCtx();
+    ~OmUiWizHub();
 
     /// \brief Get resource id.
     ///
@@ -58,4 +58,4 @@ class OmUiWizCtx : public OmDialogWiz
     void                _onWizInit();
 };
 
-#endif // OMUIWIZNEWCTX_H
+#endif // OMUIWIZHUB_H

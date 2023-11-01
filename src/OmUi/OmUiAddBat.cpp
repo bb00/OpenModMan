@@ -31,7 +31,7 @@
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 OmUiAddBat::OmUiAddBat(HINSTANCE hins) : OmDialog(hins),
-  _pCtx(nullptr),
+  _modHub(nullptr),
   _excluded(),
   _included()
 {
@@ -62,14 +62,14 @@ long OmUiAddBat::id() const
 ///
 void OmUiAddBat::_buildLbs()
 {
-  if(!this->_pCtx) return;
+  if(!this->_modHub) return;
 
   // get current Combo-Box selection first Mod Channel by default
   int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
   if(cb_sel < 0) return;
 
   // get Mod Channel corresponding to current selection
-  OmModChan* pChn = this->_pCtx->chnGet(cb_sel);
+  OmModChan* pModChan = this->_modHub->modChanGet(cb_sel);
 
   unsigned p;
   OmPackage* pPkg;
@@ -82,7 +82,7 @@ void OmUiAddBat::_buildLbs()
   for(size_t i = 0; i < this->_excluded[cb_sel].size(); i++) {
 
     p = this->_excluded[cb_sel][i];
-    pPkg = pChn->pkgGet(p);
+    pPkg = pModChan->pkgGet(p);
 
     item_str = Om_getFilePart(pPkg->srcPath());
     this->msgItem(IDC_LB_EXC, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
@@ -96,7 +96,7 @@ void OmUiAddBat::_buildLbs()
   for(size_t i = 0; i < this->_included[cb_sel].size(); i++) {
 
     p = this->_included[cb_sel][i];
-    pPkg = pChn->pkgGet(p);
+    pPkg = pModChan->pkgGet(p);
 
     item_str = Om_getFilePart(pPkg->srcPath());
     this->msgItem(IDC_LB_INC, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
@@ -110,22 +110,22 @@ void OmUiAddBat::_buildLbs()
 ///
 void OmUiAddBat::_autoInclude()
 {
-  if(!this->_pCtx) return;
+  if(!this->_modHub) return;
 
-  OmModChan* pChn;
+  OmModChan* pModChan;
   OmPackage* pPkg;
 
   // add Mod Channel(s) to Combo-Box
-  for(size_t k = 0; k < this->_pCtx->chnCount(); ++k) {
+  for(size_t k = 0; k < this->_modHub->modChanCount(); ++k) {
 
-    pChn = this->_pCtx->chnGet(k);
+    pModChan = this->_modHub->modChanGet(k);
 
     this->_excluded[k].clear();
     this->_included[k].clear();
 
-    for(size_t i = 0; i < pChn->pkgCount(); ++i) {
+    for(size_t i = 0; i < pModChan->pkgCount(); ++i) {
 
-      pPkg = pChn->pkgGet(i);
+      pPkg = pModChan->pkgGet(i);
 
       if(pPkg->hasSrc()) {
         if(pPkg->hasBck()) {
@@ -434,24 +434,24 @@ bool OmUiAddBat::_onBcOk()
   this->getItemText(IDC_EC_INP01, bat_name);
 
   // initialize a new installation batch
-  OmBatch* pBat = this->_pCtx->batAdd(bat_name);
+  OmBatch* pBat = this->_modHub->batAdd(bat_name);
 
-  OmModChan* pChn;
+  OmModChan* pModChan;
   OmPackage* pPkg;
 
   // setup batch per Mod Channel install list
-  for(size_t l = 0; l < this->_pCtx->chnCount(); ++l) {
+  for(size_t l = 0; l < this->_modHub->modChanCount(); ++l) {
 
     // ensure we got proper location
-    pChn = this->_pCtx->chnGet(l);
+    pModChan = this->_modHub->modChanGet(l);
 
     for(size_t i = 0; i < this->_included[l].size(); ++i) {
 
       // retrieve package from stored index
-      pPkg = pChn->pkgGet(this->_included[l][i]);
+      pPkg = pModChan->pkgGet(this->_included[l][i]);
 
       // add package to install list
-      pBat->instAdd(pChn, pPkg);
+      pBat->instAdd(pModChan, pPkg);
     }
   }
 
@@ -499,16 +499,16 @@ void OmUiAddBat::_onInit()
   // Disable Install-Only
   this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, 0);
 
-  if(!this->_pCtx) return;
+  if(!this->_modHub) return;
 
   wstring item_str;
 
   // add Mod Channel(s) to Combo-Box
-  for(unsigned i = 0; i < this->_pCtx->chnCount(); ++i) {
+  for(unsigned i = 0; i < this->_modHub->modChanCount(); ++i) {
 
-    item_str = this->_pCtx->chnGet(i)->title();
+    item_str = this->_modHub->modChanGet(i)->title();
     item_str += L" - ";
-    item_str += this->_pCtx->chnGet(i)->home();
+    item_str += this->_modHub->modChanGet(i)->home();
 
     this->msgItem(IDC_CB_CHN, CB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
 

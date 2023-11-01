@@ -38,15 +38,19 @@
 #define OMM_APP_URL               L"https://sourceforge.net/projects/openmodman/"
 
 #define OMM_XMAGIC_APP    L"Open_Mod_Manager_Main"
-#define OMM_XMAGIC_CTX    L"Open_Mod_Manager_Context"
-#define OMM_XMAGIC_CHN    L"Open_Mod_Manager_Location"
+//#define OMM_XMAGIC_CTX    L"Open_Mod_Manager_Context"
+#define OMM_XMAGIC_HUB    L"Open_Mod_Manager_ModHub"
+//#define OMM_XMAGIC_CHN    L"Open_Mod_Manager_Location"
+#define OMM_XMAGIC_CHN    L"Open_Mod_Manager_ModChan"
+//#define OMM_XMAGIC_BAT    L"Open_Mod_Manager_Batch"
+#define OMM_XMAGIC_SPT    L"Open_Mod_Manager_Script"
 #define OMM_XMAGIC_PKG    L"Open_Mod_Manager_Package"
 #define OMM_XMAGIC_BCK    L"Open_Mod_Manager_Backup"
-#define OMM_XMAGIC_BAT    L"Open_Mod_Manager_Batch"
+
 #define OMM_XMAGIC_REP    L"Open_Mod_Manager_Repository"
 
 #define OMM_CTX_DEF_FILE_EXT      L"omc"
-#define OMM_LOC_DEF_FILE_EXT      L"oml"
+#define OMM_CHN_DEF_FILE_EXT      L"oml"
 #define OMM_BAT_DEF_FILE_EXT      L"omb"
 #define OMM_PKG_DEF_FILE_EXT      L"omp"
 #define OMM_BCK_DEF_FILE_EXT      L"omk"

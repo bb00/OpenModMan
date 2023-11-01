@@ -33,7 +33,7 @@
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 OmUiAddRep::OmUiAddRep(HINSTANCE hins) : OmDialog(hins),
-  _pChn(nullptr),
+  _modChan(nullptr),
   _testResult(0)
 {
 
@@ -149,7 +149,7 @@ void OmUiAddRep::_onBcChk()
 ///
 bool OmUiAddRep::_onBcOk()
 {
-  if(!this->_pChn) return false;
+  if(!this->_modChan) return false;
 
   if(this->_testResult == 0) {
 
@@ -189,13 +189,13 @@ bool OmUiAddRep::_onBcOk()
     return false;
   }
 
-  // add new repository in Context
-  if(!this->_pChn->repAdd(rep_base, rep_name)) {
+  // add new repository in Mod Hub
+  if(!this->_modChan->repAdd(rep_base, rep_name)) {
 
     Om_dlgBox_okl(this->_hwnd, L"Add Repository", IDI_ERR,
                  L"Add Repository error", L"Repository "
                  "cannot be added because of the following error:",
-                 this->_pChn->lastError());
+                 this->_modChan->lastError());
   }
 
   this->quit();

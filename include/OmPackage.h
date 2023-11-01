@@ -150,9 +150,9 @@ class OmPackage
     ///
     /// Constructor with Mod Channel.
     ///
-    /// \param[in]  pChn    : Related Mod Channel for the Package.
+    /// \param[in]  pModChan    : Related Mod Channel for the Package.
     ///
-    OmPackage(OmModChan* pChn);
+    OmPackage(OmModChan* pModChan);
 
     /// \brief Destructor.
     ///
@@ -749,8 +749,8 @@ class OmPackage
     ///
     /// \return Pointer to Mod Channel object.
     ///
-    OmModChan* pChn() const {
-      return this->_pChn;
+    OmModChan* modChan() const {
+      return this->_modChan;
     }
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -808,7 +808,7 @@ class OmPackage
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmModChan*          _pChn;
+    OmModChan*          _modChan;
 
     unsigned            _type;
 

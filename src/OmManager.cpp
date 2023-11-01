@@ -39,7 +39,7 @@
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 OmManager::OmManager() :
-  _home(), _config(), _ctxLs(), _ctxCur(-1), _iconsSize(16), _folderPackages(true),
+  _home(), _config(), _modHubLs(), _modHubSl(-1), _iconsSize(16), _folderPackages(true),
   _warnEnabled(true), _warnOverlaps(false), _warnExtraInstall(true),
   _warnMissingDepend(true), _warnExtraUninst(true), _quietBatches(true), _noMarkdown(false),
   _error(), _log(), _logHwnd(nullptr), _logFile(nullptr)
@@ -53,8 +53,8 @@ OmManager::OmManager() :
 ///
 OmManager::~OmManager()
 {
-  for(size_t i = 0; i < this->_ctxLs.size(); ++i)
-    delete this->_ctxLs[i];
+  for(size_t i = 0; i < this->_modHubLs.size(); ++i)
+    delete this->_modHubLs[i];
 
   // close log file
   if(this->_logFile) {
@@ -118,6 +118,9 @@ bool OmManager::init(const char* arg)
     this->setIconsSize(this->_iconsSize);
   }
 
+  // migrate config file
+  this->_migrate();
+
   // load saved parameters
   if(this->_config.xml().hasChild(L"icon_size")) {
     this->_iconsSize = this->_config.xml().child(L"icon_size").attrAsInt(L"pixels");
@@ -126,22 +129,6 @@ bool OmManager::init(const char* arg)
   // load saved no-markdown option
   if(this->_config.xml().hasChild(L"no_markdown")) {
     this->_noMarkdown = this->_config.xml().child(L"no_markdown").attrAsInt(L"enable");
-  }
-
-  // load startup Context files if any
-  bool autoload;
-  vector<wstring> path_ls;
-
-  this->getStartContexts(&autoload, path_ls);
-
-  if(autoload) {
-    this->log(2, L"Manager() Init", L"Load startup Context file(s)");
-    for(size_t i = 0; i < path_ls.size(); ++i) {
-      this->ctxOpen(path_ls[i], false);
-    }
-
-    // we select the first Context in list
-    this->ctxSel(0);
   }
 
   // add the context file passed as argument if any
@@ -158,7 +145,11 @@ bool OmManager::init(const char* arg)
     }
 
     // try to open
-    this->ctxOpen(path);
+    if(!this->modHubLoad(path)) {
+      Om_dlgBox_err(L"Open Mod Hub", L"Mod Hub \""+path+
+                    L"\" loading failed because of the following error:",
+                    this->lastError());
+    }
   }
 
   return true;
@@ -172,9 +163,9 @@ bool OmManager::quit()
 {
   this->log(2, L"Manager() Quit", L"");
 
-  for(size_t i = 0; i < this->_ctxLs.size(); ++i)
-    delete this->_ctxLs[i];
-  this->_ctxLs.clear();
+  for(size_t i = 0; i < this->_modHubLs.size(); ++i)
+    delete this->_modHubLs[i];
+  this->_modHubLs.clear();
 
   return true;
 }
@@ -276,12 +267,12 @@ void OmManager::saveRecentFile(const wstring& path)
     }
 
     // get current <path> child entries in <recent_list>
-    vector<OmXmlNode> path_list;
-    recent_list.children(path_list, L"path");
+    vector<OmXmlNode> home_ls;
+    recent_list.children(home_ls, L"home");
 
-    for(size_t i = 0; i < path_list.size(); ++i) {
-      if(path == path_list[i].content()) {
-        recent_list.remChild(path_list[i]);
+    for(size_t i = 0; i < home_ls.size(); ++i) {
+      if(path == home_ls[i].content()) {
+        recent_list.remChild(home_ls[i]);
         break;
       }
     }
@@ -289,11 +280,11 @@ void OmManager::saveRecentFile(const wstring& path)
     // now verify the count does not exceed the limit
     if(recent_list.childCount() > (OM_MANAGER_MAX_RECENT + 1)) {
       // remove the oldest entry to keep max entry count
-      recent_list.remChild(recent_list.child(L"path",0));
+      recent_list.remChild(recent_list.child(L"home",0));
     }
 
     // append path to end of list, for most recent one
-    recent_list.addChild(L"path").setContent(path);
+    recent_list.addChild(L"home").setContent(path);
 
     this->_config.save();
   }
@@ -335,21 +326,21 @@ void OmManager::loadRecentFiles(vector<wstring>& paths)
       paths.clear();
 
       // retrieve all <path> child in <recent_list>
-      vector<OmXmlNode> path_list;
-      recent_list.children(path_list, L"path");
+      vector<OmXmlNode> home_ls;
+      recent_list.children(home_ls, L"home");
 
       // verify each entries and remove ones which are no longer valid path
-      for(size_t i = 0; i < path_list.size(); ++i) {
-        if(!Om_isFile(path_list[i].content())) {
-          recent_list.remChild(path_list[i]);
+      for(size_t i = 0; i < home_ls.size(); ++i) {
+        if(!Om_isDir(home_ls[i].content())) {
+          recent_list.remChild(home_ls[i]);
         }
       }
 
       // retrieve (again) all <path> child in <recent_list> and fill path list
-      path_list.clear();
-      recent_list.children(path_list, L"path");
-      for(size_t i = 0; i < path_list.size(); ++i) {
-        paths.push_back(path_list[i].content());
+      home_ls.clear();
+      recent_list.children(home_ls, L"home");
+      for(size_t i = 0; i < home_ls.size(); ++i) {
+        paths.push_back(home_ls[i].content());
       }
 
     }
@@ -392,29 +383,29 @@ void OmManager::getDefaultLocation(wstring& path)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmManager::saveStartContexts(bool enable, const vector<wstring>& path)
+void OmManager::saveStartHubs(bool enable, const vector<wstring>& path)
 {
   if(this->_config.valid()) {
 
-    OmXmlNode xml_stl;
+    OmXmlNode start_list;
 
     if(this->_config.xml().hasChild(L"start_list")) {
-      xml_stl = this->_config.xml().child(L"start_list");
+      start_list = this->_config.xml().child(L"start_list");
     } else {
-      xml_stl = this->_config.xml().addChild(L"start_list");
+      start_list = this->_config.xml().addChild(L"start_list");
     }
-    xml_stl.setAttr(L"enable", enable ? 1 : 0);
+    start_list.setAttr(L"enable", enable ? 1 : 0);
 
-    vector<OmXmlNode> file_ls;
-    xml_stl.children(file_ls, L"file");
+    vector<OmXmlNode> home_ls;
+    start_list.children(home_ls, L"home");
 
     // remove all current file list
-    for(size_t i = 0; i < file_ls.size(); ++i)
-      xml_stl.remChild(file_ls[i]);
+    for(size_t i = 0; i < home_ls.size(); ++i)
+      start_list.remChild(home_ls[i]);
 
     // add new list
     for(size_t i = 0; i < path.size(); ++i)
-      xml_stl.addChild(L"file").setContent(path[i]);
+      start_list.addChild(L"home").setContent(path[i]);
 
     this->_config.save();
   }
@@ -424,7 +415,7 @@ void OmManager::saveStartContexts(bool enable, const vector<wstring>& path)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmManager::getStartContexts(bool* enable, vector<wstring>& path)
+void OmManager::getStartHubs(bool* enable, vector<wstring>& path)
 {
   path.clear();
 
@@ -440,12 +431,12 @@ void OmManager::getStartContexts(bool* enable, vector<wstring>& path)
 
     *enable = start_list.attrAsInt(L"enable");
 
-    vector<OmXmlNode> file_ls;
-    start_list.children(file_ls, L"file");
+    vector<OmXmlNode> path_ls;
+    start_list.children(path_ls, L"home");
 
     // get list
-    for(size_t i = 0; i < file_ls.size(); ++i)
-      path.push_back(file_ls[i].content());
+    for(size_t i = 0; i < path_ls.size(); ++i)
+      path.push_back(path_ls[i].content());
   }
 }
 
@@ -493,46 +484,46 @@ void OmManager::setNoMarkdown(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmManager::ctxNew(const wstring& title, const wstring& path, bool open)
+bool OmManager::modHubCreate(const wstring& title, const wstring& path, bool open)
 {
 
   // check whether install path exists
   if(!Om_isDir(path)) {
     this->_error = Om_errIsDir(L"Home location path", path);
-    this->log(0, L"Manager() Create Context", this->_error);
+    this->log(0, L"Manager() Create Mod Hub", this->_error);
     return false;
   }
 
-  // compose Context home path
+  // compose Mod Hub home path
   wstring ctx_home = path + L"\\" + title;
 
-  // create Context home folder
+  // create Mod Hub home folder
   int result = Om_dirCreate(ctx_home);
   if(result != 0) {
     this->_error = Om_errCreate(L"Home folder", ctx_home, result);
-    this->log(0, L"Manager() Create Context", this->_error);
+    this->log(0, L"Manager() Create Mod Hub", this->_error);
     return false;
   }
 
-  // compose Context definition file name
+  // compose Mod Hub definition file name
   wstring ctx_def_path = ctx_home + L"\\" + title;
   ctx_def_path += L"."; ctx_def_path += OMM_CTX_DEF_FILE_EXT;
 
-  // initialize an empty Context definition file
+  // initialize an empty Mod Hub definition file
   OmConfig ctx_def;
-  if(!ctx_def.init(ctx_def_path, OMM_XMAGIC_CTX)) {
+  if(!ctx_def.init(ctx_def_path, OMM_XMAGIC_HUB)) {
     this->_error =  Om_errInit(L"Definition file",ctx_def_path,ctx_def.lastErrorStr());
-    this->log(0, L"Manager() Create Context", this->_error);
+    this->log(0, L"Manager() Create Mod Hub", this->_error);
     return false;
   }
 
-  // generate a new random UUID for this Context
+  // generate a new random UUID for this Mod Hub
   wstring uuid = Om_genUUID();
 
   // Get instance of XML document
   OmXmlNode def_xml = ctx_def.xml();
 
-  // create uuid and title entry in Context definition
+  // create uuid and title entry in Mod Hub definition
   def_xml.addChild(L"uuid").setContent(uuid);
   def_xml.addChild(L"title").setContent(title);
 
@@ -540,9 +531,9 @@ bool OmManager::ctxNew(const wstring& title, const wstring& path, bool open)
   ctx_def.save();
   ctx_def.close();
 
-  // open the new created Context
+  // open the new created Mod Hub
   if(open)
-    return this->ctxOpen(ctx_def_path);
+    return this->modHubLoad(ctx_def_path);
 
   return true;
 }
@@ -551,31 +542,33 @@ bool OmManager::ctxNew(const wstring& title, const wstring& path, bool open)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmManager::ctxOpen(const wstring& path, bool select)
+bool OmManager::modHubLoad(const wstring& path, bool select)
 {
-  // check whether Context is already opened
-  for(size_t i = 0; i < _ctxLs.size(); ++i) {
-    if(path == _ctxLs[i]->path())
+  // check whether Mod Hub is already opened
+  for(size_t i = 0; i < _modHubLs.size(); ++i) {
+    if(path == _modHubLs[i]->path())
       return true;
   }
 
-  this->log(2, L"Manager() Open Context", L"Load \""+path+L"\"");
+  this->log(2, L"Manager() Open Mod Hub", L"Load \""+path+L"\"");
 
-  OmContext* pCtx = new OmContext(this);
-  if(!pCtx->open(path)) {
-    this->_error = L"Context open failed: "+pCtx->lastError();
-    this->log(0, L"Manager() Open Context", this->_error);
-    delete pCtx;
+  OmModHub* pModHub = new OmModHub(this);
+  if(!pModHub->open(path)) {
+
+    this->_error = L"Mod Hub open failed: " + pModHub->lastError();
+    this->log(0, L"Manager() Open Mod Hub", this->_error);
+
+    delete pModHub;
     return false;
   }
 
-  this->_ctxLs.push_back(pCtx);
+  this->_modHubLs.push_back(pModHub);
 
   this->saveRecentFile(path);
 
   // the last loaded context become the active one
   if(select)
-    this->ctxSel(this->_ctxLs.size() - 1);
+    this->modHubSel(this->_modHubLs.size() - 1);
 
   return true;
 }
@@ -584,40 +577,40 @@ bool OmManager::ctxOpen(const wstring& path, bool select)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmManager::ctxClose(int id)
+void OmManager::modHubClose(int id)
 {
   if(id < 0) {
 
-    if(this->_ctxCur < 0)
+    if(this->_modHubSl < 0)
       return;
 
-    id = this->_ctxCur;
+    id = this->_modHubSl;
 
-    this->_ctxCur = -1;
+    this->_modHubSl = -1;
   }
 
-  if(id < static_cast<int>(this->_ctxLs.size())) {
-    this->_ctxLs[id]->close();
-    delete _ctxLs[id];
-    this->_ctxLs.erase(this->_ctxLs.begin()+id);
+  if(id < static_cast<int>(this->_modHubLs.size())) {
+    this->_modHubLs[id]->close();
+    delete _modHubLs[id];
+    this->_modHubLs.erase(this->_modHubLs.begin()+id);
   }
 
   // the last loaded context become the active one
-  this->ctxSel(this->_ctxLs.size() - 1);
+  this->modHubSel(this->_modHubLs.size() - 1);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmManager::ctxSel(int i)
+void OmManager::modHubSel(int i)
 {
-  if(i >= 0 && i < (int)this->_ctxLs.size()) {
-    this->_ctxCur = i;
-    this->log(2, L"Manager() Select Context", to_wstring(i)+L" \""+this->_ctxLs[_ctxCur]->title()+L"\"");
+  if(i >= 0 && i < (int)this->_modHubLs.size()) {
+    this->_modHubSl = i;
+    this->log(2, L"Manager() Select Mod Hub", to_wstring(i)+L" \""+this->_modHubLs[_modHubSl]->title()+L"\"");
   } else {
-    this->_ctxCur = -1;
-    this->log(2, L"Manager() Select Context", L"<NONE>");
+    this->_modHubSl = -1;
+    this->log(2, L"Manager() Select Mod Hub", L"<NONE>");
   }
 }
 
@@ -697,4 +690,71 @@ void OmManager::log(unsigned level, const wstring& head, const wstring& detail)
   }
 
   this->_log += entry;
+}
+
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+bool OmManager::_migrate()
+{
+  if(this->_config.valid()) {
+
+    vector<wstring> temp_ls;
+
+    // Migrate startup Mod Hub list if required
+    OmXmlNode start_list;
+    if(this->_config.xml().hasChild(L"start_list")) {
+
+      start_list = this->_config.xml().child(L"start_list");
+
+      if(start_list.hasChild(L"file")) {
+
+        vector<OmXmlNode> file_ls;
+        start_list.children(file_ls, L"file");
+
+        // get list
+        for(size_t i = 0; i < file_ls.size(); ++i)
+          temp_ls.push_back(file_ls[i].content());
+
+        // remove all current file list
+        for(size_t i = 0; i < file_ls.size(); ++i)
+          start_list.remChild(file_ls[i]);
+
+        // add new list
+        for(size_t i = 0; i < temp_ls.size(); ++i)
+          start_list.addChild(L"home").setContent(Om_getDirPart(temp_ls[i]));
+
+        temp_ls.clear();
+      }
+    }
+
+    // Migrate recent Mod Hub list if required
+    if(this->_config.xml().hasChild(L"recent_list")) {
+
+      OmXmlNode recent_list = this->_config.xml().child(L"recent_list");
+
+      if(recent_list.hasChild(L"path")) {
+
+        vector<OmXmlNode> path_ls;
+        recent_list.children(path_ls, L"path");
+
+        // get list
+        for(size_t i = 0; i < path_ls.size(); ++i)
+          temp_ls.push_back(path_ls[i].content());
+
+        // remove all current file list
+        for(size_t i = 0; i < path_ls.size(); ++i)
+          recent_list.remChild(path_ls[i]);
+
+        // add new list
+        for(size_t i = 0; i < temp_ls.size(); ++i)
+          recent_list.addChild(L"home").setContent(Om_getDirPart(temp_ls[i]));
+      }
+    }
+
+    this->_config.save();
+  }
+
+  return true;
 }

@@ -25,7 +25,7 @@
 
 #include "OmPackage.h"
 #include "OmManager.h"
-#include "OmContext.h"
+#include "OmModHub.h"
 
 #include "OmUiProgress.h"
 
@@ -750,13 +750,13 @@ void OmUiToolRep::_onBcOpen()
     }
   }
 
-  OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
+  OmModHub* pModHub = static_cast<OmManager*>(this->_data)->modHubCur();
+  OmModChan* pModChan = pModHub ? pModHub->modChanCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pChn) start = pChn->libDir();
+  if(pModChan) start = pModChan->libDir();
 
   // new dialog to open file
   if(!Om_dlgOpenFile(result, this->_hwnd, L"Open Repository definition", OMM_XML_FILES_FILTER, start))
@@ -800,13 +800,13 @@ void OmUiToolRep::_onBcOpen()
 ///
 bool OmUiToolRep::_onBcBrwPkg()
 {
-  OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
+  OmModHub* pModHub = static_cast<OmManager*>(this->_data)->modHubCur();
+  OmModChan* pModChan = pModHub ? pModHub->modChanCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pChn) start = pChn->libDir();
+  if(pModChan) start = pModChan->libDir();
 
   // open file dialog
   if(!Om_dlgOpenFile(result, this->_hwnd, L"Open Package file", OMM_PKG_FILES_FILTER, start))
@@ -831,13 +831,13 @@ bool OmUiToolRep::_onBcBrwPkg()
 ///
 bool OmUiToolRep::_onBcBrwDir()
 {
-  OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
+  OmModHub* pModHub = static_cast<OmManager*>(this->_data)->modHubCur();
+  OmModChan* pModChan = pModHub ? pModHub->modChanCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pChn) start = pChn->libDir();
+  if(pModChan) start = pModChan->libDir();
 
   // open dialog to select folder
   if(!Om_dlgBrowseDir(result, this->_hwnd, L"Select a folder where to find packages to parse and add", start))
@@ -1010,13 +1010,13 @@ bool OmUiToolRep::_onBcBrwSnap()
   if(this->_rmtCur.empty())
     return false;
 
-  OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
+  OmModHub* pModHub = static_cast<OmManager*>(this->_data)->modHubCur();
+  OmModChan* pModChan = pModHub ? pModHub->modChanCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pChn) start = pChn->libDir();
+  if(pModChan) start = pModChan->libDir();
 
   // open file dialog
   if(!Om_dlgOpenFile(result, this->_hwnd, L"Open image file", OMM_IMG_FILES_FILTER, start))
@@ -1085,13 +1085,13 @@ void OmUiToolRep::_onBcDelSnap()
 ///
 void OmUiToolRep::_onBcBrwDesc()
 {
-  OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
+  OmModHub* pModHub = static_cast<OmManager*>(this->_data)->modHubCur();
+  OmModChan* pModChan = pModHub ? pModHub->modChanCur() : nullptr;
 
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pChn) start = pChn->libDir();
+  if(pModChan) start = pModChan->libDir();
 
   // open file dialog
   if(!Om_dlgOpenFile(result, this->_hwnd, L"Open text file", OMM_TXT_FILES_FILTER, start))
@@ -1154,8 +1154,8 @@ void OmUiToolRep::_onBcSavDesc()
 ///
 void OmUiToolRep::_onBcSave()
 {
-  OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
+  OmModHub* pModHub = static_cast<OmManager*>(this->_data)->modHubCur();
+  OmModChan* pModChan = pModHub ? pModHub->modChanCur() : nullptr;
 
   // Repository XML node
   OmXmlNode xml_def = this->_config.xml();
@@ -1198,7 +1198,7 @@ void OmUiToolRep::_onBcSave()
   wstring start, result;
 
   // select the initial location for browsing start
-  if(pChn) start = pChn->libDir();
+  if(pModChan) start = pModChan->libDir();
 
   // send save dialog to user
   if(!Om_dlgSaveFile(result, this->_hwnd, L"Save Repository definition...", OMM_XML_FILES_FILTER, start))

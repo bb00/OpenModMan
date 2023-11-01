@@ -31,7 +31,7 @@
 #define OMM_TXT_FILES_FILTER      L"Text file (*.txt)\0*.TXT\0"
 #define OMM_ICO_FILES_FILTER      L"Icon files (*.ico,*.exe)\0*.ICO;*.EXE;\0Programs (*.exe)\0*.EXE;\0Icons (*.ico)\0*.ICO;\0"
 
-#define OMM_CTX_DEF_FILE_FILER    L"Context definition (*.omc)\0*.OMC;\0"
+#define OMM_CTX_DEF_FILE_FILER    L"Mod Hub definition (*.omc)\0*.OMC;\0"
 #define OMM_LOC_DEF_FILE_FILER    L"Mod Channel definition (*.oml)\0*.OML;\0"
 #define OMM_PKG_DEF_FILE_FILER    L"Package definition (*.omp)\0*.OMP;\0"
 #define OMM_BCK_DEF_FILE_FILER    L"Backup definition (*.omk)\0*.OMK;\0"

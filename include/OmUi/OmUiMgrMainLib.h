@@ -20,7 +20,7 @@
 #include "OmDialog.h"
 
 class OmUiMgr;
-//class OmContext;
+//class OmModHub;
 
 /// \brief Main window - Library tab child
 ///
@@ -83,7 +83,7 @@ class OmUiMgrMainLib : public OmDialog
     ///
     /// \param[in]  i  Index of Mod Channel to select or -1 to select none.
     ///
-    void chnSel(int i);
+    void modChanSelect(int i);
 
     /// \brief Install selected packages.
     ///

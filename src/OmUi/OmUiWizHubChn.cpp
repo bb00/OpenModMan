@@ -20,19 +20,19 @@
 
 #include "OmManager.h"
 
-#include "OmUiWizCtx.h"
+#include "OmUiWizHub.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilStr.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiWizCtxChn.h"
+#include "OmUiWizHubChn.h"
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtxChn::OmUiWizCtxChn(HINSTANCE hins) : OmDialog(hins)
+OmUiWizHubChn::OmUiWizHubChn(HINSTANCE hins) : OmDialog(hins)
 {
 
 }
@@ -41,7 +41,7 @@ OmUiWizCtxChn::OmUiWizCtxChn(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtxChn::~OmUiWizCtxChn()
+OmUiWizHubChn::~OmUiWizHubChn()
 {
 
 }
@@ -50,7 +50,7 @@ OmUiWizCtxChn::~OmUiWizCtxChn()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiWizCtxChn::id() const
+long OmUiWizHubChn::id() const
 {
   return IDD_WIZ_CTX_CHN;
 }
@@ -59,7 +59,7 @@ long OmUiWizCtxChn::id() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiWizCtxChn::hasValidParams() const
+bool OmUiWizHubChn::hasValidParams() const
 {
   wstring item_str, msg;
 
@@ -97,7 +97,7 @@ bool OmUiWizCtxChn::hasValidParams() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onTitleChange()
+void OmUiWizHubChn::_onTitleChange()
 {
   wstring title;
 
@@ -117,7 +117,7 @@ void OmUiWizCtxChn::_onTitleChange()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onBcBrwDst()
+void OmUiWizHubChn::_onBcBrwDst()
 {
   wstring start, result;
 
@@ -132,7 +132,7 @@ void OmUiWizCtxChn::_onBcBrwDst()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onCkBoxLib()
+void OmUiWizHubChn::_onCkBoxLib()
 {
   wstring title;
 
@@ -154,7 +154,7 @@ void OmUiWizCtxChn::_onCkBoxLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onBcBrwLib()
+void OmUiWizHubChn::_onBcBrwLib()
 {
   wstring start, result;
 
@@ -169,7 +169,7 @@ void OmUiWizCtxChn::_onBcBrwLib()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onCkBoxBck()
+void OmUiWizHubChn::_onCkBoxBck()
 {
   wstring title;
 
@@ -191,7 +191,7 @@ void OmUiWizCtxChn::_onCkBoxBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onBcBrwBck()
+void OmUiWizHubChn::_onBcBrwBck()
 {
   wstring start, result;
 
@@ -206,7 +206,7 @@ void OmUiWizCtxChn::_onBcBrwBck()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onInit()
+void OmUiWizHubChn::_onInit()
 {
   // define controls tool-tips
   this->_createTooltip(IDC_EC_INP01,  L"Mod Channel name, to identify it and create folder");
@@ -236,7 +236,7 @@ void OmUiWizCtxChn::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onShow()
+void OmUiWizHubChn::_onShow()
 {
   wstring item_str;
 
@@ -274,7 +274,7 @@ void OmUiWizCtxChn::_onShow()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onResize()
+void OmUiWizHubChn::_onResize()
 {
   // Introduction text
   this->_setItemPos(IDC_SC_INTRO, 10, 5, 190, 25);
@@ -299,7 +299,7 @@ void OmUiWizCtxChn::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onRefresh()
+void OmUiWizHubChn::_onRefresh()
 {
 
 }
@@ -308,7 +308,7 @@ void OmUiWizCtxChn::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxChn::_onQuit()
+void OmUiWizHubChn::_onQuit()
 {
 
 }
@@ -317,7 +317,7 @@ void OmUiWizCtxChn::_onQuit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiWizCtxChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiWizHubChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 

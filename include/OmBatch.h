@@ -21,7 +21,7 @@
 #include "OmBase.h"
 #include "OmConfig.h"
 
-class OmContext;
+class OmModHub;
 class OmModChan;
 class OmPackage;
 
@@ -41,11 +41,11 @@ class OmBatch
 
     /// \brief Constructor.
     ///
-    /// Constructor with Context.
+    /// Constructor with Mod Hub.
     ///
-    /// \param[in]  ctx     : Related Context for the Batch.
+    /// \param[in]  pModHub  : Related Mod Hub for the Batch.
     ///
-    OmBatch(OmContext* pCtx);
+    OmBatch(OmModHub* pModHub);
 
     /// \brief Destructor.
     ///
@@ -157,7 +157,7 @@ class OmBatch
     ///
     /// \return Count of referenced Mod Channel
     ///
-    size_t chnCount();
+    size_t modChanCount();
 
     /// \brief Get Mod Channel UUID
     ///
@@ -167,7 +167,7 @@ class OmBatch
     ///
     /// \return Mod Channel's UUID.
     ///
-    wstring locUuid(unsigned i);
+    wstring chnUuid(unsigned i);
 
     /// \brief Discard Mod Channel
     ///
@@ -178,7 +178,7 @@ class OmBatch
     ///
     /// \return True if operation succeed, false if reference not found.
     ///
-    bool locDiscard(const wstring& uuid);
+    bool chnDiscard(const wstring& uuid);
 
     /// \brief Clear install list.
     ///
@@ -186,53 +186,53 @@ class OmBatch
     /// Mod Channel has no reference in the current Batch this operation has
     /// no effect.
     ///
-    /// \param[in]  pChn    : Pointer to Mod Channel.
+    /// \param[in]  pModChan    : Pointer to Mod Channel.
     ///
-    void instClear(const OmModChan* pChn);
+    void instClear(const OmModChan* pModChan);
 
     /// \brief Add package to install list.
     ///
     /// Add the given Package references to the installation list of the
     /// specified Mod Channel.
     ///
-    /// \param[in]  pChn    : Pointer to Mod Channel object.
+    /// \param[in]  pModChan    : Pointer to Mod Channel object.
     /// \param[in]  pPkg    : Pointer to Package object to reference.
     ///
-    void instAdd(const OmModChan* pChn, const OmPackage* pPkg);
+    void instAdd(const OmModChan* pModChan, const OmPackage* pPkg);
 
     /// \brief Remove package from install list.
     ///
     /// Remove the specified Package references from the installation list of
     /// the specified Mod Channel.
     ///
-    /// \param[in]  pChn    : Pointer to Mod Channel object.
+    /// \param[in]  pModChan    : Pointer to Mod Channel object.
     /// \param[in]  ident   : Package identity to search and remove.
     ///
     /// \return true if reference was removed, false otherwise
     ///
-    bool instRem(const OmModChan* pChn, const wstring ident);
+    bool instRem(const OmModChan* pModChan, const wstring ident);
 
     /// \brief Get install list size.
     ///
     /// Returns size of the install list for the specified Mod Channel.
     ///
-    /// \param[in]  pChn    : Pointer to Mod Channel object.
+    /// \param[in]  pModChan    : Pointer to Mod Channel object.
     ///
     /// \return Size of install list or 0 if Mod Channel not found.
     ///
-    size_t instSize(const OmModChan* pChn);
+    size_t instSize(const OmModChan* pModChan);
 
     /// \brief Get install list package
     ///
     /// Returns the found package, in the given Mod Channel, corresponding
     /// to the referenced item in the install list.
     ///
-    /// \param[in]  pChn    : Pointer to Mod Channel object.
+    /// \param[in]  pModChan    : Pointer to Mod Channel object.
     /// \param[in]  i       : Index of reference in install list.
     ///
     /// \return Pointer to Package object or nullptr if not found.
     ///
-    OmPackage* instGet(const OmModChan* pChn, unsigned i);
+    OmPackage* instGet(const OmModChan* pModChan, unsigned i);
 
 
     /// \brief Get install list
@@ -240,12 +240,12 @@ class OmBatch
     /// Returns the list of packages, in the given Mod Channel,
     /// corresponding to referenced install list items.
     ///
-    /// \param[in]  pChn    : Pointer to Mod Channel object.
+    /// \param[in]  pModChan    : Pointer to Mod Channel object.
     /// \param[in]  pkg_ls  : Array that receive list of Package objects.
     ///
     /// \return Count of found item.
     ///
-    size_t instGetList(const OmModChan* pChn, vector<OmPackage*>& pkg_ls);
+    size_t instGetList(const OmModChan* pModChan, vector<OmPackage*>& pkg_ls);
 
     /// \brief Repair config.
     ///
@@ -286,19 +286,19 @@ class OmBatch
     ///
     void log(unsigned level, const wstring& head, const wstring& detail);
 
-    /// \brief Get Context.
+    /// \brief Get Mod Hub.
     ///
-    /// Returns Batch related Context
+    /// Returns Batch related Mod Hub
     ///
-    /// \return Pointer to Batch related Context.
+    /// \return Pointer to Batch related Mod Hub.
     ///
-    OmContext* pCtx() const {
-      return _context;
+    OmModHub* pModHub() const {
+      return _modhub;
     }
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmContext*          _context;
+    OmModHub*           _modhub;
 
     OmConfig            _config;
 
@@ -313,6 +313,8 @@ class OmBatch
     bool                _instOnly;
 
     wstring             _error;
+
+    bool                _migrate();
 };
 
 #endif // OMBATCH_H

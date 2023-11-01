@@ -20,19 +20,19 @@
 
 #include "OmManager.h"
 
-#include "OmUiWizCtx.h"
+#include "OmUiWizHub.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilStr.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiWizCtxCfg.h"
+#include "OmUiWizHubCfg.h"
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtxCfg::OmUiWizCtxCfg(HINSTANCE hins) : OmDialog(hins)
+OmUiWizHubCfg::OmUiWizHubCfg(HINSTANCE hins) : OmDialog(hins)
 {
 
 }
@@ -41,7 +41,7 @@ OmUiWizCtxCfg::OmUiWizCtxCfg(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtxCfg::~OmUiWizCtxCfg()
+OmUiWizHubCfg::~OmUiWizHubCfg()
 {
 
 }
@@ -50,7 +50,7 @@ OmUiWizCtxCfg::~OmUiWizCtxCfg()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiWizCtxCfg::id() const
+long OmUiWizHubCfg::id() const
 {
   return IDD_WIZ_CTX_CFG;
 }
@@ -59,7 +59,7 @@ long OmUiWizCtxCfg::id() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiWizCtxCfg::hasValidParams() const
+bool OmUiWizHubCfg::hasValidParams() const
 {
   wstring item_str;
 
@@ -82,7 +82,7 @@ bool OmUiWizCtxCfg::hasValidParams() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxCfg::_onPathChange()
+void OmUiWizHubCfg::_onPathChange()
 {
   wstring name, path;
 
@@ -102,7 +102,7 @@ void OmUiWizCtxCfg::_onPathChange()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxCfg::_onBcBrwHome()
+void OmUiWizHubCfg::_onBcBrwHome()
 {
   wstring start, result;
 
@@ -118,7 +118,7 @@ void OmUiWizCtxCfg::_onBcBrwHome()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxCfg::_onInit()
+void OmUiWizHubCfg::_onInit()
 {
   // define controls tool-tips
   this->_createTooltip(IDC_EC_INP01,  L"Mod Hub name, both to identify it and create home folder");
@@ -139,7 +139,7 @@ void OmUiWizCtxCfg::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxCfg::_onShow()
+void OmUiWizHubCfg::_onShow()
 {
   wstring item_str;
 
@@ -170,14 +170,14 @@ void OmUiWizCtxCfg::_onShow()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxCfg::_onResize()
+void OmUiWizHubCfg::_onResize()
 {
   // Introduction text
   this->_setItemPos(IDC_SC_INTRO, 10, 5, 190, 25);
-  // Context title Label & EditControl
+  // Mod Hub title Label & EditControl
   this->_setItemPos(IDC_SC_LBL01, 10, 40, this->cliUnitX()-25, 9);
   this->_setItemPos(IDC_EC_INP01, 10, 50, this->cliUnitX()-25, 13);
-  // Context location Label & EditControl & Browse button
+  // Mod Hub location Label & EditControl & Browse button
   this->_setItemPos(IDC_SC_LBL02, 10, 80, this->cliUnitX()-25, 9);
   this->_setItemPos(IDC_EC_INP02, 10, 90, this->cliUnitX()-45, 13);
   this->_setItemPos(IDC_BC_BRW02, this->cliUnitX()-31, 90, 16, 13);
@@ -190,7 +190,7 @@ void OmUiWizCtxCfg::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxCfg::_onRefresh()
+void OmUiWizHubCfg::_onRefresh()
 {
 
 }
@@ -199,7 +199,7 @@ void OmUiWizCtxCfg::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtxCfg::_onQuit()
+void OmUiWizHubCfg::_onQuit()
 {
 
 }
@@ -208,7 +208,7 @@ void OmUiWizCtxCfg::_onQuit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiWizCtxCfg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiWizHubCfg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
@@ -217,7 +217,7 @@ INT_PTR OmUiWizCtxCfg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch(LOWORD(wParam))
     {
     case IDC_EC_INP01: // Title
-    case IDC_EC_INP02: // Context path
+    case IDC_EC_INP02: // Mod Hub path
       // check for content changes
       if(HIWORD(wParam) == EN_CHANGE)
         this->_onPathChange();
@@ -227,7 +227,7 @@ INT_PTR OmUiWizCtxCfg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       this->_onBcBrwHome();
       break;
 
-    case IDC_EC_INP03: // Resulting Context home path
+    case IDC_EC_INP03: // Resulting Mod Hub home path
       if(HIWORD(wParam) == EN_CHANGE)
         has_changed = true;
       break;

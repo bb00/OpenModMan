@@ -14,18 +14,19 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPCTXCHN_H
-#define OMUIPROPCTXCHN_H
+#ifndef OMUIPROPHUBBAT_H
+#define OMUIPROPHUBBAT_H
 
 #include "OmDialog.h"
 
-#define CTX_PROP_CHN_ORDER   0
+#define CTX_PROP_BAT_ORDER        0
+#define CTX_PROP_BAT_QUIETMODE    1
 
-/// \brief Context Properties / Mod Channel tab child
+/// \brief Mod Hub Properties / Batches tab child
 ///
-/// OmDialog class derived for Context Properties / Mod Channel tab child dialog window
+/// OmDialog class derived for Mod Hub Properties / Batches tab child dialog window
 ///
-class OmUiPropCtxChn : public OmDialog
+class OmUiPropHubBat : public OmDialog
 {
   public:
 
@@ -35,13 +36,13 @@ class OmUiPropCtxChn : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropCtxChn(HINSTANCE hins);
+    OmUiPropHubBat(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropCtxChn();
+    ~OmUiPropHubBat();
 
     /// \brief Get resource id.
     ///
@@ -78,29 +79,19 @@ class OmUiPropCtxChn : public OmDialog
 
     bool                _chParam[8];
 
-    void                _delChn_init(int id);
+    void                _onLbBatlsSel();
 
-    void                _delChn_stop();
+    void                _onBcUpBat();
 
-    void*               _delChn_hth;
+    void                _onBcDnBat();
 
-    static DWORD WINAPI _delChn_fth(void*);
+    void                _onBcEdiBat();
 
-    static bool         _delChn_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data);
+    void                _onBcDelBat();
 
-    int                 _delChn_id;
+    void                _onBcAddBat();
 
-    void                _onLbLoclsSel();
-
-    void                _onBcUpChn();
-
-    void                _onBcDnChn();
-
-    void                _onBcDelChn();
-
-    void                _onBcEdiChn();
-
-    void                _onBcAddChn();
+    void                _onCkBoxQuiet();
 
     void                _onInit();
 
@@ -108,7 +99,9 @@ class OmUiPropCtxChn : public OmDialog
 
     void                _onRefresh();
 
+    void                _onQuit();
+
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPCTXCHN_H
+#endif // OMUIPROPHUBBAT_H

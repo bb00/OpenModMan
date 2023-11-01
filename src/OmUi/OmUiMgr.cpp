@@ -14,6 +14,8 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
+#include <algorithm>            //< std::find
+
 #include "OmBase.h"
 
 #include "OmBaseUi.h"
@@ -33,13 +35,13 @@
 #include "OmUiAddBat.h"
 #include "OmUiAddRep.h"
 #include "OmUiAddChn.h"
-#include "OmUiPropCtx.h"
+#include "OmUiPropHub.h"
 #include "OmUiPropChn.h"
 #include "OmUiPropMgr.h"
 #include "OmUiPropBat.h"
 #include "OmUiHelpLog.h"
 #include "OmUiHelpAbt.h"
-#include "OmUiWizCtx.h"
+#include "OmUiWizHub.h"
 #include "OmUiToolPkg.h"
 #include "OmUiToolRep.h"
 #include "OmUiPictView.h"
@@ -71,12 +73,12 @@ OmUiMgr::OmUiMgr(HINSTANCE hins) : OmDialog(hins),
 
   // add children dialogs
   this->addChild(new OmUiPropMgr(hins));    //< Dialog for Manager Options
-  this->addChild(new OmUiPropCtx(hins));    //< Dialog for Context Properties
+  this->addChild(new OmUiPropHub(hins));    //< Dialog for Mod Hub Properties
   this->addChild(new OmUiPropChn(hins));    //< Dialog for Mod Channel Properties
   this->addChild(new OmUiPropBat(hins));    //< Dialog for Batch Properties
   this->addChild(new OmUiHelpLog(hins));    //< Dialog for Help Debug log
   this->addChild(new OmUiHelpAbt(hins));    //< Dialog for Help About
-  this->addChild(new OmUiWizCtx(hins));     //< Dialog for New Context Wizard
+  this->addChild(new OmUiWizHub(hins));     //< Dialog for New Mod Hub Wizard
   this->addChild(new OmUiToolPkg(hins));    //< Dialog for New Package
   this->addChild(new OmUiAddBat(hins));     //< Dialog for New Batch
   this->addChild(new OmUiAddChn(hins));     //< Dialog for Adding Mod Channel
@@ -118,7 +120,7 @@ void OmUiMgr::freeze(bool enable)
 
   this->_freeze_mode = enable;
 
-  // disable Context ComboBox
+  // disable Mod Hub ComboBox
   this->enableItem(IDC_CB_CTX, !enable);
 
   // disable menus
@@ -165,12 +167,12 @@ void OmUiMgr::safemode(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiMgr::ctxOpen(const wstring& path)
+void OmUiMgr::modHubLoad(const wstring& path)
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  // Try to open Context
-  if(pMgr->ctxOpen(path)) {
+  // Try to open Mod Hub
+  if(pMgr->modHubLoad(path)) {
 
     // refresh
     this->refresh();
@@ -188,7 +190,7 @@ void OmUiMgr::ctxOpen(const wstring& path)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiMgr::ctxClose()
+void OmUiMgr::modHubClose()
 {
   #ifdef DEBUG
   std::cout << "DEBUG => OmUiMgr::ctxClose\n";
@@ -197,7 +199,7 @@ void OmUiMgr::ctxClose()
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
   // close the current context
-  pMgr->ctxClose();
+  pMgr->modHubClose();
 
   // refresh
   this->refresh();
@@ -207,7 +209,7 @@ void OmUiMgr::ctxClose()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiMgr::ctxSel(int id)
+void OmUiMgr::modHubSel(int id)
 {
   #ifdef DEBUG
   std::cout << "DEBUG => OmUiMgr::ctxSel " << id << "\n";
@@ -215,8 +217,8 @@ void OmUiMgr::ctxSel(int id)
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  // select the requested Context
-  pMgr->ctxSel(id);
+  // select the requested Mod Hub
+  pMgr->modHubSel(id);
 
   // refresh all
   this->refresh();
@@ -229,11 +231,11 @@ void OmUiMgr::ctxSel(int id)
 void OmUiMgr::_buildCaption()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmContext* pCtx = pMgr->ctxCur();
+  OmModHub* pModHub = pMgr->modHubCur();
 
   // update dialog window title
   wstring caption;
-  if(pCtx) caption = pCtx->title() + L" - ";
+  if(pModHub) caption = pModHub->title() + L" - ";
 
   this->setCaption(caption + OMM_APP_NAME);
 }
@@ -245,15 +247,15 @@ void OmUiMgr::_buildCaption()
 void OmUiMgr::_buildSbCtx()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmContext* pCtx = pMgr->ctxCur();
+  OmModHub* pModHub = pMgr->modHubCur();
 
-  // update the Context icon
+  // update the Mod Hub icon
   HICON hIc = nullptr;
 
   // get context icon
-  if(pCtx)
-    if(pCtx->icon())
-      hIc = pCtx->icon();
+  if(pModHub)
+    if(pModHub->icon())
+      hIc = pModHub->icon();
 
   // Get default icon
   if(!hIc)
@@ -319,29 +321,29 @@ void OmUiMgr::_buildCbCtx()
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  // empty the Combo-Box
+  // empty the ComboBox
   this->msgItem(IDC_CB_CTX, CB_RESETCONTENT);
 
-  // add Context(s) to Combo-Box
-  if(pMgr->ctxCount()) {
+  // add Mod Hub(s) to ComboBox
+  if(pMgr->modHubCount()) {
 
     wstring item_str;
 
-    for(unsigned i = 0; i < pMgr->ctxCount(); ++i) {
+    for(unsigned i = 0; i < pMgr->modHubCount(); ++i) {
 
-      item_str = pMgr->ctxGet(i)->title();
+      item_str = pMgr->modHubGet(i)->title();
       item_str += L" - ";
-      item_str += pMgr->ctxGet(i)->home();
+      item_str += pMgr->modHubGet(i)->home();
 
       this->msgItem(IDC_CB_CTX, CB_ADDSTRING, i, reinterpret_cast<LPARAM>(item_str.c_str()));
     }
 
     // If no context selected, force the selection of the first context in list
-    if(!pMgr->ctxCur())
-      pMgr->ctxSel(0);
+    if(!pMgr->modHubCur())
+      pMgr->modHubSel(0);
 
     // select context according current active one
-    this->msgItem(IDC_CB_CTX, CB_SETCURSEL, pMgr->ctxCurId());
+    this->msgItem(IDC_CB_CTX, CB_SETCURSEL, pMgr->modHubCurIdx());
 
     // enable the ComboBox control
     this->enableItem(IDC_CB_CTX, true);
@@ -364,7 +366,7 @@ void OmUiMgr::_onCbCtxSel()
 {
   int cb_sel = this->msgItem(IDC_CB_CTX, CB_GETCURSEL);
 
-  if(cb_sel >= 0) this->ctxSel(cb_sel);
+  if(cb_sel >= 0) this->modHubSel(cb_sel);
 }
 
 ///
@@ -389,16 +391,57 @@ void OmUiMgr::_onInit()
   std::cout << "DEBUG => OmUiMgr::_onInit\n";
   #endif
 
+  OmManager* pMgr = static_cast<OmManager*>(this->_data);
+
+  // load startup Mod Hub files if any
+  bool autoload;
+  vector<wstring> path_ls;
+
+  pMgr->getStartHubs(&autoload, path_ls);
+
+  if(autoload) {
+
+    vector<wstring> remv_ls; //< in case we must remove entries
+
+    for(size_t i = 0; i < path_ls.size(); ++i) {
+      if(!pMgr->modHubLoad(path_ls[i], false)) {
+
+        Om_dlgBox_okl(this->_hwnd, L"Mod Hub startup autoload", IDI_ERR,
+               L"Startup Mod Hub open error", path_ls[i], pMgr->lastError());
+
+        // Ask for remove Mod Hub from auto-load
+        wstring msg = L"The following Mod Hub cannot be loaded, "
+                "do you want to remove it from startup load list ?";
+
+        if(Om_dlgBox_ynl(this->_hwnd, L"Mod Hub startup autoload", IDI_WRN,
+                       L"Remove startup Mod Hub", msg, path_ls[i])) {
+
+          remv_ls.push_back(path_ls[i]);
+        }
+      }
+    }
+
+    // Remove invalid startup Mod Hub
+    if(remv_ls.size()) {
+
+      for(size_t i = 0; i < remv_ls.size(); ++i)
+        path_ls.erase(find(path_ls.begin(), path_ls.end(), remv_ls[i]));
+
+      pMgr->saveStartHubs(autoload, path_ls);
+    }
+
+    // we select the first Mod Hub in list
+    pMgr->modHubSel(0);
+  }
+
   // set window icon
   this->setIcon(Om_getResIcon(this->_hins, IDI_APP, 2), Om_getResIcon(this->_hins, IDI_APP, 1));
 
-  // Defines fonts for Context ComboBox
+  // Defines fonts for Mod Hub ComboBox
   HFONT hFt = Om_createFont(18, 200, L"Ms Shell Dlg");
   this->msgItem(IDC_CB_CTX, WM_SETFONT, reinterpret_cast<WPARAM>(hFt), true);
 
   this->_createTooltip(IDC_CB_CTX, L"Select Mod Hub");
-
-  OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
   // retrieve saved window rect values
   RECT rec = {0,0,0,0};
@@ -535,31 +578,31 @@ void OmUiMgr::_onRefresh()
   #endif
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmContext* pCtx = pMgr->ctxCur();
+  OmModHub* pModHub = pMgr->modHubCur();
 
   // update menus
-  int state = pCtx ? MF_ENABLED : MF_GRAYED;
+  int state = pModHub ? MF_ENABLED : MF_GRAYED;
   this->setPopupItem(MNU_FILE, MNU_FILE_CLOSE, state); // File > Close
   this->setPopupItem(MNU_EDIT, MNU_EDIT_CTX, state); // Edit > Mod Hub...
-  if(pCtx) {
+  if(pModHub) {
     // Edit > Mod Channel properties...
-    this->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, pMgr->ctxCur()->chnCur() ? MF_ENABLED : MF_GRAYED);
+    this->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, pMgr->modHubCur()->modChanCur() ? MF_ENABLED : MF_GRAYED);
   } else {
     this->setPopupItem(MNU_EDIT, MNU_EDIT_LOC, MF_GRAYED); // Edit > Mod Channel
     this->setPopupItem(MNU_EDIT, MNU_EDIT_PKG, MF_GRAYED); // Edit > Package []
     this->setPopupItem(MNU_EDIT, MNU_EDIT_RMT, MF_GRAYED); // Edit > Remote []
   }
 
-  // rebuild the Recent Context menu
+  // rebuild the Recent Mod Hub menu
   this->_buildMnRct();
 
-  // rebuild the Context list Combo-Box
+  // rebuild the Mod Hub list ComboBox
   this->_buildCbCtx();
 
   // update window caption
   this->_buildCaption();
 
-  // update Context Icon
+  // update Mod Hub Icon
   this->_buildSbCtx();
 }
 
@@ -714,7 +757,7 @@ INT_PTR OmUiMgr::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         // try to open
-        this->ctxOpen(path);
+        this->modHubLoad(path);
       }
     }
 
@@ -732,7 +775,7 @@ INT_PTR OmUiMgr::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       return false;
 
     OmManager* pMgr = static_cast<OmManager*>(this->_data);
-    OmContext* pCtx = pMgr->ctxCur();
+    OmModHub* pModHub = pMgr->modHubCur();
 
     wstring item_str;
 
@@ -743,31 +786,31 @@ INT_PTR OmUiMgr::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       pMgr->loadRecentFiles(paths);
 
       // subtract Command ID by the base resource ID to get real index
-      this->ctxOpen(paths[LOWORD(wParam) - IDM_FILE_RECENT_PATH]);
+      this->modHubLoad(paths[LOWORD(wParam) - IDM_FILE_RECENT_PATH]);
     }
 
     // Menus and Shortcuts Messages
     switch(LOWORD(wParam))
     {
 
-    case IDC_CB_CTX: //< Context ComboBox
+    case IDC_CB_CTX: //< Mod Hub ComboBox
       if(HIWORD(wParam) == CBN_SELCHANGE)
         this->_onCbCtxSel();
       break;
 
     // Menu : File []
     case IDM_FILE_NEW_CTX:
-      this->childById(IDD_WIZ_CTX)->open(); // New Context Wizard
+      this->childById(IDD_WIZ_CTX)->open(); // New Mod Hub Wizard
       break;
 
     case IDM_FILE_OPEN:
-      if(Om_dlgOpenFile(item_str, this->_hwnd, L"Open Context file", OMM_CTX_DEF_FILE_FILER, item_str)) {
-        this->ctxOpen(item_str);
+      if(Om_dlgOpenFile(item_str, this->_hwnd, L"Open Mod Hub file", OMM_CTX_DEF_FILE_FILER, item_str)) {
+        this->modHubLoad(item_str);
       }
       break;
 
     case IDM_FILE_CLOSE:
-      this->ctxClose();
+      this->modHubClose();
       break;
 
     case IDM_FILE_CLEAR_HIST:
@@ -781,22 +824,22 @@ INT_PTR OmUiMgr::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     // Menu : Edit []
     case IDM_EDIT_CTX_PROP: {
-      OmUiPropCtx* pUiPropCtx = static_cast<OmUiPropCtx*>(this->childById(IDD_PROP_CTX));
-      pUiPropCtx->ctxSet(pCtx);
-      pUiPropCtx->open();
+      OmUiPropHub* pUiPropHub = static_cast<OmUiPropHub*>(this->childById(IDD_PROP_CTX));
+      pUiPropHub->ctxSet(pModHub);
+      pUiPropHub->open();
       break;
     }
 
     case IDM_EDIT_CHN_PROP: {
       OmUiPropChn* pUiPropLoc = static_cast<OmUiPropChn*>(this->childById(IDD_PROP_CHN));
-      pUiPropLoc->chnSet(pCtx->chnCur());
+      pUiPropLoc->setModChan(pModHub->modChanCur());
       pUiPropLoc->open();
       break;
     }
 
     case IDM_EDIT_ADD_CHN: {
       OmUiAddChn* pUiAddLoc = static_cast<OmUiAddChn*>(this->childById(IDD_ADD_CHN));
-      pUiAddLoc->ctxSet(pCtx);
+      pUiAddLoc->ctxSet(pModHub);
       pUiAddLoc->open();
       break;
     }

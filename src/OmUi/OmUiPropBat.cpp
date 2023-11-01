@@ -113,7 +113,7 @@ bool OmUiPropBat::applyChanges()
   if(!this->_pBat)
     return false;
 
-  OmContext* pCtx = this->_pBat->pCtx();
+  OmModHub* pModHub = this->_pBat->pModHub();
 
   OmUiPropBatStg* pUiPropBatStg  = static_cast<OmUiPropBatStg*>(this->childById(IDD_PROP_BAT_STG));
   OmUiPropBatLst* pUiPropBatLst  = static_cast<OmUiPropBatLst*>(this->childById(IDD_PROP_BAT_LST));
@@ -127,8 +127,8 @@ bool OmUiPropBat::applyChanges()
     return false;
 
     // Check whether name already exists
-    for(unsigned i = 0; i < pCtx->batCount(); ++i) {
-      if(pCtx->batGet(i)->title() == bat_name) {
+    for(unsigned i = 0; i < pModHub->batCount(); ++i) {
+      if(pModHub->batGet(i)->title() == bat_name) {
         Om_dlgBox_ok(this->_hwnd, L"Script Properties", IDI_ERR,
                      L"Script name exists", L"Script "
                      "with the same name already exists, please choose another one.");
@@ -139,7 +139,7 @@ bool OmUiPropBat::applyChanges()
 
 
   // Step 2, save changes
-  if(pUiPropBatStg->hasChParam(BAT_PROP_STG_TITLE)) { //< parameter for Context title
+  if(pUiPropBatStg->hasChParam(BAT_PROP_STG_TITLE)) { //< parameter for Mod Hub title
     if(!this->_pBat->rename(bat_name)) { //< rename Batch filename
       Om_dlgBox_okl(this->_hwnd, L"Script Properties", IDI_WRN,
                    L"Script rename error", L"Script "
@@ -161,23 +161,23 @@ bool OmUiPropBat::applyChanges()
   if(pUiPropBatLst->hasChParam(BAT_PROP_STG_INSLS)) {  //< parameter for Batch install list
 
     // build the per-Mod Channel hash lists
-    OmModChan* pChn;
+    OmModChan* pModChan;
     OmPackage* pPkg;
 
-    for(size_t k = 0; k < pCtx->chnCount(); ++k) {
+    for(size_t k = 0; k < pModHub->modChanCount(); ++k) {
 
-      pChn = pCtx->chnGet(k);
+      pModChan = pModHub->modChanGet(k);
 
       // clear previous install list
-      this->_pBat->instClear(pChn);
+      this->_pBat->instClear(pModChan);
 
       for(size_t i = 0; i < pUiPropBatLst->incCount(k); ++i) {
 
         // get package from stored index
-        pPkg = pChn->pkgGet(pUiPropBatLst->incGet(k, i));
+        pPkg = pModChan->pkgGet(pUiPropBatLst->incGet(k, i));
 
         // add Package to install list
-        this->_pBat->instAdd(pChn, pPkg);
+        this->_pBat->instAdd(pModChan, pPkg);
       }
     }
 

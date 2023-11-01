@@ -213,14 +213,14 @@ void OmUiMgrMainNet::safemode(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiMgrMainNet::chnSel(int id)
+void OmUiMgrMainNet::modChanSelect(int id)
 {
   #ifdef DEBUG
   std::cout << "DEBUG => OmUiMgrMainNet::locSel " << id << "\n";
   #endif
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmContext* pCtx = pMgr->ctxCur();
+  OmModHub* pModHub = pMgr->modHubCur();
 
   // stop Library folder monitoring
   if(this->_dirMon_hth) this->_dirMon_stop();
@@ -229,18 +229,18 @@ void OmUiMgrMainNet::chnSel(int id)
   this->_pUiMgr->setPopupItem(MNU_EDIT, MNU_EDIT_RMT, MF_GRAYED);
 
   // select the requested Mod Channel
-  if(pCtx) {
+  if(pModHub) {
 
-    pCtx->chnSel(id);
+    pModHub->modChanSelect(id);
 
-    OmModChan* pChn = pCtx->chnCur();
+    OmModChan* pModChan = pModHub->modChanCur();
 
-    if(pChn) {
+    if(pModChan) {
 
       // Check Mod Channel Library folder access
-      if(pChn->libDirAccess(false)) { //< check only for reading
+      if(pModChan->libDirAccess(false)) { //< check only for reading
         // start Library folder monitoring
-        this->_dirMon_init(pChn->libDir());
+        this->_dirMon_init(pModChan->libDir());
       } else {
         // warning message will be already thrown by Library tab
       }
@@ -274,8 +274,8 @@ void OmUiMgrMainNet::rmtDown(bool upgrade)
     return;
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmModChan* pChn = pMgr->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = pMgr->modChanCur();
+  if(!pModChan) return;
 
   // get user selection
   vector<OmRemote*> user_ls;
@@ -285,7 +285,7 @@ void OmUiMgrMainNet::rmtDown(bool upgrade)
   int lv_sel = this->msgItem(IDC_LV_RMT, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
   while(lv_sel != -1) {
 
-    pRmt = pChn->rmtGet(lv_sel);
+    pRmt = pModChan->rmtGet(lv_sel);
 
     if(pRmt->isState(RMT_STATE_NEW))
       user_ls.push_back(pRmt);
@@ -301,12 +301,12 @@ void OmUiMgrMainNet::rmtDown(bool upgrade)
   wstring msg_lst;
 
   // checks whether we have a valid Library folder
-  if(!pChn->libDirAccess(true)) { //< check for read and write
+  if(!pModChan->libDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Download Packages", IDI_ERR,
                   L"Library folder access error", L"The Library folder "
                   "cannot be accessed because it do not exist or have read/write "
                   "access restrictions. Please check Mod Channel's settings "
-                  "and folder permissions", pChn->libDir());
+                  "and folder permissions", pModChan->libDir());
     return;
   }
 
@@ -319,10 +319,10 @@ void OmUiMgrMainNet::rmtDown(bool upgrade)
   vector<wstring> miss_ls;    //< missing dependencies lists
 
   // prepare package download
-  pChn->rmtPrepareDown(dwnl_ls, deps_ls, miss_ls, olds_ls, user_ls);
+  pModChan->rmtPrepareDown(dwnl_ls, deps_ls, miss_ls, olds_ls, user_ls);
 
   // warn user for missing dependencies
-  if(miss_ls.size() && pChn->warnMissDnld()) {
+  if(miss_ls.size() && pModChan->warnMissDnld()) {
 
     __msg_package_list(msg_lst, miss_ls);
     if(!Om_dlgBox_cal(this->_hwnd, L"Download Packages", IDI_PKG_WRN,
@@ -350,7 +350,7 @@ void OmUiMgrMainNet::rmtDown(bool upgrade)
   }
 
   // warn for additional installation
-  if(deps_ls.size() && pChn->warnExtraDnld()) {
+  if(deps_ls.size() && pModChan->warnExtraDnld()) {
 
     __msg_package_list(msg_lst, deps_ls);
     if(!Om_dlgBox_cal(this->_hwnd, L"Download Packages", IDI_PKG_ADD,
@@ -378,7 +378,7 @@ void OmUiMgrMainNet::rmtDown(bool upgrade)
 
     pRmt = dwnl_ls[i];
 
-    if(pRmt->download(pChn->libDir(), upgrade, &this->_rmtDnl_download_cb, this)) {
+    if(pRmt->download(pModChan->libDir(), upgrade, &this->_rmtDnl_download_cb, this)) {
 
       // update state image
       lvFind.lParam = static_cast<LPARAM>(pRmt->hash()); //< Remote package hash
@@ -414,19 +414,19 @@ void OmUiMgrMainNet::rmtFixd(bool upgrade)
     return;
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmModChan* pChn = pMgr->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = pMgr->modChanCur();
+  if(!pModChan) return;
 
   // string for dialog messages
   wstring msg_lst;
 
   // checks whether we have a valid Library folder
-  if(!pChn->libDirAccess(true)) { //< check for read and write
+  if(!pModChan->libDirAccess(true)) { //< check for read and write
     Om_dlgBox_okl(this->_hwnd, L"Fix dependencies", IDI_ERR,
                   L"Library folder access error", L"The Library folder "
                   "cannot be accessed because it do not exist or have read/write "
                   "access restrictions. Please check Mod Channel's settings "
-                  "and folder permissions", pChn->libDir());
+                  "and folder permissions", pModChan->libDir());
     return;
   }
 
@@ -441,7 +441,7 @@ void OmUiMgrMainNet::rmtFixd(bool upgrade)
   if(lv_sel < 0)
     return;
 
-  pRmt = pChn->rmtGet(lv_sel);
+  pRmt = pModChan->rmtGet(lv_sel);
 
   // this should never happen be we handle it
   if(pRmt->isState(RMT_STATE_NEW)) {
@@ -457,10 +457,10 @@ void OmUiMgrMainNet::rmtFixd(bool upgrade)
   vector<wstring> miss_ls;    //< missing dependencies lists
 
   // Get remote package depdencies
-  pChn->rmtGetDepends(deps_ls, miss_ls, pRmt);
+  pModChan->rmtGetDepends(deps_ls, miss_ls, pRmt);
 
   // warn user for missing dependencies
-  if(miss_ls.size() && pChn->warnMissDnld()) {
+  if(miss_ls.size() && pModChan->warnMissDnld()) {
 
     __msg_package_list(msg_lst, miss_ls);
     if(!Om_dlgBox_cal(this->_hwnd, L"Fix dependencies", IDI_PKG_WRN,
@@ -474,7 +474,7 @@ void OmUiMgrMainNet::rmtFixd(bool upgrade)
   }
 
   // ask user for download X packages
-  if(deps_ls.size() && pChn->warnExtraDnld()) {
+  if(deps_ls.size() && pModChan->warnExtraDnld()) {
 
     __msg_package_list(msg_lst, deps_ls);
     if(!Om_dlgBox_cal(this->_hwnd, L"Fix dependencies", IDI_PKG_WRN,
@@ -502,7 +502,7 @@ void OmUiMgrMainNet::rmtFixd(bool upgrade)
 
     pRmt = deps_ls[i];
 
-    if(pRmt->download(pChn->libDir(), upgrade, &this->_rmtDnl_download_cb, this)) {
+    if(pRmt->download(pModChan->libDir(), upgrade, &this->_rmtDnl_download_cb, this)) {
 
       // update state image
       lvFind.lParam = static_cast<LPARAM>(pRmt->hash()); //< Remote package hash
@@ -542,10 +542,10 @@ void OmUiMgrMainNet::rmtProp()
     return;
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmModChan* pChn = pMgr->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = pMgr->modChanCur();
+  if(!pModChan) return;
 
-  OmRemote* pRmt = pChn->rmtGet(lv_sel);
+  OmRemote* pRmt = pModChan->rmtGet(lv_sel);
 
   if(pRmt) {
     OmUiPropRmt* pUiPropRmt = static_cast<OmUiPropRmt*>(this->childById(IDD_PROP_RMT));
@@ -631,12 +631,12 @@ DWORD WINAPI OmUiMgrMainNet::_dirMon_fth(void* arg)
       #endif
 
       OmManager* pMgr = static_cast<OmManager*>(self->_data);
-      OmContext* pCtx = pMgr->ctxCur();
+      OmModHub* pModHub = pMgr->modHubCur();
 
-      if(pCtx) { //< this should be always the case
-        if(pCtx->chnCur()) { //< this should also be always the case
+      if(pModHub) { //< this should be always the case
+        if(pModHub->modChanCur()) { //< this should also be always the case
           // refresh Mod Channel Library
-          if(pCtx->chnCur()->rmtRefresh()) {
+          if(pModHub->modChanCur()->rmtRefresh()) {
             // if list changed, rebuilt package ListView
             self->_buildLvRmt();
           }
@@ -708,8 +708,8 @@ DWORD WINAPI OmUiMgrMainNet::_repQry_fth(void* ptr)
   OmUiMgrMainNet* self = reinterpret_cast<OmUiMgrMainNet*>(ptr);
 
   OmManager* pMgr = static_cast<OmManager*>(self->_data);
-  OmModChan* pChn = pMgr->chnCur();
-  if(!pChn) return 1;
+  OmModChan* pModChan = pMgr->modChanCur();
+  if(!pModChan) return 1;
 
   DWORD exitCode = 0;
 
@@ -729,7 +729,7 @@ DWORD WINAPI OmUiMgrMainNet::_repQry_fth(void* ptr)
     n = i + 1;
   } else {
     i = 0;
-    n = pChn->repCount();
+    n = pModChan->repCount();
   }
 
   for( ; i < n; ++i) {
@@ -740,7 +740,7 @@ DWORD WINAPI OmUiMgrMainNet::_repQry_fth(void* ptr)
     lvItem.iImage = 0; //< WIP
     self->msgItem(IDC_LV_REP, LVM_SETITEMW, 0, reinterpret_cast<LPARAM>(&lvItem));
 
-    if(!pChn->repQuery(i)) {
+    if(!pModChan->repQuery(i)) {
       exitCode = 1;
       lvItem.iImage = 1; //< ERR
       self->msgItem(IDC_LV_REP, LVM_SETITEMW, 0, reinterpret_cast<LPARAM>(&lvItem));
@@ -748,7 +748,7 @@ DWORD WINAPI OmUiMgrMainNet::_repQry_fth(void* ptr)
       lvItem.iImage = 3; //< BOK
       self->msgItem(IDC_LV_REP, LVM_SETITEMW, 0, reinterpret_cast<LPARAM>(&lvItem));
 
-      pRep = pChn->repGet(i);
+      pRep = pModChan->repGet(i);
 
       // Third column, the repository title
       lvItem.mask = LVIF_TEXT;
@@ -860,11 +860,11 @@ void OmUiMgrMainNet::_rmtDnl_finish(uint64_t hash)
 {
   // retrieve Remote object
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmModChan* pChn = pMgr->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = pMgr->modChanCur();
+  if(!pModChan) return;
 
   // retrieve Remote object
-  OmRemote* pRmt = pChn->rmtFind(hash);
+  OmRemote* pRmt = pModChan->rmtFind(hash);
   if(!pRmt)return; //< Houston we have a problem
 
   // retrieve ListView entry corresponding to current object
@@ -992,16 +992,16 @@ void OmUiMgrMainNet::_buildCbChn()
   #endif
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmContext* pCtx = pMgr->ctxCur();
+  OmModHub* pModHub = pMgr->modHubCur();
 
   // check whether any context is selected
-  if(!pCtx) {
+  if(!pModHub) {
     // empty the Combo-Box
     this->msgItem(IDC_CB_CHN, CB_RESETCONTENT);
     // disable Mod Channel ComboBox
     this->enableItem(IDC_CB_CHN, false);
     // force to reset current selection
-    this->chnSel(-1);
+    this->modChanSelect(-1);
     // return now
     return;
   }
@@ -1009,18 +1009,18 @@ void OmUiMgrMainNet::_buildCbChn()
   // empty the Combo-Box
   this->msgItem(IDC_CB_CHN, CB_RESETCONTENT);
 
-  // add Context(s) to Combo-Box
-  if(pCtx->chnCount()) {
+  // add Mod Hub(s) to ComboBox
+  if(pModHub->modChanCount()) {
 
     wstring label;
 
-    for(unsigned i = 0; i < pCtx->chnCount(); ++i) {
+    for(unsigned i = 0; i < pModHub->modChanCount(); ++i) {
 
       // compose Mod Channel label
-      label = pCtx->chnGet(i)->title() + L" - ";
+      label = pModHub->modChanGet(i)->title() + L" - ";
 
-      if(pCtx->chnGet(i)->dstDirAccess(true)) { //< check for read and write
-        label += pCtx->chnGet(i)->dstDir();
+      if(pModHub->modChanGet(i)->dstDirAccess(true)) { //< check for read and write
+        label += pModHub->modChanGet(i)->dstDir();
       } else {
         label += L"<folder access error>";
       }
@@ -1029,7 +1029,7 @@ void OmUiMgrMainNet::_buildCbChn()
     }
 
     // set selection to current active location
-    this->msgItem(IDC_CB_CHN, CB_SETCURSEL, pCtx->chnCurIndex());
+    this->msgItem(IDC_CB_CHN, CB_SETCURSEL, pModHub->modChanCurIdx());
 
     // enable the ComboBox control
     this->enableItem(IDC_CB_CHN, true);
@@ -1041,13 +1041,13 @@ void OmUiMgrMainNet::_buildCbChn()
     // no selection
     this->msgItem(IDC_CB_CHN, CB_SETCURSEL, -1);
 
-    // ask user to create at least one Target Location in the Software Context
+    // ask user to create at least one Target Location in the Mod Hub
     if(!Om_dlgBox_yn(this->_hwnd, L"Repositories", IDI_QRY,
                   L"Empty Hub", L"The Hub is empty and have no Mod Channel configured. "
                   "Do you want to add a Mod Channel now ?"))
     {
       OmUiAddChn* pUiAddLoc = static_cast<OmUiAddChn*>(this->_pUiMgr->childById(IDD_ADD_CHN));
-      pUiAddLoc->ctxSet(pCtx);
+      pUiAddLoc->ctxSet(pModHub);
       pUiAddLoc->open(true);
     }
   }
@@ -1112,9 +1112,9 @@ void OmUiMgrMainNet::_buildLvRep()
   this->msgItem(IDC_LV_REP, LVM_DELETEALLITEMS);
 
   // get current context and location
-  OmModChan* pChn = pMgr->chnCur();
+  OmModChan* pModChan = pMgr->modChanCur();
 
-  if(!pChn) {
+  if(!pModChan) {
     // disable ListView
     this->enableItem(IDC_LV_REP, false);
     // disable query button
@@ -1128,9 +1128,9 @@ void OmUiMgrMainNet::_buildLvRep()
   wstring item_str;
   OmRepository* pRep;
   LVITEMW lvItem;
-  for(unsigned i = 0; i < pChn->repCount(); ++i) {
+  for(unsigned i = 0; i < pModChan->repCount(); ++i) {
 
-    pRep = pChn->repGet(i);
+    pRep = pModChan->repGet(i);
 
     // the first column, repository status, here we INSERT the new item
     lvItem.iItem = i;
@@ -1160,7 +1160,7 @@ void OmUiMgrMainNet::_buildLvRep()
   this->msgItem(IDC_LV_REP, LVM_SCROLL, 0, -lvRec.top );
 
   // enable or disable query button
-  this->enableItem(IDC_BC_QRY, (pChn->repCount() > 0));
+  this->enableItem(IDC_BC_QRY, (pModChan->repCount() > 0));
 
   // resize ListView columns adapted to client area
   this->_rsizeLvRep();
@@ -1250,9 +1250,9 @@ void OmUiMgrMainNet::_buildLvRmt()
   this->msgItem(IDC_LV_RMT, LVM_DELETEALLITEMS);
 
   // get current context and location
-  OmModChan* pChn = pMgr->chnCur();
+  OmModChan* pModChan = pMgr->modChanCur();
 
-  if(!pChn) {
+  if(!pModChan) {
     // disable ListView
     this->enableItem(IDC_LV_RMT, false);
     // update Package ListView selection
@@ -1264,9 +1264,9 @@ void OmUiMgrMainNet::_buildLvRmt()
   // add item to list view
   OmRemote* pRmt;
   LVITEMW lvItem;
-  for(unsigned i = 0; i < pChn->rmtCount(); ++i) {
+  for(unsigned i = 0; i < pModChan->rmtCount(); ++i) {
 
-    pRmt = pChn->rmtGet(i);
+    pRmt = pModChan->rmtGet(i);
 
     // the first column, package status, here we INSERT the new item
     lvItem.iItem = i;
@@ -1367,7 +1367,7 @@ void OmUiMgrMainNet::_rsizeLvRmt()
 void OmUiMgrMainNet::_onCbLocSel()
 {
   int cb_sel = this->msgItem(IDC_CB_CHN, CB_GETCURSEL);
-  this->chnSel(cb_sel);
+  this->modChanSelect(cb_sel);
 }
 
 
@@ -1470,8 +1470,8 @@ void OmUiMgrMainNet::_onLvRmtSel()
   }
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmModChan* pChn = pMgr->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = pMgr->modChanCur();
+  if(!pModChan) return;
 
   // at least one selected, enable "Edit > Remote []" pop-up menu
   this->_pUiMgr->setPopupItem(MNU_EDIT, MNU_EDIT_RMT, MF_ENABLED);
@@ -1501,7 +1501,7 @@ void OmUiMgrMainNet::_onLvRmtSel()
     int lv_sel = this->msgItem(IDC_LV_RMT, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
     if(lv_sel >= 0) {
 
-      pRmt = pChn->rmtGet(lv_sel);
+      pRmt = pModChan->rmtGet(lv_sel);
 
       // show packages info in footer frame
       this->_pUiMgr->pUiMgrFoot()->selectItem(pRmt);
@@ -1572,11 +1572,11 @@ void OmUiMgrMainNet::_onBcStopRep()
 void OmUiMgrMainNet::_onBcNewRep()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmModChan* pChn = pMgr->chnCur();
+  OmModChan* pModChan = pMgr->modChanCur();
 
-  if(pChn) {
+  if(pModChan) {
     OmUiAddRep* pUiNewRep = static_cast<OmUiAddRep*>(this->_pUiMgr->childById(IDD_ADD_REP));
-    pUiNewRep->chnSet(pChn);
+    pUiNewRep->setModChan(pModChan);
     pUiNewRep->open(true);
   }
 }
@@ -1588,13 +1588,13 @@ void OmUiMgrMainNet::_onBcNewRep()
 void OmUiMgrMainNet::_onBcDelRep()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmModChan* pChn = pMgr->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = pMgr->modChanCur();
+  if(!pModChan) return;
 
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
   if(lb_sel < 0) return;
 
-  OmRepository* pRep = pChn->repGet(lb_sel);
+  OmRepository* pRep = pModChan->repGet(lb_sel);
 
   // warns the user before committing the irreparable
   if(!Om_dlgBox_ynl(this->_hwnd, L"Remove Repository", IDI_QRY,
@@ -1602,7 +1602,7 @@ void OmUiMgrMainNet::_onBcDelRep()
                 pRep->base()+L" - "+pRep->name()))
     return;
 
-  pChn->repRem(lb_sel);
+  pModChan->repRem(lb_sel);
 
   // reload the repository ListBox
   this->_buildLvRep();
@@ -1627,12 +1627,12 @@ void OmUiMgrMainNet::_onBcAbort()
   this->enableItem(IDC_BC_ABORT, false);
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmModChan* pChn = pMgr->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = pMgr->modChanCur();
+  if(!pModChan) return;
 
   // we set abort value to Remote object hash to identify it
   // within the download callback function
-  this->_rmtDnl_abort = pChn->rmtGet(lv_sel)->hash();
+  this->_rmtDnl_abort = pModChan->rmtGet(lv_sel)->hash();
 }
 
 
@@ -1818,7 +1818,7 @@ void OmUiMgrMainNet::_onRefresh()
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
 
-  OmContext* pCtx = pMgr->ctxCur();
+  OmModHub* pModHub = pMgr->modHubCur();
 
   // disable the Progress-Bar
   this->enableItem(IDC_PB_PKG, false);
@@ -1830,42 +1830,42 @@ void OmUiMgrMainNet::_onRefresh()
   this->_buildLvRep();
 
   // disable or enable elements depending context
-  this->enableItem(IDC_SC_LBL01, (pCtx != nullptr));
-  this->enableItem(IDC_LV_RMT, (pCtx != nullptr));
-  this->enableItem(IDC_LB_REP, (pCtx != nullptr));
-  this->enableItem(IDC_BC_NEW, (pCtx != nullptr));
+  this->enableItem(IDC_SC_LBL01, (pModHub != nullptr));
+  this->enableItem(IDC_LV_RMT, (pModHub != nullptr));
+  this->enableItem(IDC_LB_REP, (pModHub != nullptr));
+  this->enableItem(IDC_BC_NEW, (pModHub != nullptr));
 
   // values for access errors
   bool lib_access = true;
 
-  OmModChan* pChn = pMgr->chnCur();
+  OmModChan* pModChan = pMgr->modChanCur();
 
   // We try to avoid unnecessary refresh of ListView by
   // select specific condition of refresh
-  if(pChn) {
+  if(pModChan) {
 
     // restart folder monitoring if required
-    if(pChn->libDirAccess(true)) {
-      this->_dirMon_init(pChn->libDir());
+    if(pModChan->libDirAccess(true)) {
+      this->_dirMon_init(pModChan->libDir());
     } else {
       lib_access = false;
     }
 
-    pChn->rmtRefresh(true);
+    pModChan->rmtRefresh(true);
   }
 
   this->_buildLvRmt();
 
-  if(!pCtx) return;
+  if(!pModHub) return;
 
   // Display error dialog AFTER ListView refreshed its content
-  if(pChn) {
+  if(pModChan) {
     if(!lib_access) {
       Om_dlgBox_okl(this->_hwnd, L"Repositories", IDI_WRN,
                     L"Library folder access error", L"The Library folder "
                     "cannot be accessed because it do not exist or have read "
                     "access restrictions. Please check Mod Channel's settings "
-                    "and folder permissions.", pChn->libDir());
+                    "and folder permissions.", pModChan->libDir());
     }
   }
 }
@@ -1910,7 +1910,7 @@ INT_PTR OmUiMgrMainNet::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
   }
 
   // UWM_MAIN_CTX_CHANGED is a custom message sent from Main (parent) Dialog
-  // to notify its child tab dialogs the Context selection changed.
+  // to notify its child tab dialogs the Mod Hub selection changed.
   if(uMsg == UWM_MAIN_CTX_CHANGED) {
     // invalidate Mod Channel selection
     this->msgItem(IDC_CB_CHN, CB_SETCURSEL, -1);
@@ -1929,13 +1929,13 @@ INT_PTR OmUiMgrMainNet::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
   }
 
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmContext* pCtx = pMgr->ctxCur();
-  if(!pCtx) return false;
+  OmModHub* pModHub = pMgr->modHubCur();
+  if(!pModHub) return false;
 
   if(uMsg == WM_NOTIFY) {
 
-    OmModChan* pChn = pCtx->chnCur();
-    if(!pChn) return false;
+    OmModChan* pModChan = pModHub->modChanCur();
+    if(!pModChan) return false;
 
     // if repositories query is running we block all interaction
     if(this->_repQryt_hth)
@@ -1975,21 +1975,21 @@ INT_PTR OmUiMgrMainNet::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
         switch(reinterpret_cast<NMLISTVIEW*>(lParam)->iSubItem)
         {
         case 0:
-          pChn->rmtSetSorting(LS_SORT_STAT);
+          pModChan->rmtSetSorting(LS_SORT_STAT);
           break;
         case 2:
-          pChn->rmtSetSorting(LS_SORT_VERS);
+          pModChan->rmtSetSorting(LS_SORT_VERS);
           break;
         case 3:
-          pChn->rmtSetSorting(LS_SORT_CATG);
+          pModChan->rmtSetSorting(LS_SORT_CATG);
           break;
         case 4:
-          pChn->rmtSetSorting(LS_SORT_SIZE);
+          pModChan->rmtSetSorting(LS_SORT_SIZE);
           break;
         case 5:
           return false; // ignore action
         default:
-          pChn->rmtSetSorting(LS_SORT_NAME);
+          pModChan->rmtSetSorting(LS_SORT_NAME);
           break;
         }
         this->_buildLvRmt(); //< rebuild ListView
@@ -2010,9 +2010,9 @@ INT_PTR OmUiMgrMainNet::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     #endif
 
     OmManager* pMgr = static_cast<OmManager*>(this->_data);
-    OmContext* pCtx = pMgr->ctxCur();
+    OmModHub* pModHub = pMgr->modHubCur();
 
-    if(!pCtx->chnCur())
+    if(!pModHub->modChanCur())
       return false;
 
     switch(LOWORD(wParam))

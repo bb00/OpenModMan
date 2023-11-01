@@ -551,8 +551,8 @@ bool OmUiToolPkg::_onBcBrwDir(const wchar_t* path)
       return false; //< return now, don't change anything
   }
 
-  OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
+  OmModHub* pModHub = static_cast<OmManager*>(this->_data)->modHubCur();
+  OmModChan* pModChan = pModHub ? pModHub->modChanCur() : nullptr;
 
   wstring result, start;
 
@@ -566,7 +566,7 @@ bool OmUiToolPkg::_onBcBrwDir(const wchar_t* path)
     this->getItemText(IDC_EC_INP01, start);
 
     if(start.empty()) {
-      if(pChn) start = pChn->libDir();
+      if(pModChan) start = pModChan->libDir();
     } else {
       start = Om_getDirPart(start);
     }
@@ -632,8 +632,8 @@ bool OmUiToolPkg::_onBcBrwPkg(const wchar_t* path)
   // reset unsaved changes
   this->_unsaved = false;
 
-  OmContext* pCtx = static_cast<OmManager*>(this->_data)->ctxCur();
-  OmModChan* pChn = pCtx ? pCtx->chnCur() : nullptr;
+  OmModHub* pModHub = static_cast<OmManager*>(this->_data)->modHubCur();
+  OmModChan* pModChan = pModHub ? pModHub->modChanCur() : nullptr;
 
   wstring result, start;
 
@@ -647,7 +647,7 @@ bool OmUiToolPkg::_onBcBrwPkg(const wchar_t* path)
     this->getItemText(IDC_EC_INP02, start);
 
     if(start.empty()) {
-      if(pChn) start = pChn->libDir();
+      if(pModChan) start = pModChan->libDir();
     } else {
       start = Om_getDirPart(start);
     }

@@ -24,7 +24,7 @@
 #include "OmUtilStr.h"
 
 #include "OmManager.h"
-#include "OmContext.h"
+#include "OmModHub.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #include "OmModChan.h"
@@ -873,8 +873,8 @@ static size_t __rmt_get_old_required(vector<OmPackage*>& out_ls, const vector<Om
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmModChan::OmModChan(OmContext* pCtx) :
-  _context(pCtx), _config(), _uuid(), _title(), _index(0), _home(), _path(),
+OmModChan::OmModChan(OmModHub* pModHub) :
+  _modhub(pModHub), _config(), _uuid(), _title(), _index(0), _home(), _path(),
   _dstDir(), _libDir(), _libDirCust(false), _libDevMode(true), _libShowHidden(false), _bckDir(),
   _bckDirCust(false), _pkgLs(), _bckZipLevel(0), _pkgSorting(LS_SORT_NAME),
   _upgdRename(false), _rmtSorting(LS_SORT_NAME), _warnOverlaps(true),
@@ -2034,7 +2034,7 @@ bool OmModChan::renameHome(const wstring& name)
   // compose new Mod Channel definition file name
   wstring new_file = name;
   new_file += L".";
-  new_file += OMM_LOC_DEF_FILE_EXT;
+  new_file += OMM_CHN_DEF_FILE_EXT;
 
   // Rename Mod Channel definition file
   int result = Om_fileMove(old_path, old_home + L"\\" + new_file);
@@ -3007,10 +3007,10 @@ size_t OmModChan::rmtGetDepends(vector<OmRemote*>& dep_ls, vector<wstring>& mis_
 ///
 void OmModChan::log(unsigned level, const wstring& head, const wstring& detail)
 {
-  wstring log_str = L"Context("; log_str.append(this->_context->title());
+  wstring log_str = L"ModHub("; log_str.append(this->_modhub->title());
   log_str.append(L"):: "); log_str.append(head);
 
-  this->_context->log(level, log_str, detail);
+  this->_modhub->log(level, log_str, detail);
 }
 
 

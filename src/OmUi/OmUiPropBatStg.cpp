@@ -19,7 +19,7 @@
 
 #include "OmBaseUi.h"
 
-#include "OmContext.h"
+#include "OmModHub.h"
 #include "OmBatch.h"
 #include "OmDialogProp.h"
 
@@ -115,8 +115,8 @@ void OmUiPropBatStg::_onRefresh()
   OmBatch* pBat = static_cast<OmUiPropBat*>(this->_parent)->batCur();
   if(!pBat) return;
 
-  OmContext* pCtx = pBat->pCtx();
-  if(!pCtx) return;
+  OmModHub* pModHub = pBat->pModHub();
+  if(!pModHub) return;
 
   // batch title
   this->setItemText(IDC_EC_INP01, pBat->title());

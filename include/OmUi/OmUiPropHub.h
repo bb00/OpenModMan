@@ -14,18 +14,18 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPCTX_H
-#define OMUIPROPCTX_H
+#ifndef OMUIPROPHUB_H
+#define OMUIPROPHUB_H
 
 #include "OmDialogProp.h"
 
-class OmContext;
+class OmModHub;
 
-/// \brief Context Properties parent dialog
+/// \brief Mod Hub Properties parent dialog
 ///
-/// OmDialogProp class derived for Context Properties parent dialog window.
+/// OmDialogProp class derived for Mod Hub Properties parent dialog window.
 ///
-class OmUiPropCtx : public OmDialogProp
+class OmUiPropHub : public OmDialogProp
 {
   public:
 
@@ -35,13 +35,13 @@ class OmUiPropCtx : public OmDialogProp
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropCtx(HINSTANCE hins);
+    OmUiPropHub(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropCtx();
+    ~OmUiPropHub();
 
     /// \brief Get resource id.
     ///
@@ -51,26 +51,26 @@ class OmUiPropCtx : public OmDialogProp
     ///
     long id() const;
 
-    /// \brief Get associated Context.
+    /// \brief Get associated Mod Hub.
     ///
-    /// Returns associated Context object
+    /// Returns associated Mod Hub object
     ///
-    /// \return Associated Context or nullptr if none.
+    /// \return Associated Mod Hub or nullptr if none.
     ///
-    OmContext* ctxCur() const {
-      return _pCtx;
+    OmModHub* modHubCur() const {
+      return _modHub;
     }
 
-    /// \brief Set associated Context.
+    /// \brief Set associated Mod Hub.
     ///
-    /// Define the associated Context, which the dialog is intended to
-    /// work with and on. A valid Context must be set in order before
+    /// Define the associated Mod Hub, which the dialog is intended to
+    /// work with and on. A valid Mod Hub must be set in order before
     /// opening the dialog.
     ///
-    /// \param[in]  pCtx  : Context object to associate.
+    /// \param[in]  pModHub  : Mod Hub object to associate.
     ///
-    void ctxSet(OmContext* pCtx) {
-      _pCtx = pCtx;
+    void ctxSet(OmModHub* pModHub) {
+      _modHub = pModHub;
     }
 
     /// \brief Check for properties changes
@@ -88,9 +88,9 @@ class OmUiPropCtx : public OmDialogProp
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmContext*          _pCtx;
+    OmModHub*           _modHub;
 
     void                _onPropInit();
 };
 
-#endif // OMUIPROPCTX_H
+#endif // OMUIPROPHUB_H

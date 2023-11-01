@@ -14,16 +14,19 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIWIZCTXCFG_H
-#define OMUIWIZCTXCFG_H
+#ifndef OMUIPROPHUBSETG_H
+#define OMUIPROPHUBSETG_H
 
 #include "OmDialog.h"
 
-/// \brief New Context Wizard / Configuration page child
+#define CTX_PROP_STG_TITLE   0
+#define CTX_PROP_STG_ICON    1
+
+/// \brief Mod Hub Properties / Settings tab child
 ///
-/// OmDialog class derived for New Context Wizard / Configuration page child dialog window
+/// OmDialog class derived for Mod Hub Properties / Settings tab child dialog window
 ///
-class OmUiWizCtxCfg : public OmDialog
+class OmUiPropHubStg : public OmDialog
 {
   public:
 
@@ -33,13 +36,13 @@ class OmUiWizCtxCfg : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiWizCtxCfg(HINSTANCE hins);
+    OmUiPropHubStg(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiWizCtxCfg();
+    ~OmUiPropHubStg();
 
     /// \brief Get resource id.
     ///
@@ -49,32 +52,44 @@ class OmUiWizCtxCfg : public OmDialog
     ///
     long id() const;
 
-    /// \brief Check valid parameters.
+    /// \brief Check changed parameter
     ///
-    /// Checks whether the dialog actually contain valid
-    /// parameters set by user.
+    /// Checks whether the specified dialog related parameter has been
+    /// marked as changed, meaning it was modified by user.
     ///
-    /// \return True parameters set by user are valid, false otherwise.
+    /// \param[in]  i   : Dialog related parameter to check
     ///
-    bool hasValidParams() const;
+    /// \return True if the specified parameter is marked as changed,
+    ///         false otherwise
+    ///
+    bool hasChParam(unsigned i) const {
+      return _chParam[i];
+    }
+
+    /// \brief Set changed parameter
+    ///
+    /// Marks the specified dialog related parameter as changed or unchanged.
+    ///
+    /// \param[in]  i   : Dialog related parameter to mark
+    /// \param[in]  en  : Boolean value to enable or disable
+    ///
+    void setChParam(unsigned i, bool en);
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void                _onPathChange();
+    bool                _chParam[8];
 
-    void                _onBcBrwHome();
+    void                _onBcBrwIcon();
+
+    void                _onBcDelIcon();
 
     void                _onInit();
-
-    void                _onShow();
 
     void                _onResize();
 
     void                _onRefresh();
 
-    void                _onQuit();
-
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIWIZCTXCFG_H
+#endif // OMUIPROPHUBSETG_H

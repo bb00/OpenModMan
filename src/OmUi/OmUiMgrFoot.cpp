@@ -260,7 +260,7 @@ void OmUiMgrFoot::_onRefresh()
   #endif
 
   //OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  //OmContext* pCtx = pMgr->ctxCur();
+  //OmModHub* pModHub = pMgr->modHubCur();
 }
 
 

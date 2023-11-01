@@ -19,35 +19,35 @@
 #include "OmBaseUi.h"
 
 #include "OmManager.h"
-#include "OmContext.h"
+#include "OmModHub.h"
 
-#include "OmUiWizCtxBeg.h"
-#include "OmUiWizCtxCfg.h"
-#include "OmUiWizCtxChn.h"
+#include "OmUiWizHubBeg.h"
+#include "OmUiWizHubCfg.h"
+#include "OmUiWizHubChn.h"
 #include "OmUiMgr.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilWin.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiWizCtx.h"
+#include "OmUiWizHub.h"
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtx::OmUiWizCtx(HINSTANCE hins) : OmDialogWiz(hins)
+OmUiWizHub::OmUiWizHub(HINSTANCE hins) : OmDialogWiz(hins)
 {
   // create wizard pages
-  this->_addPage(new OmUiWizCtxBeg(hins));
-  this->_addPage(new OmUiWizCtxCfg(hins));
-  this->_addPage(new OmUiWizCtxChn(hins));
+  this->_addPage(new OmUiWizHubBeg(hins));
+  this->_addPage(new OmUiWizHubCfg(hins));
+  this->_addPage(new OmUiWizHubChn(hins));
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiWizCtx::~OmUiWizCtx()
+OmUiWizHub::~OmUiWizHub()
 {
 
 }
@@ -56,7 +56,7 @@ OmUiWizCtx::~OmUiWizCtx()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiWizCtx::id() const
+long OmUiWizHub::id() const
 {
   return IDD_WIZ_CTX;
 }
@@ -65,15 +65,15 @@ long OmUiWizCtx::id() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiWizCtx::_onWizNext()
+bool OmUiWizHub::_onWizNext()
 {
   switch(this->_currPage)
   {
-  case 1: // Context parameters Wizard page
-    return static_cast<OmUiWizCtxCfg*>(this->childById(IDD_WIZ_CTX_CFG))->hasValidParams();
+  case 1: // Mod Hub parameters Wizard page
+    return static_cast<OmUiWizHubCfg*>(this->childById(IDD_WIZ_CTX_CFG))->hasValidParams();
     break;
   case 2: // Mod Channel parameters Wizard page
-    return static_cast<OmUiWizCtxChn*>(this->childById(IDD_WIZ_CTX_CHN))->hasValidParams();
+    return static_cast<OmUiWizHubChn*>(this->childById(IDD_WIZ_CTX_CHN))->hasValidParams();
     break;
   default:
     return true;
@@ -87,13 +87,13 @@ bool OmUiWizCtx::_onWizNext()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtx::_onWizFinish()
+void OmUiWizHub::_onWizFinish()
 {
   OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmUiWizCtxCfg* pUiWizCtxCfg = static_cast<OmUiWizCtxCfg*>(this->childById(IDD_WIZ_CTX_CFG));
-  OmUiWizCtxChn* pUiWizLocCfg = static_cast<OmUiWizCtxChn*>(this->childById(IDD_WIZ_CTX_CHN));
+  OmUiWizHubCfg* pUiWizCtxCfg = static_cast<OmUiWizHubCfg*>(this->childById(IDD_WIZ_CTX_CFG));
+  OmUiWizHubChn* pUiWizLocCfg = static_cast<OmUiWizHubChn*>(this->childById(IDD_WIZ_CTX_CHN));
 
-  // Retrieve Context parameters
+  // Retrieve Mod Hub parameters
   wstring ctx_name, ctx_home;
   pUiWizCtxCfg->getItemText(IDC_EC_INP01, ctx_name);
   pUiWizCtxCfg->getItemText(IDC_EC_INP02, ctx_home);
@@ -113,16 +113,16 @@ void OmUiWizCtx::_onWizFinish()
 
   this->quit();
 
-  // create the new Context, if an error occur, error message
-  if(pMgr->ctxNew(ctx_name, ctx_home, true)) {
-    // get current selected Context (the just created one)
-    OmContext* pCtx = pMgr->ctxCur();
-    // create new Mod Channel in Context
-    if(!pCtx->chnAdd(chn_name, chn_dst, chn_lib, chn_bck)) {
+  // create the new Mod Hub, if an error occur, error message
+  if(pMgr->modHubCreate(ctx_name, ctx_home, true)) {
+    // get current selected Mod Hub (the just created one)
+    OmModHub* pModHub = pMgr->modHubCur();
+    // create new Mod Channel in Mod Hub
+    if(!pModHub->modChanCreate(chn_name, chn_dst, chn_lib, chn_bck)) {
       Om_dlgBox_okl(this->_hwnd, L"Mod Hub Wizard", IDI_ERR,
                     L"Mod Channel creation error", L"Mod Channel "
                     "creation failed because of the following error:",
-                    pCtx->lastError());
+                    pModHub->lastError());
     }
   } else {
     Om_dlgBox_okl(this->_hwnd, L"Mod Hub Wizard", IDI_ERR,
@@ -139,7 +139,7 @@ void OmUiWizCtx::_onWizFinish()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiWizCtx::_onWizInit()
+void OmUiWizHub::_onWizInit()
 {
   // set dialog icon
   this->setIcon(Om_getResIcon(this->_hins, IDI_APP, 2), Om_getResIcon(this->_hins, IDI_APP, 1));

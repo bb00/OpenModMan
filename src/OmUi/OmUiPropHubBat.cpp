@@ -23,18 +23,18 @@
 #include "OmUiMgr.h"
 #include "OmUiAddBat.h"
 #include "OmUiPropBat.h"
-#include "OmUiPropCtx.h"
+#include "OmUiPropHub.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilWin.h"         //< Om_getResIcon
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-#include "OmUiPropCtxBat.h"
+#include "OmUiPropHubBat.h"
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropCtxBat::OmUiPropCtxBat(HINSTANCE hins) : OmDialog(hins)
+OmUiPropHubBat::OmUiPropHubBat(HINSTANCE hins) : OmDialog(hins)
 {
   // modified parameters flags
   for(unsigned i = 0; i < 8; ++i) {
@@ -45,7 +45,7 @@ OmUiPropCtxBat::OmUiPropCtxBat(HINSTANCE hins) : OmDialog(hins)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropCtxBat::~OmUiPropCtxBat()
+OmUiPropHubBat::~OmUiPropHubBat()
 {
 
 }
@@ -54,7 +54,7 @@ OmUiPropCtxBat::~OmUiPropCtxBat()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-long OmUiPropCtxBat::id() const
+long OmUiPropHubBat::id() const
 {
   return IDD_PROP_CTX_BAT;
 }
@@ -63,7 +63,7 @@ long OmUiPropCtxBat::id() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::setChParam(unsigned i, bool en)
+void OmUiPropHubBat::setChParam(unsigned i, bool en)
 {
   this->_chParam[i] = en;
   static_cast<OmDialogProp*>(this->_parent)->checkChanges();
@@ -73,7 +73,7 @@ void OmUiPropCtxBat::setChParam(unsigned i, bool en)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onLbBatlsSel()
+void OmUiPropHubBat::_onLbBatlsSel()
 {
   int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
 
@@ -92,7 +92,7 @@ void OmUiPropCtxBat::_onLbBatlsSel()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onBcUpBat()
+void OmUiPropHubBat::_onBcUpBat()
 {
   // get selected item (index)
   int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
@@ -123,7 +123,7 @@ void OmUiPropCtxBat::_onBcUpBat()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onBcDnBat()
+void OmUiPropHubBat::_onBcDnBat()
 {
   // get selected item (index)
   int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
@@ -158,19 +158,19 @@ void OmUiPropCtxBat::_onBcDnBat()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onBcEdiBat()
+void OmUiPropHubBat::_onBcEdiBat()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
 
-  if(lb_sel >= 0 && lb_sel < (int)pCtx->batCount()) {
+  if(lb_sel >= 0 && lb_sel < (int)pModHub->batCount()) {
 
     // open the Batch Properties dialog
     int bat_id = this->msgItem(IDC_LB_BAT, LB_GETITEMDATA, lb_sel, 0);
     OmUiPropBat* pUiPropBat = static_cast<OmUiPropBat*>(this->siblingById(IDD_PROP_BAT));
-    pUiPropBat->batSet(pCtx->batGet(bat_id));
+    pUiPropBat->batSet(pModHub->batGet(bat_id));
     pUiPropBat->open();
   }
 }
@@ -179,10 +179,10 @@ void OmUiPropCtxBat::_onBcEdiBat()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onBcDelBat()
+void OmUiPropHubBat::_onBcDelBat()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   // get selected item (index)
   int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
@@ -194,18 +194,18 @@ void OmUiPropCtxBat::_onBcDelBat()
     // warns the user before committing the irreparable
     if(!Om_dlgBox_ynl(this->_hwnd, L"Mod Hub properties", IDI_QRY,
               L"Delete Script", L"Delete the Script ?",
-              pCtx->batGet(bat_id)->title()))
+              pModHub->batGet(bat_id)->title()))
     {
       return;
     }
 
-    if(!pCtx->batRem(bat_id)) {
+    if(!pModHub->batRem(bat_id)) {
 
       // warns the user error occurred
       Om_dlgBox_okl(this->_hwnd, L"Mod Hub properties", IDI_ERR,
                 L"Script delete error", L"Script deletion "
                 "process failed because of the following error:",
-                pCtx->lastError());
+                pModHub->lastError());
 
       return;
     }
@@ -219,13 +219,13 @@ void OmUiPropCtxBat::_onBcDelBat()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onBcAddBat()
+void OmUiPropHubBat::_onBcAddBat()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   OmUiAddBat* pUiNewBat = static_cast<OmUiAddBat*>(this->siblingById(IDD_ADD_BAT));
-  pUiNewBat->ctxSet(pCtx);
+  pUiNewBat->ctxSet(pModHub);
   pUiNewBat->open(true);
 }
 
@@ -234,7 +234,7 @@ void OmUiPropCtxBat::_onBcAddBat()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onCkBoxQuiet()
+void OmUiPropHubBat::_onCkBoxQuiet()
 {
   // user modified parameter, notify it
   this->setChParam(CTX_PROP_BAT_QUIETMODE, true);
@@ -244,7 +244,7 @@ void OmUiPropCtxBat::_onCkBoxQuiet()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onInit()
+void OmUiPropHubBat::_onInit()
 {
   this->setBmIcon(IDC_BC_ADD, Om_getResIcon(this->_hins, IDI_BT_ADD));
   this->setBmIcon(IDC_BC_DEL, Om_getResIcon(this->_hins, IDI_BT_REM));
@@ -257,7 +257,7 @@ void OmUiPropCtxBat::_onInit()
   this->_createTooltip(IDC_BC_UP,     L"Move up in list");
   this->_createTooltip(IDC_BC_DN,     L"Move down in list");
   this->_createTooltip(IDC_BC_DEL,    L"Delete the selected Installation batch");
-  this->_createTooltip(IDC_BC_ADD,    L"Create a new Installation batch for this Context");
+  this->_createTooltip(IDC_BC_ADD,    L"Create a new Installation batch for this Mod Hub");
   this->_createTooltip(IDC_BC_EDI,    L"Edit Installation batch properties");
   this->_createTooltip(IDC_BC_CKBX1,  L"Disable installation warning messages for batches execution.");
 
@@ -273,7 +273,7 @@ void OmUiPropCtxBat::_onInit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onResize()
+void OmUiPropHubBat::_onResize()
 {
   // Mod Channel list Label & ListBox
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 180, 9);
@@ -298,19 +298,19 @@ void OmUiPropCtxBat::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onRefresh()
+void OmUiPropHubBat::_onRefresh()
 {
-  OmContext* pCtx = static_cast<OmUiPropCtx*>(this->_parent)->ctxCur();
-  if(!pCtx) return;
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  if(!pModHub) return;
 
   this->msgItem(IDC_LB_BAT, LB_RESETCONTENT);
 
-  for(unsigned i = 0; i < pCtx->batCount(); ++i) {
-    this->msgItem(IDC_LB_BAT, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(pCtx->batGet(i)->title().c_str()));
+  for(unsigned i = 0; i < pModHub->batCount(); ++i) {
+    this->msgItem(IDC_LB_BAT, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(pModHub->batGet(i)->title().c_str()));
     this->msgItem(IDC_LB_BAT, LB_SETITEMDATA, i, i); // for Mod Channel index reordering
   }
 
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pCtx->batQuietMode());
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pModHub->batQuietMode());
 
   // reset modified parameters flags
   for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;
@@ -321,7 +321,7 @@ void OmUiPropCtxBat::_onRefresh()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropCtxBat::_onQuit()
+void OmUiPropHubBat::_onQuit()
 {
 
 }
@@ -330,7 +330,7 @@ void OmUiPropCtxBat::_onQuit()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropCtxBat::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropHubBat::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 

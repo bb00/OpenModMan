@@ -190,7 +190,7 @@ void OmUiPropMgrGle::_onBcBrwStr()
 
   this->getItemText(IDC_EC_INP01, start);
 
-  if(!Om_dlgOpenFile(result, this->_hwnd, L"Select Context file", OMM_CTX_DEF_FILE_FILER, start))
+  if(!Om_dlgOpenFile(result, this->_hwnd, L"Select Mod Hub file", OMM_CTX_DEF_FILE_FILER, start))
     return;
 
   // add file path to startup context list
@@ -229,11 +229,11 @@ void OmUiPropMgrGle::_onInit()
   this->_createTooltip(IDC_CB_ICS,    L"Size of icons in packages lists");
 
   this->_createTooltip(IDC_BC_CKBX2,  L"Disables Markdown parsing and display descriptions as raw text");
-  this->_createTooltip(IDC_BC_CKBX2,  L"Automatically opens Context files at application startup");
-  this->_createTooltip(IDC_LB_PATH,   L"Context files to be opened at application startup");
+  this->_createTooltip(IDC_BC_CKBX2,  L"Automatically opens Mod Hub files at application startup");
+  this->_createTooltip(IDC_LB_PATH,   L"Mod Hub files to be opened at application startup");
   this->_createTooltip(IDC_BC_UP,   L"Move up in list");
   this->_createTooltip(IDC_BC_DN,   L"Move down in list");
-  this->_createTooltip(IDC_BC_BRW01,  L"Browse to select a Context file to add");
+  this->_createTooltip(IDC_BC_BRW01,  L"Browse to select a Mod Hub file to add");
   this->_createTooltip(IDC_BC_REM,    L"Remove the selected entry");
 
   // add items to Icon Size ComboBox
@@ -260,15 +260,15 @@ void OmUiPropMgrGle::_onResize()
   // No Markdown checkbox
   this->_setItemPos(IDC_BC_CKBX1, 50, 55, 200, 9);
 
-  // Startup Contexts list CheckBox & ListBox
+  // Startup Mod Hub list CheckBox & ListBox
   this->_setItemPos(IDC_BC_CKBX2, 50, 79, 100, 9);
   this->_setItemPos(IDC_LB_PATH, 50, 90, this->cliUnitX()-100, this->cliUnitY()-130);
 
-  // Startup Contexts list Up and Down buttons
+  // Startup Mod Hub list Up and Down buttons
   this->_setItemPos(IDC_BC_UP, this->cliUnitX()-48, 105, 16, 15);
   this->_setItemPos(IDC_BC_DN, this->cliUnitX()-48, 120, 16, 15);
 
-  // Startup Contexts list Add and Remove... buttons
+  // Startup Mod Hub list Add and Remove... buttons
   this->_setItemPos(IDC_BC_BRW01, 50, this->cliUnitY()-38, 50, 14);
   this->_setItemPos(IDC_BC_REM, 102, this->cliUnitY()-38, 50, 14);
 }
@@ -300,7 +300,7 @@ void OmUiPropMgrGle::_onRefresh()
   vector<wstring> path_ls;
 
   // set Load at Startup CheckBox
-  pMgr->getStartContexts(&auto_open, path_ls);
+  pMgr->getStartHubs(&auto_open, path_ls);
   this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, auto_open);
 
   // Enable or disable Browse button and ListBox
@@ -338,15 +338,15 @@ INT_PTR OmUiPropMgrGle::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
         this->setChParam(MGR_PROP_GLE_ICON_SIZE, true);
       break;
 
-    case IDC_BC_CKBX1: //< Check-Box for Display as raw text
+    case IDC_BC_CKBX1: //< CheckBox for Display as raw text
       this->_onCkBoxRaw();
       break;
 
-    case IDC_BC_CKBX2: //< Check-Box for Open Context(s) at startup
+    case IDC_BC_CKBX2: //< CheckBox for Open Mod Hub(s) at startup
       this->_onCkBoxStr();
       break;
 
-    case IDC_LB_PATH: //< List-Box for startup Context(s) list
+    case IDC_LB_PATH: //< ListBox for startup Mod Hub(s) list
       if(HIWORD(wParam) == LBN_SELCHANGE)
         this->_onLbStrlsSel();
       break;
@@ -359,11 +359,11 @@ INT_PTR OmUiPropMgrGle::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       this->_onBcDnStr();
       break;
 
-    case IDC_BC_BRW01: //< Startup Context list "Add.." Button
+    case IDC_BC_BRW01: //< Startup Mod Hub list "Add.." Button
       this->_onBcBrwStr();
       break;
 
-    case IDC_BC_REM: //< Startup Context list "Remove" Button
+    case IDC_BC_REM: //< Startup Mod Hub list "Remove" Button
       this->_onBcRemStr();
       break;
     }

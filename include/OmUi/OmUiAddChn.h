@@ -19,7 +19,7 @@
 
 #include "OmDialog.h"
 
-class OmContext;
+class OmModHub;
 
 /// \brief Add Mod Channel dialog
 ///
@@ -51,33 +51,33 @@ class OmUiAddChn : public OmDialog
     ///
     long id() const;
 
-    /// \brief Get associated Context.
+    /// \brief Get associated Mod Hub.
     ///
-    /// Returns associated Context object
+    /// Returns associated Mod Hub object
     ///
-    /// \return Associated Context or nullptr if none.
+    /// \return Associated Mod Hub or nullptr if none.
     ///
-    OmContext* ctxCur() const {
-      return _pCtx;
+    OmModHub* modHubCur() const {
+      return _modHub;
     }
 
-    /// \brief Set associated Context.
+    /// \brief Set associated Mod Hub.
     ///
-    /// Define the associated Context, which the dialog is intended to
-    /// work with and on. A valid Context must be set in order before
+    /// Define the associated Mod Hub, which the dialog is intended to
+    /// work with and on. A valid Mod Hub must be set in order before
     /// opening the dialog.
     ///
-    /// \param[in]  pCtx  : Context object to associate.
+    /// \param[in]  pModHub  : Mod Hub object to associate.
     ///
-    void ctxSet(OmContext* pCtx) {
-      _pCtx = pCtx;
+    void ctxSet(OmModHub* pModHub) {
+      _modHub = pModHub;
     }
 
   protected:
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmContext*                _pCtx;
+    OmModHub*                 _modHub;
 
     void                      _onTitleChange();
 

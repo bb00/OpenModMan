@@ -96,7 +96,7 @@ void OmUiPropPkgBck::_onInit()
     this->enableItem(IDC_EC_READ3, true);
     if(pPkg->ovrCount()) {
 
-      OmModChan* pChn = pPkg->pChn();
+      OmModChan* pModChan = pPkg->modChan();
 
       wstring olap_str;
       uint64_t olap_hsh;
@@ -106,7 +106,7 @@ void OmUiPropPkgBck::_onInit()
       for(unsigned i = 0; i < n; ++i) {
 
         olap_hsh = pPkg->ovrGet(i);
-        olap_pkg = pChn->pkgFind(olap_hsh);
+        olap_pkg = pModChan->pkgFind(olap_hsh);
         olap_str += olap_pkg != nullptr ? olap_pkg->ident() : Om_uint64ToStr(olap_hsh);
 
         if(i < (n - 1)) {

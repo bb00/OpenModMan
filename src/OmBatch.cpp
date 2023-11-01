@@ -23,7 +23,7 @@
 #include "OmUtilHsh.h"
 
 #include "OmManager.h"
-#include "OmContext.h"
+#include "OmModHub.h"
 #include "OmModChan.h"
 #include "OmPackage.h"
 
@@ -35,7 +35,7 @@
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 OmBatch::OmBatch() :
-  _context(nullptr), _config(), _path(), _uuid(), _title(), _index(0),
+  _modhub(nullptr), _config(), _path(), _uuid(), _title(), _index(0),
   _instOnly(false), _error()
 {
 
@@ -45,8 +45,8 @@ OmBatch::OmBatch() :
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmBatch::OmBatch(OmContext* pCtx) :
-  _context(pCtx), _config(), _path(), _uuid(), _title(), _index(0),
+OmBatch::OmBatch(OmModHub* pModHub) :
+  _modhub(pModHub), _config(), _path(), _uuid(), _title(), _index(0),
   _instOnly(false), _error()
 {
 
@@ -71,7 +71,7 @@ bool OmBatch::open(const wstring& path)
   this->close();
 
   // try to open and parse the XML file
-  if(!this->_config.open(path, OMM_XMAGIC_BAT)) {
+  if(!this->_config.open(path, OMM_XMAGIC_SPT)) {
     this->_error = L"Error loading Batch definition: ";
     this->_error += this->_config.lastErrorStr();
     this->log(0, wstring(L"Batch(")+path+L") Open", this->_error);
@@ -119,7 +119,7 @@ bool OmBatch::init(const wstring& path, const wstring& title, unsigned index)
   this->close();
 
   // try to open and parse the XML file
-  if(!this->_config.init(path, OMM_XMAGIC_BAT)) {
+  if(!this->_config.init(path, OMM_XMAGIC_SPT)) {
     this->_error = L"Error initializing Batch definition: ";
     this->_error += this->_config.lastErrorStr();
     this->log(0, wstring(L"Batch(")+path+L") Open", this->_error);
@@ -210,10 +210,10 @@ void OmBatch::setInstallOnly(bool enable)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmBatch::chnCount()
+size_t OmBatch::modChanCount()
 {
   if(this->_config.valid()) {
-    return this->_config.xml().childCount(L"location");
+    return this->_config.xml().childCount(L"modchan");
   }
 
   return 0;
@@ -223,12 +223,12 @@ size_t OmBatch::chnCount()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-wstring OmBatch::locUuid(unsigned i)
+wstring OmBatch::chnUuid(unsigned i)
 {
   wstring uuid;
 
   if(this->_config.valid()) {
-    OmXmlNode xml_chn = this->_config.xml().child(L"location", i);
+    OmXmlNode xml_chn = this->_config.xml().child(L"modchan", i);
     uuid = xml_chn.attrAsString(L"uuid");
   }
 
@@ -239,16 +239,16 @@ wstring OmBatch::locUuid(unsigned i)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmBatch::locDiscard(const wstring& uuid)
+bool OmBatch::chnDiscard(const wstring& uuid)
 {
   bool result = false;
 
   if(this->_config.valid()) {
 
-    // get the proper <location> node.
-    OmXmlNode xml_chn = this->_config.xml().child(L"location", L"uuid", uuid);
+    // get the proper <modchan> node.
+    OmXmlNode xml_chn = this->_config.xml().child(L"modchan", L"uuid", uuid);
 
-    // if no <location> with uuid was found, create it
+    // if no <modchan> with uuid was found, create it
     if(!xml_chn.empty()) {
       this->_config.xml().remChild(xml_chn);
       result = true;
@@ -266,14 +266,14 @@ bool OmBatch::locDiscard(const wstring& uuid)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmBatch::instClear(const OmModChan* pChn)
+void OmBatch::instClear(const OmModChan* pModChan)
 {
   if(this->_config.valid()) {
 
-    // get the proper <location> node.
-    OmXmlNode xml_chn = this->_config.xml().child(L"location", L"uuid", pChn->uuid());
+    // get the proper <modchan> node.
+    OmXmlNode xml_chn = this->_config.xml().child(L"modchan", L"uuid", pModChan->uuid());
 
-    // if no <location> with uuid was found, create it
+    // if no <modchan> with uuid was found, create it
     if(!xml_chn.empty()) {
       this->_config.xml().remChild(xml_chn);
     }
@@ -287,17 +287,17 @@ void OmBatch::instClear(const OmModChan* pChn)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmBatch::instAdd(const OmModChan* pChn, const OmPackage* pPkg)
+void OmBatch::instAdd(const OmModChan* pModChan, const OmPackage* pPkg)
 {
   if(this->_config.valid()) {
 
-    // get the proper <location> node.
-    OmXmlNode xml_chn = this->_config.xml().child(L"location", L"uuid", pChn->uuid());
+    // get the proper <modchan> node.
+    OmXmlNode xml_chn = this->_config.xml().child(L"modchan", L"uuid", pModChan->uuid());
 
-    // if no <location> with uuid was found, create it
+    // if no <modchan> with uuid was found, create it
     if(xml_chn.empty()) {
-      xml_chn = this->_config.xml().addChild(L"location");
-      xml_chn.setAttr(L"uuid", pChn->uuid());
+      xml_chn = this->_config.xml().addChild(L"modchan");
+      xml_chn.setAttr(L"uuid", pModChan->uuid());
     }
 
     // add <install> entry if not already exists
@@ -316,16 +316,16 @@ void OmBatch::instAdd(const OmModChan* pChn, const OmPackage* pPkg)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmBatch::instRem(const OmModChan* pChn, const wstring ident)
+bool OmBatch::instRem(const OmModChan* pModChan, const wstring ident)
 {
   if(this->_config.valid()) {
 
     bool result = false;
 
-    // get the proper <location> node.
-    OmXmlNode xml_chn = this->_config.xml().child(L"location", L"uuid", pChn->uuid());
+    // get the proper <modchan> node.
+    OmXmlNode xml_chn = this->_config.xml().child(L"modchan", L"uuid", pModChan->uuid());
 
-    // if no <location> with uuid was found, return
+    // if no <modchan> with uuid was found, return
     if(xml_chn.empty()) {
       return false;
     }
@@ -352,12 +352,12 @@ bool OmBatch::instRem(const OmModChan* pChn, const wstring ident)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmBatch::instSize(const OmModChan* pChn)
+size_t OmBatch::instSize(const OmModChan* pModChan)
 {
   if(this->_config.valid()) {
 
-    // get the proper <location> node.
-    OmXmlNode xml_chn = this->_config.xml().child(L"location", L"uuid", pChn->uuid());
+    // get the proper <modchan> node.
+    OmXmlNode xml_chn = this->_config.xml().child(L"modchan", L"uuid", pModChan->uuid());
 
     // if found, return count of <install> child nodes.
     if(!xml_chn.empty())
@@ -371,12 +371,12 @@ size_t OmBatch::instSize(const OmModChan* pChn)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmPackage* OmBatch::instGet(const OmModChan* pChn, unsigned i)
+OmPackage* OmBatch::instGet(const OmModChan* pModChan, unsigned i)
 {
   if(this->_config.valid()) {
 
-    // get the proper <location> node.
-    OmXmlNode xml_chn = this->_config.xml().child(L"location", L"uuid", pChn->uuid());
+    // get the proper <modchan> node.
+    OmXmlNode xml_chn = this->_config.xml().child(L"modchan", L"uuid", pModChan->uuid());
 
     // if found, return count of <install> child nodes.
     if(!xml_chn.empty()) {
@@ -386,13 +386,13 @@ OmPackage* OmBatch::instGet(const OmModChan* pChn, unsigned i)
 
       // first try and rely on package hash value
       if(xml_ins.hasAttr(L"hash")) {
-        if((pPkg = pChn->pkgFind(xml_ins.attrAsUint64(L"hash"))))
+        if((pPkg = pModChan->pkgFind(xml_ins.attrAsUint64(L"hash"))))
           return pPkg;
       }
 
       // then try with identity
       if(xml_ins.hasAttr(L"ident")) {
-        if((pPkg = pChn->pkgFind(xml_ins.attrAsString(L"ident"))))
+        if((pPkg = pModChan->pkgFind(xml_ins.attrAsString(L"ident"))))
           return pPkg;
       }
     }
@@ -405,12 +405,12 @@ OmPackage* OmBatch::instGet(const OmModChan* pChn, unsigned i)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-size_t OmBatch::instGetList(const OmModChan* pChn, vector<OmPackage*>& pkg_ls)
+size_t OmBatch::instGetList(const OmModChan* pModChan, vector<OmPackage*>& pkg_ls)
 {
   if(this->_config.valid()) {
 
-    // get the proper <location> node.
-    OmXmlNode xml_chn = this->_config.xml().child(L"location", L"uuid", pChn->uuid());
+    // get the proper <modchan> node.
+    OmXmlNode xml_chn = this->_config.xml().child(L"modchan", L"uuid", pModChan->uuid());
 
     // if found, return count of <install> child nodes.
     if(!xml_chn.empty()) {
@@ -425,14 +425,14 @@ size_t OmBatch::instGetList(const OmModChan* pChn, vector<OmPackage*>& pkg_ls)
 
         // first try and rely on package hash value
         if(xml_ins_ls[i].hasAttr(L"hash")) {
-          if((pPkg = pChn->pkgFind(xml_ins_ls[i].attrAsUint64(L"hash")))) {
+          if((pPkg = pModChan->pkgFind(xml_ins_ls[i].attrAsUint64(L"hash")))) {
             pkg_ls.push_back(pPkg); continue;
           }
         }
 
         // then try with identity
         if(xml_ins_ls[i].hasAttr(L"ident")) {
-          if((pPkg = pChn->pkgFind(xml_ins_ls[i].attrAsString(L"ident")))) {
+          if((pPkg = pModChan->pkgFind(xml_ins_ls[i].attrAsString(L"ident")))) {
             pkg_ls.push_back(pPkg); continue;
           }
         }
@@ -452,8 +452,8 @@ size_t OmBatch::instGetList(const OmModChan* pChn, vector<OmPackage*>& pkg_ls)
 ///
 bool OmBatch::repair()
 {
-  if(!this->_context) {
-    this->log(1, L"Batch("+this->_title+L") Repair", L"No Context bound, aborting.");
+  if(!this->_modhub) {
+    this->log(1, L"Batch("+this->_title+L") Repair", L"No Mod Hub bound, aborting.");
     return false;
   }
 
@@ -462,21 +462,23 @@ bool OmBatch::repair()
     return false;
   }
 
+  bool modified = false;
+
   // usefull strings for job
   wstring uuid, ident;
 
   // list for nodes to discard
   vector<OmXmlNode> xml_dis_ls;
-  // <location> nodes list
+  // <modchan> nodes list
   vector<OmXmlNode> xml_chn_ls;
 
   // remove Mod Channel broken references
-  this->_config.xml().children(xml_chn_ls, L"location");
+  this->_config.xml().children(xml_chn_ls, L"modchan");
 
   // build the discard list
   for(size_t i = 0; i < xml_chn_ls.size(); ++i) {
     uuid = xml_chn_ls[i].attrAsString(L"uuid");
-    if(!this->_context->chnGet(uuid)) {
+    if(!this->_modhub->modChanGet(uuid)) {
       xml_dis_ls.push_back(xml_chn_ls[i]);
       this->log(2, L"Batch("+this->_title+L") Repair", L"Discard Mod Channel reference: "+uuid);
     }
@@ -486,13 +488,14 @@ bool OmBatch::repair()
     for(size_t i = 0; i < xml_dis_ls.size(); ++i) {
       this->_config.xml().remChild(xml_dis_ls[i]);
     }
+    modified = true;
   }
 
   // clear and load new Mod Channel list
   xml_chn_ls.clear();
-  this->_config.xml().children(xml_chn_ls, L"location");
+  this->_config.xml().children(xml_chn_ls, L"modchan");
 
-  OmModChan* pChn;
+  OmModChan* pModChan;
   OmPackage* pPkg;
 
   vector<OmXmlNode> xml_ins_ls;
@@ -501,9 +504,9 @@ bool OmBatch::repair()
   for(size_t i = 0; i < xml_chn_ls.size(); ++i) {
 
     // get Mod Channel
-    pChn = this->_context->chnGet(xml_chn_ls[i].attrAsString(L"uuid"));
+    pModChan = this->_modhub->modChanGet(xml_chn_ls[i].attrAsString(L"uuid"));
 
-    // get install list for this location
+    // get install list for this Mod Channel
     xml_ins_ls.clear();
     xml_chn_ls[i].children(xml_ins_ls, L"install");
 
@@ -519,12 +522,13 @@ bool OmBatch::repair()
 
         uint64_t hash = xml_ins_ls[j].attrAsUint64(L"hash");
 
-        if((pPkg = pChn->pkgFind(hash))) {
+        if((pPkg = pModChan->pkgFind(hash))) {
 
             // add missing ident reference
             if(!xml_ins_ls[j].hasAttr(L"ident")) {
               xml_ins_ls[j].setAttr(L"ident", pPkg->ident());
               this->log(2, L"Batch("+this->_title+L") Repair", L"Repair Package reference: "+pPkg->ident());
+              modified = true;
             }
 
         } else {
@@ -536,11 +540,12 @@ bool OmBatch::repair()
 
         ident = xml_ins_ls[j].attrAsString(L"ident");
 
-        if((pPkg = pChn->pkgFind(ident))) {
+        if((pPkg = pModChan->pkgFind(ident))) {
             // add missing hash reference
             if(!xml_ins_ls[j].hasAttr(L"hash")) {
               xml_ins_ls[j].setAttr(L"hash", pPkg->hash());
               this->log(2, L"Batch("+this->_title+L") Repair", L"Repair Package reference: "+Om_uint64ToStr(pPkg->hash()));
+              modified = true;
             }
         } else {
           xml_dis_ls.push_back(xml_ins_ls[j]);
@@ -560,12 +565,15 @@ bool OmBatch::repair()
       for(size_t j = 0; j < xml_dis_ls.size(); ++j) {
         xml_chn_ls[i].remChild(xml_dis_ls[j]);
       }
+      modified = true;
     }
   }
 
   // Write definition file
-  if(this->_path.size())
-    this->_config.save();
+  if(modified) {
+    if(this->_path.size())
+      this->_config.save();
+  }
 
   return true;
 }
@@ -621,12 +629,11 @@ void OmBatch::close()
 ///
 void OmBatch::log(unsigned level, const wstring& head, const wstring& detail)
 {
-  if(this->_context != nullptr) {
+  if(this->_modhub != nullptr) {
 
-    wstring log_str = L"Context("; log_str.append(this->_context->title());
+    wstring log_str = L"ModHub("; log_str.append(this->_modhub->title());
     log_str.append(L"):: "); log_str.append(head);
 
-    this->_context->log(level, log_str, detail);
+    this->_modhub->log(level, log_str, detail);
   }
 }
-

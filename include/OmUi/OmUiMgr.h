@@ -26,10 +26,10 @@
 ///
 #define IDM_FILE_RECENT_PATH      40990
 
-/// \brief Custom "Context Changed" window Message
+/// \brief Custom "Mod Hub Changed" window Message
 ///
 /// Custom window message to notify tab child dialogs that selected
-/// Context in main window changed.
+/// Mod Hub in main window changed.
 ///
 #define UWM_MAIN_CTX_CHANGED      (WM_APP+16)
 
@@ -156,27 +156,27 @@ class OmUiMgr : public OmDialog
     ///
     void safemode(bool enable);
 
-    /// \brief Open Context
+    /// \brief Open Mod Hub
     ///
-    /// Try to load the specified Context file then refresh dialog.
+    /// Try to load the specified Mod Hub file then refresh dialog.
     ///
-    /// \param[in]  path  Context definition file path to load.
+    /// \param[in]  path  Mod Hub definition file path to load.
     ///
-    void ctxOpen(const wstring& path);
+    void modHubLoad(const wstring& path);
 
-    /// \brief Close current Context
+    /// \brief Close current Mod Hub
     ///
-    /// Close the current active Context file then refresh dialog.
+    /// Close the current active Mod Hub file then refresh dialog.
     ///
-    void ctxClose();
+    void modHubClose();
 
-    /// \brief Select Context
+    /// \brief Select Mod Hub
     ///
-    /// Select or unselect Context then refresh dialog.
+    /// Select or unselect Mod Hub then refresh dialog.
     ///
-    /// \param[in]  i  Index of Context to select or -1 to select none.
+    /// \param[in]  i  Index of Mod Hub to select or -1 to select none.
     ///
-    void ctxSel(int i);
+    void modHubSel(int i);
 
     /// \brief Get tab frame dialog
     ///

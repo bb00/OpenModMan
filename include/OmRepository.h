@@ -24,7 +24,7 @@
 
 class OmModChan;
 
-/// \brief Repository object for Context.
+/// \brief Repository object for Mod Channel.
 ///
 /// The Repository object defines environment for network packages repository
 /// and provide interface to retrieve and download repository definition.
@@ -39,7 +39,7 @@ class OmRepository
     ///
     /// Default constructor.
     ///
-    OmRepository(OmModChan* pChn);
+    OmRepository(OmModChan* pModChan);
 
     /// \brief Destructor.
     ///
@@ -192,8 +192,8 @@ class OmRepository
     ///
     /// \return Pointer to Mod Channel or nullptr.
     ///
-    OmModChan* pChn() const {
-      return _pChn;
+    OmModChan* modChan() const {
+      return _modChan;
     }
 
     /// \brief Clear repository.
@@ -211,7 +211,7 @@ class OmRepository
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmModChan*          _pChn;
+    OmModChan*          _modChan;
 
     OmConfig            _config;
 

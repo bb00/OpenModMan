@@ -58,7 +58,9 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int 
 
   if(manager.init(lpCmdLine)) {
 
+    // set manager pointer as dialog internal data
     dialog.setData(&manager);
+
     // open main dialog with registered class name
     dialog.registered("OpenModMan.Class", true);
 

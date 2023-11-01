@@ -108,15 +108,15 @@ void OmUiPropChnLib::_onInit()
   this->_createTooltip(IDC_BC_CKBX5,  L"Warn when packages uninstall require additional uninstallations");
   this->_createTooltip(IDC_BC_CKBX6,  L"Parse and show library hidden files and subfolders");
 
-  OmModChan* pChn = static_cast<OmUiPropChn*>(this->_parent)->chnCur();
-  if(!pChn) return;
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  if(!pModChan) return;
 
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pChn->libDevMode());
-  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pChn->warnOverlaps());
-  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pChn->warnExtraInst());
-  this->msgItem(IDC_BC_CKBX4, BM_SETCHECK, pChn->warnMissDeps());
-  this->msgItem(IDC_BC_CKBX5, BM_SETCHECK, pChn->warnExtraUnin());
-  this->msgItem(IDC_BC_CKBX6, BM_SETCHECK, pChn->libShowHidden());
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pModChan->libDevMode());
+  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pModChan->warnOverlaps());
+  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pModChan->warnExtraInst());
+  this->msgItem(IDC_BC_CKBX4, BM_SETCHECK, pModChan->warnMissDeps());
+  this->msgItem(IDC_BC_CKBX5, BM_SETCHECK, pModChan->warnExtraUnin());
+  this->msgItem(IDC_BC_CKBX6, BM_SETCHECK, pModChan->libShowHidden());
 
   // reset modified parameters flags
   for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;

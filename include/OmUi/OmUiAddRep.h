@@ -57,8 +57,8 @@ class OmUiAddRep : public OmDialog
     ///
     /// \return Associated Mod Channel or nullptr if none.
     ///
-    OmModChan* chnCur() const {
-      return _pChn;
+    OmModChan* modChan() const {
+      return _modChan;
     }
 
     /// \brief Set associated Mod Channel.
@@ -69,15 +69,15 @@ class OmUiAddRep : public OmDialog
     ///
     /// \param[in]  pModChan  : Mod Channel object to associate.
     ///
-    void chnSet(OmModChan* pModChan) {
-      _pChn = pModChan;
+    void setModChan(OmModChan* pModChan) {
+      _modChan = pModChan;
     }
 
   protected:
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmModChan*         _pChn;
+    OmModChan*          _modChan;
 
     int                 _testResult;
 

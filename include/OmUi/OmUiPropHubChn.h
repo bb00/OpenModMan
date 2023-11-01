@@ -14,19 +14,18 @@
   You should have received a copy of the GNU General Public License
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef OMUIPROPCTXSETG_H
-#define OMUIPROPCTXSETG_H
+#ifndef OMUIPROPHUBCHN_H
+#define OMUIPROPHUBCHN_H
 
 #include "OmDialog.h"
 
-#define CTX_PROP_STG_TITLE   0
-#define CTX_PROP_STG_ICON    1
+#define CTX_PROP_CHN_ORDER   0
 
-/// \brief Context Properties / Settings tab child
+/// \brief Mod Hub Properties / Mod Channel tab child
 ///
-/// OmDialog class derived for Context Properties / Settings tab child dialog window
+/// OmDialog class derived for Mod Hub Properties / Mod Channel tab child dialog window
 ///
-class OmUiPropCtxStg : public OmDialog
+class OmUiPropHubChn : public OmDialog
 {
   public:
 
@@ -36,13 +35,13 @@ class OmUiPropCtxStg : public OmDialog
     ///
     /// \param[in]  hins    : API Instance handle.
     ///
-    OmUiPropCtxStg(HINSTANCE hins);
+    OmUiPropHubChn(HINSTANCE hins);
 
     /// \brief Destructor.
     ///
     /// Default destructor.
     ///
-    ~OmUiPropCtxStg();
+    ~OmUiPropHubChn();
 
     /// \brief Get resource id.
     ///
@@ -79,9 +78,29 @@ class OmUiPropCtxStg : public OmDialog
 
     bool                _chParam[8];
 
-    void                _onBcBrwIcon();
+    void                _delChn_init(int id);
 
-    void                _onBcDelIcon();
+    void                _delChn_stop();
+
+    void*               _delChn_hth;
+
+    static DWORD WINAPI _delChn_fth(void*);
+
+    static bool         _delChn_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data);
+
+    int                 _delChn_id;
+
+    void                _onLbLoclsSel();
+
+    void                _onBcUmodChan();
+
+    void                _onBcDnChn();
+
+    void                _onBcDelChn();
+
+    void                _onBcEdiChn();
+
+    void                _onBcAddChn();
 
     void                _onInit();
 
@@ -92,4 +111,4 @@ class OmUiPropCtxStg : public OmDialog
     INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // OMUIPROPCTXSETG_H
+#endif // OMUIPROPHUBCHN_H
