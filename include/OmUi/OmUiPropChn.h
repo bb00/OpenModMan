@@ -57,8 +57,8 @@ class OmUiPropChn : public OmDialogProp
     ///
     /// \return Associated Mod Channel or nullptr if none.
     ///
-    OmModChan* modChan() const {
-      return _modChan;
+    OmModChan* ModChan() const {
+      return this->_ModChan;
     }
 
     /// \brief Set associated Mod Channel.
@@ -67,10 +67,10 @@ class OmUiPropChn : public OmDialogProp
     /// work with and on. A valid Mod Channel must be set in order before
     /// opening the dialog.
     ///
-    /// \param[in]  pModChan  : Mod Channel object to associate.
+    /// \param[in]  ModChan  : Mod Channel object to associate.
     ///
-    void setModChan(OmModChan* pModChan) {
-      this->_modChan = pModChan;
+    void setModChan(OmModChan* ModChan) {
+      this->_ModChan = ModChan;
     }
 
     /// \brief Check for properties changes
@@ -80,6 +80,13 @@ class OmUiPropChn : public OmDialogProp
     ///
     bool checkChanges();
 
+    /// \brief Validate properties changes
+    ///
+    /// Checks whether dialog's changed properties are valid and suitable
+    /// then alert user or perform required action in context.
+    ///
+    bool validChanges();
+
     /// \brief Apply properties changes
     ///
     /// Retrieve dialog's dedicated properties then apply changes.
@@ -88,21 +95,7 @@ class OmUiPropChn : public OmDialogProp
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmModChan*          _modChan;
-
-    void*               _movBck_hth;
-
-    wstring             _movBck_dest;
-
-    void                _movBck_init(const wstring& dest);
-
-    void                _movBck_stop();
-
-    static DWORD WINAPI _movBck_fth(void*);
-
-    static bool         _movBck_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data);
-
-    void                _onPropInit();
+    OmModChan*          _ModChan;
 
     INT_PTR             _onPropMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

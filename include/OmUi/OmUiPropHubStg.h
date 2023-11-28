@@ -17,16 +17,16 @@
 #ifndef OMUIPROPHUBSETG_H
 #define OMUIPROPHUBSETG_H
 
-#include "OmDialog.h"
+#include "OmDialogPropTab.h"
 
-#define CTX_PROP_STG_TITLE   0
-#define CTX_PROP_STG_ICON    1
+#define HUB_PROP_STG_TITLE   0
+#define HUB_PROP_STG_ICON    1
 
 /// \brief Mod Hub Properties / Settings tab child
 ///
 /// OmDialog class derived for Mod Hub Properties / Settings tab child dialog window
 ///
-class OmUiPropHubStg : public OmDialog
+class OmUiPropHubStg : public OmDialogPropTab
 {
   public:
 
@@ -52,44 +52,19 @@ class OmUiPropHubStg : public OmDialog
     ///
     long id() const;
 
-    /// \brief Check changed parameter
-    ///
-    /// Checks whether the specified dialog related parameter has been
-    /// marked as changed, meaning it was modified by user.
-    ///
-    /// \param[in]  i   : Dialog related parameter to check
-    ///
-    /// \return True if the specified parameter is marked as changed,
-    ///         false otherwise
-    ///
-    bool hasChParam(unsigned i) const {
-      return _chParam[i];
-    }
-
-    /// \brief Set changed parameter
-    ///
-    /// Marks the specified dialog related parameter as changed or unchanged.
-    ///
-    /// \param[in]  i   : Dialog related parameter to mark
-    /// \param[in]  en  : Boolean value to enable or disable
-    ///
-    void setChParam(unsigned i, bool en);
-
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    bool                _chParam[8];
 
     void                _onBcBrwIcon();
 
     void                _onBcDelIcon();
 
-    void                _onInit();
+    void                _onTabInit();
 
-    void                _onResize();
+    void                _onTabResize();
 
-    void                _onRefresh();
+    void                _onTabRefresh();
 
-    INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    INT_PTR             _onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 #endif // OMUIPROPHUBSETG_H

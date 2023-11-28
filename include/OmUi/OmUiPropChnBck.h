@@ -17,15 +17,16 @@
 #ifndef OMUIPROPCHNBCK_H
 #define OMUIPROPCHNBCK_H
 
-#include "OmDialog.h"
+#include "OmDialogPropTab.h"
 
-#define CHN_PROP_BCK_COMP_LEVEL   0
+#define CHN_PROP_BCK_CUSTDIR      0
+#define CHN_PROP_BCK_COMP_LEVEL   1
 
-/// \brief Mod Channel Properties / Backups tab child
+/// \brief Mod Channel Properties: "Data Backup" tab
 ///
-/// OmDialog class derived for Mod Channel Properties / Backups tab child dialog window
+/// OmDialogPropTab class derived for "Data Backup" tab child dialog window
 ///
-class OmUiPropChnBck : public OmDialog
+class OmUiPropChnBck : public OmDialogPropTab
 {
   public: ///         - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -51,32 +52,11 @@ class OmUiPropChnBck : public OmDialog
     ///
     long id() const;
 
-    /// \brief Check changed parameter
-    ///
-    /// Checks whether the specified dialog related parameter has been
-    /// marked as changed, meaning it was modified by user.
-    ///
-    /// \param[in]  i   : Dialog related parameter to check
-    ///
-    /// \return True if the specified parameter is marked as changed,
-    ///         false otherwise
-    ///
-    bool hasChParam(unsigned i) const {
-      return _chParam[i];
-    }
-
-    /// \brief Set changed parameter
-    ///
-    /// Marks the specified dialog related parameter as changed or unchanged.
-    ///
-    /// \param[in]  i   : Dialog related parameter to mark
-    /// \param[in]  en  : Boolean value to enable or disable
-    ///
-    void setChParam(unsigned i, bool en);
-
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    bool                _chParam[8];
+    void                _onCkBoxBck();
+
+    void                _onBcBrwBck();
 
     void                _onCkBoxZip();
 
@@ -92,11 +72,13 @@ class OmUiPropChnBck : public OmDialog
 
     static bool         _delBck_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data);
 
-    void                _onInit();
+    void                _onTabInit();
 
-    void                _onResize();
+    void                _onTabResize();
 
-    INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void                _onTabRefresh();
+
+    INT_PTR             _onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 #endif // OMUIPROPCHNBCK_H

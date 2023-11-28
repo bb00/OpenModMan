@@ -19,62 +19,41 @@
 
 #include "OmBaseApp.h"
 
-#include "OmManager.h"
-#include "OmModChan.h"
+#include "OmArchive.h"          //< Archive compression methods / level
+
+#include "OmModMan.h"
 
 #include "OmUtilFs.h"
+#include "OmUtilAlg.h"
 #include "OmUtilHsh.h"
 #include "OmUtilErr.h"
 #include "OmUtilStr.h"
 
+#include <commctrl.h>           //< ExtractIconW
+
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #include "OmModHub.h"
 
-
-/// \brief Mod Channel index comparison callback
-///
-/// std::sort callback comparison function for sorting Mod Channels
-/// by index number order.
-///
-/// \param[in]  a     : Left Mod Channel.
-/// \param[in]  b     : Right Mod Channel.
-///
-/// \return True if Mod Channel a is "before" Mod Channel b, false otherwise
-///
-static bool __chn_sort_index_fn(const OmModChan* a, const OmModChan* b)
-{
-  return (a->index() < b->index());
-}
-
-
-/// \brief OmBatch index comparison callback
-///
-/// std::sort callback comparison function for sorting Mod Batches
-/// by index number order.
-///
-/// \param[in]  a     : Left OmBatch.
-/// \param[in]  b     : Right OmBatch.
-///
-/// \return True if OmBatch a is "before" OmBatch b, false otherwise
-///
-static bool __bat_sort_index_fn(const OmBatch* a, const OmBatch* b)
-{
-  return (a->index() < b->index());
-}
-
-
-
-
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmModHub::OmModHub(OmManager* pMgr) :
-  _manager(pMgr), _config(), _path(), _uuid(), _title(), _home(), _icon(nullptr),
-  _modChanLs(), _modChanSl(-1), _batLs(), _batQuietMode(true), _valid(false), _error()
+OmModHub::OmModHub(OmModMan* ModMan) :
+  _ModMan(ModMan),
+  _icon_handle(nullptr),
+  _active_channel(-1),
+  _setup_abort(false),
+  _setup_hth(nullptr),
+  _setup_hwo(nullptr),
+  _setup_dones(0),
+  _setup_percent(0),
+  _setup_begin_cb(nullptr),
+  _setup_progress_cb(nullptr),
+  _setup_result_cb(nullptr),
+  _setup_user_ptr(nullptr),
+  _presets_quietmode(true)
 {
 
 }
-
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -84,161 +63,166 @@ OmModHub::~OmModHub()
   this->close();
 }
 
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmModHub::close()
+{
+  this->_xmlconf.clear();
+
+  this->_path.clear();
+  this->_home.clear();
+  this->_uuid.clear();
+  this->_title.clear();
+
+  this->_icon_source.clear();
+  if(this->_icon_handle)
+    DestroyIcon(this->_icon_handle);
+  this->_icon_handle = nullptr;
+
+  for(size_t i = 0; i < this->_channel_list.size(); ++i)
+    delete this->_channel_list[i];
+
+  this->_channel_list.clear();
+
+  this->_active_channel = -1;
+
+  for(size_t i = 0; i < this->_preset_list.size(); ++i)
+    delete this->_preset_list[i];
+
+  this->_preset_list.clear();
+
+  this->_setup_abort = false;
+  Om_clearThread(this->_setup_hth, this->_setup_hwo);
+  this->_setup_hth = nullptr;
+  this->_setup_hwo = nullptr;
+  this->_setup_dones = 0;
+  this->_setup_percent = 0;
+  this->_setup_begin_cb = nullptr;
+  this->_setup_progress_cb = nullptr;
+  this->_setup_result_cb = nullptr;
+  this->_setup_user_ptr = nullptr;
+}
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmModHub::open(const wstring& path)
+bool OmModHub::open(const OmWString& path)
 {
-  vector<wstring> file_ls;
-  vector<wstring> fold_ls;
-
-  wstring temp_path, verbose; //< for log message compositing
-
   this->close();
 
   // Migrate old standard to new standard
   if(!this->_migrate(path)) {
-    this->_error = L"Migration is required but has failed, see log for more details";
-    this->log(0, L"ModHub(<anonymous>) Open", this->_error);
+    this->_error(L"open", L"Migration required but has failed (see logs more details)");
     return false;
   }
 
   // Check whether path is valid
   if(!Om_isDir(path)) {
-    this->_error = L"The specified folder doesn't exists";
-    this->log(0, L"ModHub(<anonymous>) Open", this->_error);
+    this->_error(L"open", Om_errNotDir(L"Mod Hub home", path));
     return false;
   }
 
   // Expected Mod Hub definition file path
-  temp_path = path + L"\\ModHub.xml";
+  OmWString modhub_path;
+  Om_concatPaths(modhub_path, path, OM_MODHUB_FILENAME);
 
   // Check whether definition file exists
-  if(!Om_isFile(temp_path)) {
-    this->_error = L"Definition file (\"ModHub.xml\") not found";
-    this->log(0, L"ModHub(<anonymous>) Open", this->_error);
+  if(!Om_isFile(modhub_path)) {
+    this->_error(L"open", L"Expected definition file (ModHub.xml) not found");
     return false;
   }
 
   // try to open and parse the XML file
-  if(!this->_config.open(temp_path, OMM_XMAGIC_HUB)) {
-    this->_error = Om_errParse(L"Definition file", path, this->_config.lastErrorStr());
-    this->log(0, L"ModHub(<anonymous>) Open", this->_error);
+  if(!this->_xmlconf.load(modhub_path, OM_XMAGIC_HUB)) {
+    this->_error(L"open", Om_errParse(L"Definition file", L"ModHub.xml", this->_xmlconf.lastErrorStr()));
     return false;
   }
 
   // check for the presence of <uuid> entry
-  if(!this->_config.xml().hasChild(L"uuid")) {
-    this->_error =  L"\""+Om_getFilePart(path)+L"\" invalid definition: <uuid> node missing.";
-    log(0, L"ModHub(<anonymous>) Open", this->_error);
-    return false;
-  }
-
-  // check for the presence of <title> entry
-  if(!this->_config.xml().hasChild(L"title")) {
-    this->_error = L"\""+Om_getFilePart(path)+L"\" invalid definition: <title> node missing.";
-    log(0, L"ModHub(<anonymous>) Open", this->_error);
+  if(!this->_xmlconf.hasChild(L"uuid") || !this->_xmlconf.hasChild(L"title")) {
+    this->_error(L"open", Om_errParse(L"Definition file", L"ModHub.xml", L"missing essential node(s)"));
     return false;
   }
 
   // right now this Mod Hub appear usable, even if it is empty
   this->_home = path;
-  this->_path = temp_path;
-  this->_uuid = this->_config.xml().child(L"uuid").content();
-  this->_title = this->_config.xml().child(L"title").content();
-  this->_valid = true;
-
-  this->log(2, L"ModHub("+this->_title+L") Open",
-            L"Definition parsed.");
+  this->_path = modhub_path;
+  this->_uuid = this->_xmlconf.child(L"uuid").content();
+  this->_title = this->_xmlconf.child(L"title").content();
 
   // lookup for a icon
-  if(this->_config.xml().hasChild(L"icon")) {
+  if(this->_xmlconf.hasChild(L"icon")) {
 
     // we got a banner
-    wstring ico_path = this->_config.xml().child(L"icon").content();
+    this->_icon_source = this->_xmlconf.child(L"icon").content();
 
-    this->log(2, L"ModHub("+this->_title+L") Open",
-              L"Associated icon \""+ico_path+L"\"");
-
-    HICON hIc = nullptr;
-    ExtractIconExW(ico_path.c_str(), 0, &hIc, nullptr, 1); //< large icon
-    //ExtractIconExW(ico_path.c_str(), 0, nullptr, &hIc, 1); //< small icon
+    HICON hIc = ExtractIconW(nullptr, this->_icon_source.c_str(), 0);
+    //HICON hIc = nullptr;
+    //ExtractIconExW(this->_icon_source.c_str(), 0, &hIc, nullptr, 1); //< large icon
 
     if(hIc) {
-      this->_icon = hIc;
+      this->_icon_handle = hIc;
     } else {
-      this->log(1, L"ModHub("+this->_title+L") Open",
-                L"\""+ico_path+L"\" icon extraction failed.");
+      this->_log(OM_LOG_WRN, L"open", L"application icon extraction failed.");
     }
   }
 
-  // we check for saved batches quiet mode option
-  if(this->_config.xml().hasChild(L"batches_quietmode")) {
-    this->_batQuietMode = this->_config.xml().child(L"batches_quietmode").attrAsInt(L"enable");
+  // we check for saved setup quiet mode option
+  if(this->_xmlconf.hasChild(L"batches_quietmode")) {
+    this->_presets_quietmode = this->_xmlconf.child(L"batches_quietmode").attrAsInt(L"enable");
   } else {
-    this->setBatQuietMode(this->_batQuietMode); //< create default
+    this->setPresetQuietMode(this->_presets_quietmode); //< create default
   }
 
   // load Mod Channels for this Mod Hub
-  fold_ls.clear();
-  Om_lsDir(&fold_ls, this->_home, true);
+  OmWStringArray subdir;
+  Om_lsDir(&subdir, this->_home, true);
 
-  for(size_t i = 0; i < fold_ls.size(); ++i) {
+  OmWString modchan_path;
+  for(size_t i = 0; i < subdir.size(); ++i) {
 
     // Expected Mod Chan definition file path
-    temp_path = fold_ls[i] + L"\\ModChan.xml";
+    Om_concatPaths(modchan_path, subdir[i], OM_MODCHN_FILENAME);
 
-    if(Om_isFile(temp_path)) {
+    if(Om_isFile(modchan_path)) {
 
-      this->log(2, L"ModHub("+this->_title+L") Open",
-                L"Linking Mod Channel \""+Om_getFilePart(fold_ls[i])+L"\"");
+      OmModChan* ModChan = new OmModChan(this);
 
-      // we use the first file we found
-      OmModChan* pModChan = new OmModChan(this);
-
-      if(pModChan->open(temp_path)) {
-        this->_modChanLs.push_back(pModChan);
+      if(ModChan->open(modchan_path)) {
+        this->_channel_list.push_back(ModChan);
       } else {
-        delete pModChan;
+        delete ModChan;
       }
     }
   }
 
+  // expected Script library path
+  OmWString presets_path = Om_concatPaths(this->_home, OM_MODHUB_MODPSET_DIR);
+
   // load Script for this Mod Hub
+  OmWStringArray filename;
+  Om_lsFileFiltered(&filename, presets_path, L"*.xml", true);
 
-  // Expected Script library path
-  temp_path = this->_home + L"\\_Scripts";
+  for(size_t i = 0; i < filename.size(); ++i) {
 
-  file_ls.clear();
-  Om_lsFileFiltered(&file_ls, temp_path, L"*.xml", true);
+    OmModPset* ModPset = new OmModPset(this);
 
-  for(size_t i = 0; i < file_ls.size(); ++i) {
-
-    this->log(2, L"ModHub("+this->_title+L") Open",
-              L"Bind Script \""+Om_getFilePart(file_ls[i])+L"\"");
-
-    OmBatch* pBat = new OmBatch(this);
-
-    if(pBat->open(file_ls[i])) {
-      this->_batLs.push_back(pBat);
+    if(ModPset->open(filename[i])) {
+      this->_preset_list.push_back(ModPset);
     } else {
-      delete pBat;
+      delete ModPset;
     }
   }
 
   // sort Mod Channel by index
-  if(this->_modChanLs.size() > 1)
-    sort(this->_modChanLs.begin(), this->_modChanLs.end(), __chn_sort_index_fn);
+  this->sortChannels();
 
-  // sort Batches by index
-  if(this->_batLs.size() > 1)
-    sort(this->_batLs.begin(), this->_batLs.end(), __bat_sort_index_fn);
+  this->sortPresets();
 
   // the first location in list become the default active one
-  if(this->_modChanLs.size()) {
-    this->modChanSelect(0);
-  }
+  if(this->_channel_list.size())
+    this->selectChannel(0);
 
   return true;
 }
@@ -247,57 +231,19 @@ bool OmModHub::open(const wstring& path)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmModHub::close()
+void OmModHub::setTitle(const OmWString& title)
 {
-  if(this->_valid) {
-
-    wstring title = this->_title;
-
-    this->_path.clear();
-    this->_home.clear();
-    this->_title.clear();
-
-    if(this->_icon) DestroyIcon(this->_icon);
-    this->_icon = nullptr;
-
-    this->_config.close();
-
-    for(size_t i = 0; i < this->_modChanLs.size(); ++i)
-      delete this->_modChanLs[i];
-
-    this->_modChanLs.clear();
-
-    this->_modChanSl = -1;
-
-    for(size_t i = 0; i < this->_batLs.size(); ++i)
-      delete this->_batLs[i];
-
-    this->_batLs.clear();
-
-    this->_valid = false;
-
-    this->log(2, L"ModHub("+title+L") Close",
-              L"Success");
-  }
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmModHub::setTitle(const wstring& title)
-{
-  if(this->_config.valid()) {
+  if(this->_xmlconf.valid()) {
 
     this->_title = title;
 
-    if(this->_config.xml().hasChild(L"title")) {
-      this->_config.xml().child(L"title").setContent(title);
+    if(this->_xmlconf.hasChild(L"title")) {
+      this->_xmlconf.child(L"title").setContent(title);
     } else {
-      this->_config.xml().addChild(L"title").setContent(title);
+      this->_xmlconf.addChild(L"title").setContent(title);
     }
 
-    this->_config.save();
+    this->_xmlconf.save();
   }
 }
 
@@ -305,58 +251,61 @@ void OmModHub::setTitle(const wstring& title)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmModHub::setIcon(const wstring& src)
+void OmModHub::setIcon(const OmWString& path)
 {
-  if(this->_config.valid()) {
+  if(this->_xmlconf.valid()) {
 
     // delete previous object
-    if(this->_icon) DestroyIcon(this->_icon);
-    this->_icon = nullptr;
+    if(this->_icon_handle)
+      DestroyIcon(this->_icon_handle);
+
+    this->_icon_handle = nullptr;
 
     // empty source path mean remove icon
-    if(!src.empty()) {
+    if(!path.empty()) {
 
-      HICON hIc = nullptr;
+      HICON hIcon = nullptr;
 
-      if(Om_isFile(src))
-        ExtractIconExW(src.c_str(), 0, &hIc, nullptr, 1);
+      if(Om_isFile(path))
+        ExtractIconExW(path.c_str(), 0, &hIcon, nullptr, 1);
 
-      if(hIc) {
+      if(hIcon) {
 
-        this->_icon = hIc;
+        this->_icon_source = path;
+        this->_icon_handle = hIcon;
 
-        if(this->_config.xml().hasChild(L"icon")) {
-          this->_config.xml().child(L"icon").setContent(src);
+        if(this->_xmlconf.hasChild(L"icon")) {
+          this->_xmlconf.child(L"icon").setContent(this->_icon_source);
         } else {
-          this->_config.xml().addChild(L"icon").setContent(src);
+          this->_xmlconf.addChild(L"icon").setContent(this->_icon_source);
         }
 
       } else {
-        this->log(1, L"ModHub("+this->_title+L") Set Icon",
-                  L"\""+src+L"\" icon extraction failed.");
+        this->_log(OM_LOG_WRN, L"setIcon", L"icon extraction failed");
       }
     }
 
-    if(!this->_icon) {
+    if(!this->_icon_handle) {
 
-      if(this->_config.xml().hasChild(L"icon")) {
-        this->_config.xml().remChild(this->_config.xml().child(L"icon"));
+      if(this->_xmlconf.hasChild(L"icon")) {
+        this->_xmlconf.remChild(this->_xmlconf.child(L"icon"));
       }
     }
 
-    this->_config.save();
+    this->_xmlconf.save();
   }
 }
-
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmModChan* OmModHub::modChanGet(const wstring& uuid)
+OmModChan* OmModHub::findChannel(const OmWString& uuid) const
 {
-  for(size_t i = 0; i < this->_modChanLs.size(); ++i) {
-    if(uuid == this->_modChanLs[i]->uuid())
-      return this->_modChanLs[i];
+  for(size_t i = 0; i < this->_channel_list.size(); ++i) {
+
+    if(this->_channel_list[i]->uuid() == uuid)
+
+      return this->_channel_list[i];
   }
 
   return nullptr;
@@ -365,44 +314,55 @@ OmModChan* OmModHub::modChanGet(const wstring& uuid)
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmModHub::modChanSort()
+bool OmModHub::_compare_chn_index(const OmModChan* a, const OmModChan* b)
 {
-  if(this->_modChanLs.size() > 1)
-    sort(this->_modChanLs.begin(), this->_modChanLs.end(), __chn_sort_index_fn);
+  return (a->index() < b->index());
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmModHub::sortChannels()
+{
+  sort(this->_channel_list.begin(), this->_channel_list.end(), OmModHub::_compare_chn_index);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmModHub::modChanSelect(int i)
+bool OmModHub::selectChannel(int32_t i)
 {
   if(i >= 0) {
-    if(i < (int)this->_modChanLs.size()) {
-      this->_modChanSl = i;
-      this->log(2, L"ModHub("+this->_title+L") Select Mod Channel",
-                L"\""+this->_modChanLs[_modChanSl]->title()+L"\".");
+
+    if(i < (int)this->_channel_list.size()) {
+
+      this->_active_channel = i;
+
     } else {
+
       return false;
     }
+
   } else {
-    this->_modChanSl = -1;
+
+    this->_active_channel = -1;
   }
 
   return true;
 }
 
-
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmModHub::modChanSelect(const wstring& uuid)
+bool OmModHub::selectChannel(const OmWString& uuid)
 {
-  for(size_t i = 0; i < this->_modChanLs.size(); ++i) {
-    if(uuid == this->_modChanLs[i]->uuid()) {
-      this->_modChanSl = i;
-      this->log(2, L"ModHub("+this->_title+L") Select Mod Channel",
-                L"\""+this->_modChanLs[_modChanSl]->title()+L"\".");
+  for(size_t i = 0; i < this->_channel_list.size(); ++i) {
+
+    if(this->_channel_list[i]->uuid() == uuid) {
+
+      this->_active_channel = i;
+
       return true;
     }
   }
@@ -410,138 +370,107 @@ bool OmModHub::modChanSelect(const wstring& uuid)
   return false;
 }
 
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+OmModChan* OmModHub::activeChannel() const
+{
+  if(this->_active_channel >= 0)
+    return this->_channel_list[this->_active_channel];
+
+  return nullptr;
+}
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-int OmModHub::modChanIdx(const wstring& uuid)
+int32_t OmModHub::indexOfChannel(const OmWString& uuid)
 {
-  for(size_t i = 0; i < this->_modChanLs.size(); ++i) {
-    if(uuid == this->_modChanLs[i]->uuid()) {
+  for(size_t i = 0; i < this->_channel_list.size(); ++i)
+    if(this->_channel_list[i]->uuid() == uuid)
       return i;
-    }
-  }
 
   return -1;
 }
 
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+int32_t OmModHub::indexOfChannel(const OmModChan* ModChan)
+{
+  for(size_t i = 0; i < this->_channel_list.size(); ++i)
+    if(this->_channel_list[i] == ModChan)
+      return i;
+
+  return -1;
+}
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmModHub::modChanCreate(const wstring& title, const wstring& install, const wstring& library, const wstring& backup)
+bool OmModHub::createChannel(const OmWString& title, const OmWString& target, const OmWString& library, const OmWString& backup)
 {
-  // this theoretically can't happen, but we check to be sure
-  if(!this->isValid()) {
-    this->_error = L"Mod Hub is empty.";
-    this->log(0, L"ModHub(<anonymous>) Create Mod Channel", this->_error);
-    return false;
-  }
-
-  int result;
-
   // compose Mod Channel home path
-  wstring chn_home = this->_home + L"\\" + title;
+  OmWString channel_home = Om_concatPaths(this->_home, title);
 
   // create Mod Channel sub-folder
-  if(!Om_isDir(chn_home)) {
-    result = Om_dirCreate(chn_home);
+  if(!Om_isDir(channel_home)) {
+    int32_t result = Om_dirCreate(channel_home);
     if(result != 0) {
-      this->_error = Om_errCreate(L"Mod Channel home", chn_home, result);
-      this->log(0, L"ModHub("+this->_title+L") Create Mod Channel", this->_error);
+      this->_error(L"createChannel", Om_errCreate(L"Mod Channel home", channel_home, result));
       return false;
     }
   } else {
-    this->log(1, L"ModHub("+this->_title+L") Create Mod Channel",
-              Om_errExists(L"Mod Channel home",chn_home));
-  }
-
-  // compose Mod Channel definition file name
-  wstring chn_def_path = chn_home + L"\\" + title;
-  chn_def_path += L"."; chn_def_path += OMM_CHN_DEF_FILE_EXT;
-
-  // check whether definition file already exists and delete it
-  if(Om_isFile(chn_def_path)) {
-
-    this->log(1, L"ModHub("+this->_title+L") Create Mod Channel",
-              Om_errExists(L"Definition file",chn_def_path));
-
-    int result = Om_fileDelete(chn_def_path);
-    if(result != 0) {
-      this->_error = Om_errDelete(L"Old definition file", chn_def_path, result);
-      this->log(0, L"ModHub("+this->_title+L") Create Mod Channel", this->_error);
-      return false;
-    }
+    this->_log(OM_LOG_WRN, L"createChannel", Om_errExists(L"Mod Channel home", channel_home));
   }
 
   // initialize new definition file
-  OmConfig chn_def;
-  if(!chn_def.init(chn_def_path, OMM_XMAGIC_CHN)) {
-    this->_error = Om_errInit(L"Definition file", chn_def_path, chn_def.lastErrorStr());
-    this->log(0, L"ModHub("+this->_title+L") Create Mod Channel", this->_error);
+  OmXmlConf channel_def(OM_XMAGIC_CHN);
+
+  // define uuid and title in definition file
+  channel_def.addChild(L"uuid").setContent(Om_genUUID());
+  channel_def.addChild(L"title").setContent(title);
+  channel_def.child(L"title").setAttr(L"index", static_cast<int>(this->_channel_list.size()));
+
+  channel_def.addChild(L"install").setContent(target);
+
+  // checks whether we have custom Backup directory
+  if(backup.empty()) {
+    // Create the default backup sub-directory
+    OmWString backup_path = Om_concatPaths(channel_home, OM_MODCHAN_BACKUP_DIR);
+    Om_dirCreate(backup_path);
+  } else {
+    // add custom backup in definition
+    channel_def.addChild(L"backup").setContent(backup);
+  }
+
+  // checks whether we have custom Library directory
+  if(library.empty()) {
+    // Create the default library sub-directory
+    OmWString library_path = Om_concatPaths(channel_home, OM_MODCHAN_MODLIB_DIR);
+    Om_dirCreate(library_path);
+  } else {
+    // add custom library in definition
+    channel_def.addChild(L"library").setContent(library);
+  }
+
+  // compose Mod Channel definition file name
+  OmWString channel_path = Om_concatPaths(channel_home, OM_MODCHN_FILENAME);
+
+  // save and close definition file
+  if(!channel_def.save(channel_path)) {
+    this->_error(L"createChannel", Om_errSave(L"definition file", channel_path, channel_def.lastErrorStr()));
     return false;
   }
 
-  // Generate a new UUID for this Mod Channel
-  wstring uuid = Om_genUUID();
-
-  // Get XML document instance
-  OmXmlNode chn_xml = chn_def.xml();
-
-  // define uuid and title in definition file
-  chn_xml.addChild(L"uuid").setContent(uuid);
-  chn_xml.addChild(L"title").setContent(title);
-
-  // define ordering index in definition file
-  chn_xml.child(L"title").setAttr(L"index", static_cast<int>(this->_modChanLs.size()));
-
-  // define installation destination folder in definition file
-  chn_xml.addChild(L"install").setContent(install);
-
-  // checks whether we have custom Backup folder
-  if(backup.empty()) {
-    // Create the default backup sub-folder
-    Om_dirCreate(chn_home + L"\\Backup");
-  } else {
-    // check whether custom Library folder exists
-    if(!Om_isDir(backup)) {
-      this->log(1, L"ModHub("+this->_title+L") Create Mod Channel",
-                Om_errIsDir(L"Custom Backup folder", backup));
-    }
-    // add custom backup in definition
-    chn_xml.addChild(L"backup").setContent(backup);
-  }
-
-  // checks whether we have custom Library folder
-  if(library.empty()) {
-    // Create the default library sub-folder
-    Om_dirCreate(chn_home + L"\\Library");
-  } else {
-    // check whether custom Library folder exists
-    if(!Om_isDir(library)) {
-      this->log(1, L"ModHub("+this->_title+L") Create Mod Channel",
-                Om_errIsDir(L"Custom Library folder", library));
-    }
-    // add custom library in definition
-    chn_xml.addChild(L"library").setContent(library);
-  }
-
-  // save and close definition file
-  chn_def.save();
-  chn_def.close();
-
-  this->log(2, L"ModHub("+this->_title+L") Create Mod Channel", L"Mod Channel \""+title+L")\" created.");
-
   // load the newly created Mod Channel
-  OmModChan* pModChan = new OmModChan(this);
-  pModChan->open(chn_def_path);
-  this->_modChanLs.push_back(pModChan);
+  OmModChan* ModChan = new OmModChan(this);
+  ModChan->open(channel_path);
+  this->_channel_list.push_back(ModChan);
 
-  // sort locations by index
-  this->modChanSort();
-
-  // select the last added location
-  this->modChanSelect(this->_modChanLs.size() - 1);
+  // sort channels and select the last one
+  this->sortChannels();
+  this->selectChannel(this->_channel_list.size() - 1);
 
   return true;
 }
@@ -550,364 +479,616 @@ bool OmModHub::modChanCreate(const wstring& title, const wstring& install, const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmModHub::modChanDelete(unsigned id)
+bool OmModHub::deleteChannel(size_t index)
 {
-  if(id >= this->_modChanLs.size())
+  if(index >= this->_channel_list.size()) {
+    this->_error(L"deleteChannel", L"index out of bound");
     return false;
+  }
 
-  OmModChan* pModChan = this->_modChanLs[id];
+  OmModChan* ModChan = this->_channel_list[index];
 
-  if(pModChan->bckHasData()) {
-    this->_error = L"Aborted: Still have backup data to be restored.";
-    this->log(0, L"ModHub("+this->_title+L") Delete Mod Channel", this->_error);
+  if(ModChan->hasBackupData()) {
+    this->_error(L"deleteChannel", L"channel still have backup data to be restored");
     return false;
+  }
+
+  // keep Mod Channel paths
+  OmWString channel_title = ModChan->title();
+  OmWString channel_home = ModChan->home();
+  OmWString channel_path = ModChan->path();
+
+  // close Mod Channel
+  ModChan->close();
+
+  // remove the default backup folder
+  OmWString bck_path = Om_concatPaths(channel_home, OM_MODCHAN_BACKUP_DIR);
+  if(Om_isDir(bck_path)) {
+    // this will fails if folder not empty, this is intended
+    int32_t result = Om_dirDelete(bck_path);
+    if(result != 0)
+      this->_log(OM_LOG_WRN, L"deleteChannel", Om_errDelete(L"Backup directory", bck_path, result));
+  }
+
+  // remove the default Library folder
+  OmWString lib_path = Om_concatPaths(channel_home, OM_MODCHAN_MODLIB_DIR);
+  if(Om_isDir(lib_path)) {
+    // this will fails if folder not empty, this is intended
+    if(Om_isDirEmpty(lib_path)) {
+      int32_t result = Om_dirDelete(lib_path);
+      if(result != 0)
+        this->_log(OM_LOG_WRN, L"deleteChannel", Om_errDelete(L"Library directory", lib_path, result));
+
+    } else {
+      this->_log(OM_LOG_WRN, L"deleteChannel", L"Non-empty Library directory was not deleted");
+    }
   }
 
   bool has_error = false;
 
-  // keep Mod Channel paths
-  wstring chn_name = pModChan->title();
-  wstring chn_home = pModChan->home();
-  wstring chn_path = pModChan->path();
-
-  // close Mod Channel
-  pModChan->close();
-
-  // remove the default backup folder
-  wstring bck_path = chn_home + L"\\Backup";
-  if(Om_isDir(bck_path)) {
-    // this will fails if folder not empty, this is intended
-    int result = Om_dirDelete(bck_path);
-    if(result != 0) {
-      this->log(1, L"ModHub("+this->_title+L") Delete Mod Channel",
-                Om_errDelete(L"Backup folder", bck_path, result));
-    }
-  }
-
-  // remove the default Library folder
-  wstring lib_path = chn_home + L"\\Library";
-  if(Om_isDir(lib_path)) {
-    // this will fails if folder not empty, this is intended
-    if(Om_isDirEmpty(lib_path)) {
-      int result = Om_dirDelete(lib_path);
-      if(result != 0) {
-        this->log(1, L"ModHub("+this->_title+L") Delete Mod Channel",
-                  Om_errDelete(L"Library folder", lib_path, result));
-      }
-    } else {
-      this->log(1, L"ModHub("+this->_title+L") Delete Mod Channel",
-              L"Non-empty Library folder will not be deleted");
-    }
-  }
-
   // remove the definition file
-  if(Om_isFile(chn_path)) {
-    // close the definition file
-    this->_config.close();
-    int result = Om_fileDelete(chn_path);
+  if(Om_isFile(channel_path)) {
+    int32_t result = Om_fileDelete(channel_path);
     if(result != 0) {
-      this->_error = Om_errDelete(L"Definition file", chn_path, result);
-      this->log(1, L"ModHub("+this->_title+L") Delete Mod Channel", this->_error);
-      has_error = true; //< this is considered as a real error
+      this->_error(L"deleteChannel", Om_errDelete(L"Definition file", channel_path, result));
+      has_error = true;
     }
   }
 
-  // check if location home folder is empty, if yes, we delete it
-  if(Om_isDirEmpty(chn_home)) {
-    int result = Om_dirDelete(chn_home);
+  // check if location home directory is empty, if yes, we delete it
+  if(Om_isDirEmpty(channel_home)) {
+    int result = Om_dirDelete(channel_home);
     if(result != 0) {
-      this->_error = Om_errDelete(L"Home folder", chn_home, result);
-      this->log(1, L"ModHub("+this->_title+L") Delete Mod Channel", this->_error);
+      this->_error(L"deleteChannel", Om_errDelete(L"Home directory", channel_home, result));
       has_error = true; //< this is considered as a real error
     }
   } else {
-    this->log(1, L"ModHub("+this->_title+L") Delete Mod Channel",
-              L"Non-empty home folder \""+chn_home+L"\" will not be deleted");
+    this->_log(OM_LOG_WRN, L"deleteChannel", L"Non-empty Mod Channel home directory was not deleted");
   }
-
-  this->log(2, L"ModHub("+this->_title+L") Delete Mod Channel",
-            L"Mod Channel \""+chn_name+L"\" deleted.");
 
   // delete object
-  delete pModChan;
+  delete ModChan;
 
   // remove from list
-  this->_modChanLs.erase(this->_modChanLs.begin()+id);
+  this->_channel_list.erase(this->_channel_list.begin() + index);
 
   // update locations order indexing
-  for(size_t i = 0; i < this->_modChanLs.size(); ++i) {
-    this->_modChanLs[i]->setIndex(i);
-  }
+  for(size_t i = 0; i < this->_channel_list.size(); ++i)
+    this->_channel_list[i]->setIndex(i);
 
   // sort Mod Channels by index
-  this->modChanSort();
-
-  // select the first available location
-  this->modChanSelect(0);
+  this->sortChannels();
+  this->selectChannel(0);
 
   return !has_error;
 }
 
-
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmModHub::batSort()
+bool OmModHub::_compare_pst_index(const OmModPset* a, const OmModPset* b)
 {
-  if(this->_batLs.size() > 1)
-    sort(this->_batLs.begin(), this->_batLs.end(), __bat_sort_index_fn);
+  return (a->index() < b->index());
 }
 
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmModHub::sortPresets()
+{
+  sort(this->_preset_list.begin(), this->_preset_list.end(), OmModHub::_compare_pst_index);
+}
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmBatch* OmModHub::batAdd(const wstring& title)
+int32_t OmModHub::indexOfPreset(const OmModPset* ModPset) const
 {
+  for(size_t i = 0; i < this->_preset_list.size(); ++i)
+    if(ModPset == this->_preset_list[i])
+      return i;
+
+  return -1;
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+OmModPset* OmModHub::createPreset(const OmWString& title)
+{
+  OmWString presets_dir = Om_concatPaths(this->_home, OM_MODHUB_MODPSET_DIR);
+
+  // check whether Preset subdirectory exists
+  if(!Om_isDir(presets_dir)) {
+
+    // create Preset subdirectory
+    int32_t result = Om_dirCreate(presets_dir);
+    if(result != 0) {
+      this->_error(L"createPreset", Om_errCreate(L"Presets directory", presets_dir, result));
+      return nullptr;
+    }
+  }
+
+  // Initialize new definition
+  OmXmlConf preset_cfg;
+  preset_cfg.init(OM_XMAGIC_SPT);
+
+  // generate and set UUID
+  preset_cfg.addChild(L"uuid").setContent(Om_genUUID());
+
+  // Set <title> width index
+  OmXmlNode xml_title = preset_cfg.addChild(L"title");
+  xml_title.setContent(title);
+  xml_title.setAttr(L"index", static_cast<int32_t>(this->_preset_list.size()));
+
+  // create the <options> node
+  preset_cfg.addChild(L"options").setAttr(L"installonly", 0);
+
   // compose path using title and context home
-  wstring path = this->_home + L"\\";
-  path += title; path += L"."; path += OMM_BAT_DEF_FILE_EXT;
+  OmWString preset_path = Om_concatPaths(presets_dir, title);
+  preset_path += L".xml";
 
-  // Create new batch object
-  OmBatch* pBat = new OmBatch(this);
-  pBat->init(path, title, this->_batLs.size());
-  this->_batLs.push_back(pBat);
+  // save definition file
+  if(!preset_cfg.save(preset_path)) {
+    this->_error(L"createPreset", Om_errSave(L"preset file", preset_path, preset_cfg.lastErrorStr()));
+    return nullptr;
+  }
 
-  this->log(2, L"ModHub("+this->_title+L") Create Batch", L"Batch \""+title+L"\" created.");
+  // Create new Mod Preset object
+  OmModPset* ModPset = new OmModPset(this);
+
+  if(!ModPset->open(preset_path)) {
+    this->_error(L"createPreset", Om_errLoad(L"preset file", preset_path, ModPset->lastError()));
+    return nullptr;
+  }
+
+  this->_preset_list.push_back(ModPset);
 
   // sort Batches by index
-  this->batSort();
+  this->sortPresets();
 
-  return pBat;
+  return ModPset;
 }
-
-
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmModHub::batRem(unsigned id)
+bool OmModHub::deletePreset(size_t index)
 {
-  if(id < this->_batLs.size()) {
-
-    OmBatch* pBat = this->_batLs[id];
-
-    wstring bat_path = pBat->path();
-    wstring bat_title = pBat->title();
-
-
-    // remove the definition file
-    if(Om_isFile(bat_path)) {
-      // close the definition file
-      this->_config.close();
-      int result = Om_fileDelete(bat_path);
-      if(result != 0) {
-        this->_error = Om_errDelete(L"Batch definition file", bat_path, result);
-        this->log(1, L"ModHub("+this->_title+L") Delete Batch", this->_error);
-        return false;
-      }
-    }
-
-    // delete batch object
-    delete pBat;
-
-    // remove from list
-    this->_batLs.erase(this->_batLs.begin()+id);
-
-    // update batches order indexing
-    for(size_t i = 0; i < this->_batLs.size(); ++i) {
-      this->_batLs[i]->setIndex(i);
-    }
-
-    // sort Batches by index
-    this->batSort();
-
-    this->log(2, L"ModHub("+this->_title+L") Delete Batch", L"Installation Batch \""+bat_title+L"\" deleted.");
-
-    return true;
+  if(index >= this->_preset_list.size()) {
+    this->_error(L"deletePreset", L"index out of bound");
+    return false;
   }
 
-  return false;
-}
+  OmModPset* ModPset = this->_preset_list[index];
 
+  // delete the definition file
+  if(Om_isFile(ModPset->path())) {
 
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmModHub::setBatQuietMode(bool enable)
-{
-  this->_batQuietMode = enable;
-
-  if(this->_config.valid()) {
-
-    if(this->_config.xml().hasChild(L"batches_quietmode")) {
-      this->_config.xml().child(L"batches_quietmode").setAttr(L"enable", this->_batQuietMode ? 1 : 0);
-    } else {
-      this->_config.xml().addChild(L"batches_quietmode").setAttr(L"enable", this->_batQuietMode ? 1 : 0);
-    }
-
-    this->_config.save();
-  }
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmModHub::log(unsigned level, const wstring& head, const wstring& detail)
-{
-  wstring log_str = L"Manager:: "; log_str.append(head);
-
-  this->_manager->log(level, log_str, detail);
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-bool OmModHub::_migrate(const wstring& path)
-{
-  // Function to migrate Mod Hub structure and definitions files from old standard
-  // to new standard
-  int result;
-  OmXmlDoc xmldoc;
-  vector<wstring> file_ls;
-  vector<wstring> dirs_ls;
-  vector<wstring> delt_ls;
-  vector<OmXmlNode> xmlnode_ls;
-
-  wstring hub_dir = path + L"\\";
-  wstring spt_dir = path + L"\\_Scripts\\";
-  wstring spt_mig, chn_mig, hub_mig;
-
-  // Check whether we got an OMC file, meaning migration is required
-  Om_lsFileFiltered(&file_ls, hub_dir, L"*.omc", true);
-  if(!file_ls.size())
-    return true;
-
-  // Here we go for Mod Hub set migration
-  this->log(2, L"ModHub("+hub_dir+L") Migration",
-            L"Found old fashion Mod Hub that must be migrated.");
-
-  // We first create the new '_Scripts' folder, this will also tell us
-  // that Mod Hub directory is writable
-  if(!Om_isDir(spt_dir)) {
-    // Create "Scripts" directory, fail silently
-    result = Om_dirCreate(spt_dir);
+    int32_t result = Om_fileDelete(ModPset->path());
     if(result != 0) {
-      this->_error = Om_errCreate(L"Script directory", spt_dir, result);
-      this->log(1, L"ModHub("+hub_dir+L") Migration", this->_error);
+      this->_error(L"deletePreset", Om_errDelete(L"preset file", ModPset->path(), result));
       return false;
     }
   }
 
-  // We now migrate Scripts files, xml 'magic' node is modified and file
+  // delete batch object
+  delete ModPset;
+
+  // remove from list
+  this->_preset_list.erase(this->_preset_list.begin() + index);
+
+  // update batches order indexing
+  for(size_t i = 0; i < this->_preset_list.size(); ++i) {
+    this->_preset_list[i]->setIndex(i);
+    this->_preset_list[i]->save();
+  }
+
+  // sort Batches by index
+  this->sortPresets();
+
+  return true;
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+bool OmModHub::renamePreset(size_t index, const OmWString& title)
+{
+  if(index >= this->_preset_list.size()) {
+    this->_error(L"renamePreset", L"index out of bound");
+    return false;
+  }
+
+  OmModPset* ModPset = this->_preset_list[index];
+
+  // change Preset title
+  ModPset->setTitle(title);
+  ModPset->save();
+
+  // keep old Preset filename
+  OmWString old_path = ModPset->path();
+
+  // compose new Preset filename
+  OmWString new_path = Om_concatPaths(Om_getDirPart(old_path), title);
+  new_path += L".xml";
+
+  bool has_error = false;
+
+  // try to rename file
+  ModPset->close();
+
+  int32_t result = Om_fileMove(old_path, new_path);
+  if(result != 0) {
+    this->_error(L"rename", Om_errMove(L"Preset definition", old_path, result));
+    new_path = old_path;
+    has_error = true;
+  }
+
+  ModPset->open(new_path);
+
+  return !has_error;
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmModHub::setPresetQuietMode(bool enable)
+{
+  this->_presets_quietmode = enable;
+
+  if(this->_xmlconf.valid()) {
+
+    if(this->_xmlconf.hasChild(L"batches_quietmode")) {
+      this->_xmlconf.child(L"batches_quietmode").setAttr(L"enable", this->_presets_quietmode ? 1 : 0);
+    } else {
+      this->_xmlconf.addChild(L"batches_quietmode").setAttr(L"enable", this->_presets_quietmode ? 1 : 0);
+    }
+
+    this->_xmlconf.save();
+  }
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmModHub::abortPresets()
+{
+  this->_setup_abort = true;
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmModHub::queuePresets(OmModPset* ModPset, Om_beginCb begin_cb, Om_progressCb progress_cb, Om_resultCb result_cb, void* user_ptr)
+{
+  if(this->_setup_queue.empty()) {
+    /*
+    // another operation is currently processing
+    if(this->_locked_mod_library) {
+
+      this->_log(OM_LOG_WRN, L"queueInstalls", L"local library is locked by another operation");
+
+      if(result_cb)  // flush all results with abort
+        for(size_t i = 0; i << selection.size(); ++i)
+          result_cb(user_ptr, OM_RESULT_ABORT, reinterpret_cast<uint64_t>(selection[i]));
+
+      return;
+    }
+    */
+
+    this->_setup_begin_cb = begin_cb;
+    this->_setup_progress_cb = progress_cb;
+    this->_setup_result_cb = result_cb;
+    this->_setup_user_ptr = user_ptr;
+
+    // reset global progression parameters
+    this->_setup_dones = 0;
+    this->_setup_percent = 0;
+
+  } else {
+
+    // emit a warning in case a crazy client starts new download with
+    // different parameters than current
+    if(this->_setup_begin_cb != begin_cb ||
+       this->_setup_result_cb != result_cb ||
+       this->_setup_progress_cb != progress_cb ||
+       this->_setup_user_ptr != user_ptr) {
+      this->_log(OM_LOG_WRN, L"queuePresets", L"changing callbacks for a running thread is not allowed");
+    }
+  }
+  /*
+  // lock the local library to prevent concurrent array manipulation
+  this->_locked_mod_library = true;
+  */
+
+  // reset abort flag
+  this->_setup_abort = false;
+
+  Om_push_backUnique(this->_setup_queue, ModPset);
+
+  if(!this->_setup_hth) {
+
+    // launch thread
+    this->_setup_hth = Om_createThread(OmModHub::_setup_run_fn, this);
+    this->_setup_hwo = Om_waitForThread(this->_setup_hth, OmModHub::_setup_end_fn, this);
+  }
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+DWORD WINAPI OmModHub::_setup_run_fn(void* ptr)
+{
+  OmModHub* self = static_cast<OmModHub*>(ptr);
+  DWORD exit_code = 0;
+
+  #ifdef DEBUG
+  std::wcout << "DEBUG => OmModHub::_setup_run_fn : enter\n";
+  #endif // DEBUG
+
+  OmPModPackArray installs, restores;
+
+  while(self->_setup_queue.size()) {
+
+    OmModPset* ModPset = self->_setup_queue.front();
+
+    if(self->_setup_begin_cb)
+      self->_setup_begin_cb(self->_setup_user_ptr, reinterpret_cast<uint64_t>(ModPset));
+
+    // perform setup for each existing Mod Channel
+    for(size_t i = 0; i < self->_channel_list.size(); ++i) {
+
+      OmModChan* ModChan = self->_channel_list[i];
+
+      installs.clear();
+      restores.clear();
+
+      ModPset->getSetupEntryList(ModChan, &installs);
+
+      if(!ModPset->installOnly()) {
+
+        // create the restores list
+        for(size_t j = 0; j < ModChan->modpackCount(); ++j) {
+
+          OmModPack* ModPack = ModChan->getModpack(j);
+
+          if(!ModPack->hasBackup())
+            continue;
+
+          if(!Om_arrayContain(installs, ModPack))
+            restores.push_back(ModPack);
+        }
+      }
+
+      if(self->_setup_progress_cb) {
+
+        size_t tot, cur;
+
+        tot = 0; cur = restores.size();
+        // we send restores fisrt
+        for(size_t j = 0; j < restores.size(); ++j)
+          self->_setup_progress_cb(self->_setup_user_ptr, tot, cur--, reinterpret_cast<uint64_t>(restores[j]));
+
+        tot = installs.size(); cur = 0;
+        // then send installs
+        for(size_t j = 0; j < installs.size(); ++j)
+          self->_setup_progress_cb(self->_setup_user_ptr, tot, ++cur, reinterpret_cast<uint64_t>(installs[j]));
+      }
+
+    }
+
+    if(self->_setup_result_cb)
+      self->_setup_result_cb(self->_setup_user_ptr, OM_RESULT_OK, reinterpret_cast<uint64_t>(ModPset));
+
+    self->_setup_dones++;
+    self->_setup_queue.pop_front();
+  }
+
+  #ifdef DEBUG
+  std::wcout << "DEBUG => OmModHub::_setup_run_fn : leave\n";
+  #endif // DEBUG
+
+  return exit_code;
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+VOID WINAPI OmModHub::_setup_end_fn(void* ptr,uint8_t fired)
+{
+  OmModHub* self = static_cast<OmModHub*>(ptr);
+
+  #ifdef DEBUG
+  std::wcout << "DEBUG => OmModHub::_setup_end_fn\n";
+  #endif // DEBUG
+/*
+  // unlock the local library
+  self->_locked_mod_library = false;
+*/
+  //DWORD exit_code = Om_threadExitCode(self->_install_hth);
+  Om_clearThread(self->_setup_hth, self->_setup_hwo);
+
+  self->_setup_dones = 0;
+  self->_setup_percent = 0;
+
+  self->_setup_hth = nullptr;
+  self->_setup_hwo = nullptr;
+
+  self->_setup_begin_cb = nullptr;
+  self->_setup_progress_cb = nullptr;
+  self->_setup_result_cb = nullptr;
+  self->_setup_user_ptr = nullptr;
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+bool OmModHub::_migrate(const OmWString& path)
+{
+  // Function to migrate Mod Hub structure and definitions files from old standard
+  // to new standard
+  OmXmlDoc xmldoc;
+  OmXmlNode xmlnode;
+
+  OmWStringArray filename;
+  OmWStringArray to_delete;
+
+  OmWString modhub_home = Om_isFile(path) ? Om_getDirPart(path) : path;
+
+  // Check whether we got an OMC file, meaning migration is required
+  Om_lsFileFiltered(&filename, modhub_home, L"*." OM_CTX_DEF_FILE_EXT, true);
+  if(!filename.size())
+    return true;
+
+  OmWString presets_dir = Om_concatPaths(modhub_home, OM_MODHUB_MODPSET_DIR);
+
+  // Here we go for Mod Hub set migration
+  this->_log(OM_LOG_OK, L"_migrate", L"Found old fashion Mod Hub that must be migrated");
+
+  // We first create the new 'OM_MODHUB_MODPSET_DIR' folder, this will also tell us
+  // that Mod Hub directory is writable
+  if(!Om_isDir(presets_dir)) {
+    // Create "Preset" directory, fail silently
+    int32_t result = Om_dirCreate(presets_dir);
+    if(result != 0) {
+      this->_error(L"_migrate", Om_errCreate(L"presets directory", presets_dir, result));
+      return false;
+    }
+  }
+
+  // We now migrate Preset files, xml 'magic' node is modified and file
   // saved into the new dedicated '_Script' folder
 
-  // Search for Scripts within Mod Hub home directory
-  file_ls.clear();
-  Om_lsFileFiltered(&file_ls, hub_dir, L"*.omb", true);
+  // Search for Preset within Mod Hub home directory
+  filename.clear();
+  Om_lsFileFiltered(&filename, modhub_home, L"*." OM_BAT_DEF_FILE_EXT, true);
 
-
-
-  // Modify and save each script file
-  for(size_t i = 0; i < file_ls.size(); ++i) {
+  // Modify and save each Preset file
+  OmWString preset_path;
+  OmXmlNodeArray location_nodes;
+  for(size_t i = 0; i < filename.size(); ++i) {
 
     // Load definition and change the 'magic' node
-    xmldoc.load(file_ls[i]);
-    OmXmlNode magic = xmldoc.child(L"Open_Mod_Manager_Batch");
-    if(!magic.empty()) magic.setName(OMM_XMAGIC_SPT);
+    xmldoc.load(filename[i]);
+    xmlnode = xmldoc.child(OM_XMAGIC_BAT);
+    if(!xmlnode.empty()) xmlnode.setName(OM_XMAGIC_SPT);
 
     // Rename all Scripts <location> by <modchan>
-    xmldoc.children(xmlnode_ls, L"location");
-    for(size_t i = 0; i < xmlnode_ls.size(); ++i)
-      xmlnode_ls[i].setName(L"modchan");
+    xmlnode.children(location_nodes, L"location");
+    for(size_t i = 0; i < location_nodes.size(); ++i)
+      location_nodes[i].setName(L"setup");
 
     // Save file with new name at new location
-    spt_mig = spt_dir + Om_getNamePart(file_ls[i]) + L".xml";
-    if(!xmldoc.save(spt_mig)) {
-      this->_error = Om_errCreate(L"Script file", spt_mig, result);
-      this->log(1, L"ModHub("+hub_dir+L") Migration", this->_error);
+    preset_path = Om_concatPaths(presets_dir, Om_getNamePart(filename[i]));
+    preset_path += L".xml";
+    if(!xmldoc.save(preset_path)) {
+      this->_error(L"_migrate", Om_errSave(L"preset file", preset_path, xmldoc.lastErrorStr()));
       return false;
     }
 
     xmldoc.clear();
 
     // add old file to be deleted
-    delt_ls.push_back(file_ls[i]);
+    to_delete.push_back(filename[i]);
   }
 
   // Now migrate Mod Channel(s)
-  Om_lsDir(&dirs_ls, hub_dir, false);
+  OmWStringArray subdir;
+  Om_lsDir(&subdir, modhub_home, false);
 
-  for(size_t i = 0; i < dirs_ls.size(); ++i) {
+  OmWString channel_home, channel_path;
+  for(size_t i = 0; i < subdir.size(); ++i) {
+
+    channel_home = Om_concatPaths(modhub_home, subdir[i]);
 
     // check for presence of old standard Mod Channel definition file
-    file_ls.clear();
-    Om_lsFileFiltered(&file_ls, hub_dir+dirs_ls[i], L"*.oml", true);
+    filename.clear();
+    Om_lsFileFiltered(&filename, channel_home, L"*." OM_LOC_DEF_FILE_EXT, true);
 
     // Parse the first file found
-    if(file_ls.size()) {
+    if(filename.size()) {
 
       // Load definition and change the 'magic' node
-      xmldoc.load(file_ls[0]);
-      OmXmlNode magic = xmldoc.child(L"Open_Mod_Manager_Location");
-      if(!magic.empty()) magic.setName(OMM_XMAGIC_CHN);
+      xmldoc.load(filename[0]);
+      xmlnode = xmldoc.child(OM_XMAGIC_LOC);
+      if(!xmlnode.empty()) xmlnode.setName(OM_XMAGIC_CHN);
 
-      chn_mig = Om_getDirPart(file_ls[0]) + L"\\ModChan.xml";
+      // migrate backup zip options to new standard with default values
+      xmlnode = xmlnode.child(L"backup_comp");
+      if(!xmlnode.empty()) {
+        xmlnode.setAttr(L"method", (int)OM_METHOD_ZSTD);
+        xmlnode.setAttr(L"level", (int)OM_LEVEL_FAST);
+      }
+
+      channel_path = Om_concatPaths(channel_home, OM_MODCHN_FILENAME);
 
       // Save file with new name
-      if(!xmldoc.save(chn_mig)) {
-        this->_error = Om_errCreate(L"Mod Channel file", spt_mig, result);
-        this->log(1, L"ModHub("+hub_dir+L") Migration", this->_error);
+      if(!xmldoc.save(channel_path)) {
+        this->_error(L"_migrate", Om_errSave(L"Mod Channel definition file", channel_path, xmldoc.lastErrorStr()));
         return false;
       }
 
       xmldoc.clear();
 
       // add old file to be deleted
-      delt_ls.push_back(file_ls[0]);
+      to_delete.push_back(filename[0]);
     }
   }
 
   // Finally migrate the Mod Hub definition file
-  file_ls.clear();
-  Om_lsFileFiltered(&file_ls, hub_dir, L"*.omc", true);
+  filename.clear();
+  Om_lsFileFiltered(&filename, modhub_home, L"*." OM_CTX_DEF_FILE_EXT, true);
 
-  if(file_ls.size()) {
+  if(filename.size()) {
 
     // Load definition and change the 'magic' node
-    xmldoc.load(file_ls[0]);
-    OmXmlNode magic = xmldoc.child(L"Open_Mod_Manager_Context");
-    if(!magic.empty()) magic.setName(OMM_XMAGIC_HUB);
+    xmldoc.load(filename[0]);
+    xmlnode = xmldoc.child(OM_XMAGIC_CTX);
+    if(!xmlnode.empty()) xmlnode.setName(OM_XMAGIC_HUB);
 
-    hub_mig = hub_dir + L"ModHub.xml";
+    OmWString modhub_path = Om_concatPaths(modhub_home, OM_MODHUB_FILENAME);
 
     // Save file with new name
-    if(!xmldoc.save(hub_mig)) {
-      this->_error = Om_errCreate(L"Mod Hub file", hub_mig, result);
-      this->log(1, L"ModHub("+hub_dir+L") Migration", this->_error);
+    if(!xmldoc.save(modhub_path)) {
+      this->_error(L"_migrate", Om_errSave(L"Mod Hub definition file", modhub_path, xmldoc.lastErrorStr()));
       return false;
     }
 
     xmldoc.clear();
 
     // add old file to be deleted
-    delt_ls.push_back(file_ls[0]);
+    to_delete.push_back(filename[0]);
   }
 
   // Here we go for Mod Hub set migration
-  this->log(2, L"ModHub("+hub_dir+L") Migration",
-            L"Migration appear successful, cleaning old data.");
+  this->_log(OM_LOG_OK, L"_migrate", L"Migration appear successful, cleaning old data.");
 
-  for(size_t i = 0; i < delt_ls.size(); ++i) {
-    result = Om_fileDelete(delt_ls[i]);
+  for(size_t i = 0; i < to_delete.size(); ++i) {
+    int32_t result = Om_fileDelete(to_delete[i]);
     if(result != 0) {
-      this->_error = Om_errDelete(L"Old file", delt_ls[i], result);
-      this->log(1, L"ModHub("+hub_dir+L") Migration", this->_error);
+      this->_error(L"_migrate", Om_errDelete(L"old file", to_delete[i], result));
       return false;
     }
   }
 
   return true;
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmModHub::_log(unsigned level, const OmWString& origin,  const OmWString& detail) const
+{
+  OmWString root(L"ModHub["); root.append(this->_title); root.append(L"].");
+  this->_ModMan->escalateLog(level, root + origin, detail);
+}
+
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmModHub::_error(const OmWString& origin, const OmWString& detail)
+{
+  this->_lasterr = detail;
+  this->_log(OM_LOG_ERR, origin, detail);
 }

@@ -1599,7 +1599,7 @@ PNG_EXPORT(74, void, png_init_io, (png_structrp png_ptr, png_FILE_p fp));
  * default function will be used.
  */
 
-PNG_EXPORT(75, void, png_set_error_fn, (png_structrp png_ptr,
+PNG_EXPORT(75, void, png_error_fn, (png_structrp png_ptr,
     png_voidp error_ptr, png_error_ptr error_fn, png_error_ptr warning_fn));
 
 /* Return the user pointer associated with the error functions */

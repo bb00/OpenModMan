@@ -57,7 +57,7 @@ class OmUiPropHub : public OmDialogProp
     ///
     /// \return Associated Mod Hub or nullptr if none.
     ///
-    OmModHub* modHubCur() const {
+    OmModHub* modHub() const {
       return _modHub;
     }
 
@@ -69,7 +69,7 @@ class OmUiPropHub : public OmDialogProp
     ///
     /// \param[in]  pModHub  : Mod Hub object to associate.
     ///
-    void ctxSet(OmModHub* pModHub) {
+    void setModHub(OmModHub* pModHub) {
       _modHub = pModHub;
     }
 
@@ -80,6 +80,13 @@ class OmUiPropHub : public OmDialogProp
     ///
     bool checkChanges();
 
+    /// \brief Validate properties changes
+    ///
+    /// Checks whether dialog's changed properties are valid and suitable
+    /// then alert user or perform required action in context.
+    ///
+    bool validChanges();
+
     /// \brief Apply properties changes
     ///
     /// Retrieve dialog's dedicated properties then apply changes.
@@ -89,8 +96,6 @@ class OmUiPropHub : public OmDialogProp
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     OmModHub*           _modHub;
-
-    void                _onPropInit();
 };
 
 #endif // OMUIPROPHUB_H

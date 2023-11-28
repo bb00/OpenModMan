@@ -12,7 +12,7 @@
  *
  * This file provides a location for all error handling.  Users who
  * need special error handling are expected to write replacement functions
- * and use png_set_error_fn() to use those functions.  See the instructions
+ * and use png_error_fn() to use those functions.  See the instructions
  * at each function.
  */
 
@@ -31,7 +31,7 @@ png_default_warning PNGARG((png_const_structrp png_ptr,
 
 /* This function is called whenever there is a fatal error.  This function
  * should not be changed.  If there is a need to handle errors differently,
- * you should supply a replacement error function and use png_set_error_fn()
+ * you should supply a replacement error function and use png_error_fn()
  * to replace the error function at run-time.
  */
 #ifdef PNG_ERROR_TEXT_SUPPORTED
@@ -210,7 +210,7 @@ png_format_number(png_const_charp start, png_charp end, int format,
 /* This function is called whenever there is a non-fatal error.  This function
  * should not be changed.  If there is a need to handle warnings differently,
  * you should supply a replacement warning function and use
- * png_set_error_fn() to replace the warning function at run-time.
+ * png_error_fn() to replace the warning function at run-time.
  */
 void PNGAPI
 png_warning(png_const_structrp png_ptr, png_const_charp warning_message)
@@ -705,7 +705,7 @@ png_free_jmpbuf(png_structrp png_ptr)
 /* This is the default error handling function.  Note that replacements for
  * this function MUST NOT RETURN, or the program will likely crash.  This
  * function is used by default, or if the program supplies NULL for the
- * error function pointer in png_set_error_fn().
+ * error function pointer in png_error_fn().
  */
 static PNG_FUNCTION(void /* PRIVATE */,
 png_default_error,(png_const_structrp png_ptr, png_const_charp error_message),
@@ -832,7 +832,7 @@ png_default_warning(png_const_structrp png_ptr, png_const_charp warning_message)
  * method used in the default routine calls longjmp(png_ptr->jmp_buf_ptr, 1)
  */
 void PNGAPI
-png_set_error_fn(png_structrp png_ptr, png_voidp error_ptr,
+png_error_fn(png_structrp png_ptr, png_voidp error_ptr,
     png_error_ptr error_fn, png_error_ptr warning_fn)
 {
    if (png_ptr == NULL)

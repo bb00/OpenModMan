@@ -296,7 +296,7 @@ png_create_png_struct,(png_const_charp user_png_ver, png_voidp error_ptr,
     * extremely sophisticated.  The design lacks merit but is implicit in the
     * API.
     */
-   png_set_error_fn(&create_struct, error_ptr, error_fn, warn_fn);
+   png_error_fn(&create_struct, error_ptr, error_fn, warn_fn);
 
 #  ifdef PNG_SETJMP_SUPPORTED
       if (!setjmp(create_jmp_buf))

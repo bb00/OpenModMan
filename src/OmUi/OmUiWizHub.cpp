@@ -18,13 +18,13 @@
 
 #include "OmBaseUi.h"
 
-#include "OmManager.h"
+#include "OmModMan.h"
 #include "OmModHub.h"
 
 #include "OmUiWizHubBeg.h"
 #include "OmUiWizHubCfg.h"
 #include "OmUiWizHubChn.h"
-#include "OmUiMgr.h"
+#include "OmUiMan.h"
 
 #include "OmUtilDlg.h"
 #include "OmUtilWin.h"
@@ -58,7 +58,7 @@ OmUiWizHub::~OmUiWizHub()
 ///
 long OmUiWizHub::id() const
 {
-  return IDD_WIZ_CTX;
+  return IDD_WIZ_HUB;
 }
 
 
@@ -70,10 +70,10 @@ bool OmUiWizHub::_onWizNext()
   switch(this->_currPage)
   {
   case 1: // Mod Hub parameters Wizard page
-    return static_cast<OmUiWizHubCfg*>(this->childById(IDD_WIZ_CTX_CFG))->hasValidParams();
+    return static_cast<OmUiWizHubCfg*>(this->childById(IDD_WIZ_HUB_CFG))->hasValidParams();
     break;
   case 2: // Mod Channel parameters Wizard page
-    return static_cast<OmUiWizHubChn*>(this->childById(IDD_WIZ_CTX_CHN))->hasValidParams();
+    return static_cast<OmUiWizHubChn*>(this->childById(IDD_WIZ_HUB_CHN))->hasValidParams();
     break;
   default:
     return true;
@@ -89,17 +89,16 @@ bool OmUiWizHub::_onWizNext()
 ///
 void OmUiWizHub::_onWizFinish()
 {
-  OmManager* pMgr = static_cast<OmManager*>(this->_data);
-  OmUiWizHubCfg* pUiWizCtxCfg = static_cast<OmUiWizHubCfg*>(this->childById(IDD_WIZ_CTX_CFG));
-  OmUiWizHubChn* pUiWizLocCfg = static_cast<OmUiWizHubChn*>(this->childById(IDD_WIZ_CTX_CHN));
+  OmUiWizHubCfg* pUiWizCtxCfg = static_cast<OmUiWizHubCfg*>(this->childById(IDD_WIZ_HUB_CFG));
+  OmUiWizHubChn* pUiWizLocCfg = static_cast<OmUiWizHubChn*>(this->childById(IDD_WIZ_HUB_CHN));
 
   // Retrieve Mod Hub parameters
-  wstring ctx_name, ctx_home;
-  pUiWizCtxCfg->getItemText(IDC_EC_INP01, ctx_name);
-  pUiWizCtxCfg->getItemText(IDC_EC_INP02, ctx_home);
+  OmWString hub_name, hub_path;
+  pUiWizCtxCfg->getItemText(IDC_EC_INP01, hub_name);
+  pUiWizCtxCfg->getItemText(IDC_EC_INP02, hub_path);
 
   // Retrieve Mod Channel parameters
-  wstring chn_name, chn_dst, chn_lib, chn_bck;
+  OmWString chn_name, chn_dst, chn_lib, chn_bck;
   pUiWizLocCfg->getItemText(IDC_EC_INP01, chn_name);
   pUiWizLocCfg->getItemText(IDC_EC_INP02, chn_dst);
 
@@ -113,22 +112,30 @@ void OmUiWizHub::_onWizFinish()
 
   this->quit();
 
+  OmModMan* ModMan = static_cast<OmModMan*>(this->_data);
+
   // create the new Mod Hub, if an error occur, error message
-  if(pMgr->modHubCreate(ctx_name, ctx_home, true)) {
+  if(ModMan->createHub(hub_path, hub_name, true)) {
+
     // get current selected Mod Hub (the just created one)
-    OmModHub* pModHub = pMgr->modHubCur();
+    OmModHub* ModHub = ModMan->activeHub();
+
     // create new Mod Channel in Mod Hub
-    if(!pModHub->modChanCreate(chn_name, chn_dst, chn_lib, chn_bck)) {
+    if(!ModHub->createChannel(chn_name, chn_dst, chn_lib, chn_bck)) {
+
       Om_dlgBox_okl(this->_hwnd, L"Mod Hub Wizard", IDI_ERR,
                     L"Mod Channel creation error", L"Mod Channel "
                     "creation failed because of the following error:",
-                    pModHub->lastError());
+                    ModHub->lastError());
     }
+
   } else {
+
     Om_dlgBox_okl(this->_hwnd, L"Mod Hub Wizard", IDI_ERR,
                   L"Mod Hub creation error", L"Mod Hub "
                   "creation failed because of the following error:",
-                  pMgr->lastError());
+                  ModMan->lastError());
+
   }
 
   // force parent dialog to refresh

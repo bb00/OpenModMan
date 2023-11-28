@@ -18,6 +18,7 @@
 #define OMUIADDREP_H
 
 #include "OmDialog.h"
+#include "OmConnect.h"
 
 class OmModChan;
 
@@ -57,8 +58,8 @@ class OmUiAddRep : public OmDialog
     ///
     /// \return Associated Mod Channel or nullptr if none.
     ///
-    OmModChan* modChan() const {
-      return _modChan;
+    OmModChan* ModChan() const {
+      return this->_ModChan;
     }
 
     /// \brief Set associated Mod Channel.
@@ -67,21 +68,25 @@ class OmUiAddRep : public OmDialog
     /// work with and on. A valid Mod Channel must be set in order before
     /// opening the dialog.
     ///
-    /// \param[in]  pModChan  : Mod Channel object to associate.
+    /// \param[in]  ModChan  : Mod Channel object to associate.
     ///
-    void setModChan(OmModChan* pModChan) {
-      _modChan = pModChan;
+    void setModChan(OmModChan* ModChan) {
+      this->_ModChan = ModChan;
     }
 
   protected:
 
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmModChan*          _modChan;
+    OmModChan*          _ModChan;
 
-    int                 _testResult;
+    OmConnect           _connect;
 
-    void                _testLog(const wstring& log);
+    OmResult            _qry_result;
+
+    void                _qry_addlog(const OmWString& log);
+
+    static void         _qry_reponse_fn(void* ptr, uint8_t* buf, uint64_t len, uint64_t code);
 
     void                _onBcChk();
 

@@ -17,16 +17,16 @@
 #ifndef OMUIPROPCHNNET_H
 #define OMUIPROPCHNNET_H
 
-#include <OmDialog.h>
+#include <OmDialogPropTab.h>
 
 #define CHN_PROP_NET_ONUPGRADE   0
 #define CHN_PROP_NET_WARNINGS    1
 
-/// \brief Mod Channel Properties / Network tab child
+/// \brief Mod Channel Properties: "Mods Repositories" tab
 ///
-/// OmDialog class derived for Mod Channel Properties / Network tab child dialog window
+/// OmDialogPropTab class derived for "Mods Repositories" tab child dialog window
 ///
-class OmUiPropChnNet : public OmDialog
+class OmUiPropChnNet : public OmDialogPropTab
 {
   public: ///         - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -51,38 +51,17 @@ class OmUiPropChnNet : public OmDialog
     ///
     long id() const;
 
-    /// \brief Check changed parameter
-    ///
-    /// Checks whether the specified dialog related parameter has been
-    /// marked as changed, meaning it was modified by user.
-    ///
-    /// \param[in]  i   : Dialog related parameter to check
-    ///
-    /// \return True if the specified parameter is marked as changed,
-    ///         false otherwise
-    ///
-    bool hasChParam(unsigned i) const {
-      return _chParam[i];
-    }
-
-    /// \brief Set changed parameter
-    ///
-    /// Marks the specified dialog related parameter as changed or unchanged.
-    ///
-    /// \param[in]  i   : Dialog related parameter to mark
-    /// \param[in]  en  : Boolean value to enable or disable
-    ///
-    void setChParam(unsigned i, bool en);
-
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    bool                _chParam[8];
+    void                _query_start(size_t i);
+
+    static void         _query_result_fn(void*, OmResult, uint64_t);
 
     void                _onLbReplsSel();
 
     void                _onBcAddRepo();
 
-    void                _onBcChkRepo();
+    void                _onBcQryRepo();
 
     void                _onBcDelRepo();
 
@@ -90,13 +69,13 @@ class OmUiPropChnNet : public OmDialog
 
     void                _onCkBoxWrn();
 
-    void                _onInit();
+    void                _onTabInit();
 
-    void                _onResize();
+    void                _onTabResize();
 
-    void                _onRefresh();
+    void                _onTabRefresh();
 
-    INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    INT_PTR             _onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 #endif // OMUIPROPCHNNET_H

@@ -17,8 +17,9 @@
 #include "OmBase.h"
 
 #include "OmBaseUi.h"
+#include "OmBaseApp.h"
 
-#include "OmManager.h"
+#include "OmModMan.h"
 
 #include "OmUiWizHub.h"
 
@@ -52,7 +53,7 @@ OmUiWizHubChn::~OmUiWizHubChn()
 ///
 long OmUiWizHubChn::id() const
 {
-  return IDD_WIZ_CTX_CHN;
+  return IDD_WIZ_HUB_CHN;
 }
 
 
@@ -61,7 +62,7 @@ long OmUiWizHubChn::id() const
 ///
 bool OmUiWizHubChn::hasValidParams() const
 {
-  wstring item_str, msg;
+  OmWString item_str, msg;
 
   this->getItemText(IDC_EC_INP01, item_str);
   if(!Om_dlgValidName(this->_hwnd, L"Mod Channel name", item_str))
@@ -99,7 +100,7 @@ bool OmUiWizHubChn::hasValidParams() const
 ///
 void OmUiWizHubChn::_onTitleChange()
 {
-  wstring title;
+  OmWString title;
 
   this->getItemText(IDC_EC_INP01, title);
 
@@ -107,10 +108,10 @@ void OmUiWizHubChn::_onTitleChange()
     title = L"<invalid path>";
 
   if(!this->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
-    this->setItemText(IDC_EC_INP03, title + L"\\Library");
+    this->setItemText(IDC_EC_INP03, title + OM_MODCHAN_MODLIB_DIR);
   }
   if(!this->msgItem(IDC_BC_CKBX2, BM_GETCHECK)) {
-    this->setItemText(IDC_EC_INP04, title + L"\\Backup");
+    this->setItemText(IDC_EC_INP04, title + OM_MODCHAN_BACKUP_DIR);
   }
 }
 
@@ -119,7 +120,7 @@ void OmUiWizHubChn::_onTitleChange()
 ///
 void OmUiWizHubChn::_onBcBrwDst()
 {
-  wstring start, result;
+  OmWString start, result;
 
   this->getItemText(IDC_EC_INP02, start);
 
@@ -134,7 +135,7 @@ void OmUiWizHubChn::_onBcBrwDst()
 ///
 void OmUiWizHubChn::_onCkBoxLib()
 {
-  wstring title;
+  OmWString title;
 
   int bm_chk = this->msgItem(IDC_BC_CKBX1, BM_GETCHECK);
 
@@ -148,7 +149,7 @@ void OmUiWizHubChn::_onCkBoxLib()
     }
   }
 
-  this->setItemText(IDC_EC_INP03, title + L"\\Library");
+  this->setItemText(IDC_EC_INP03, title + OM_MODCHAN_MODLIB_DIR);
 }
 
 ///
@@ -156,7 +157,7 @@ void OmUiWizHubChn::_onCkBoxLib()
 ///
 void OmUiWizHubChn::_onBcBrwLib()
 {
-  wstring start, result;
+  OmWString start, result;
 
   this->getItemText(IDC_EC_INP03, start);
 
@@ -171,7 +172,7 @@ void OmUiWizHubChn::_onBcBrwLib()
 ///
 void OmUiWizHubChn::_onCkBoxBck()
 {
-  wstring title;
+  OmWString title;
 
   int bm_chk = this->msgItem(IDC_BC_CKBX2, BM_GETCHECK);
 
@@ -185,7 +186,7 @@ void OmUiWizHubChn::_onCkBoxBck()
     }
   }
 
-  this->setItemText(IDC_EC_INP04, title + L"\\Backup");
+  this->setItemText(IDC_EC_INP04, title + OM_MODCHAN_BACKUP_DIR);
 }
 
 ///
@@ -193,7 +194,7 @@ void OmUiWizHubChn::_onCkBoxBck()
 ///
 void OmUiWizHubChn::_onBcBrwBck()
 {
-  wstring start, result;
+  OmWString start, result;
 
   this->getItemText(IDC_EC_INP04, start);
 
@@ -238,7 +239,7 @@ void OmUiWizHubChn::_onInit()
 ///
 void OmUiWizHubChn::_onShow()
 {
-  wstring item_str;
+  OmWString item_str;
 
   // enable or disable "next" button according values
   bool allow = true;
@@ -365,7 +366,7 @@ INT_PTR OmUiWizHubChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     if(has_changed) {
       bool allow = true;
 
-      wstring item_str;
+      OmWString item_str;
 
       this->getItemText(IDC_EC_INP01, item_str);
       if(!item_str.empty()) {

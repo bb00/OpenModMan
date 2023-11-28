@@ -57,7 +57,7 @@ class OmUiAddChn : public OmDialog
     ///
     /// \return Associated Mod Hub or nullptr if none.
     ///
-    OmModHub* modHubCur() const {
+    OmModHub* activeHub() const {
       return _modHub;
     }
 

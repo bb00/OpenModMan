@@ -18,9 +18,11 @@
 
 #include "OmBaseUi.h"
 
-#include "OmManager.h"
+#include "OmModMan.h"
 
-#include "OmUiMgr.h"
+#include "OmArchive.h"          //< Archive compression methods / level
+
+#include "OmUiMan.h"
 #include "OmUiAddRep.h"
 #include "OmUiPropChnStg.h"
 #include "OmUiPropChnLib.h"
@@ -30,7 +32,7 @@
 
 #include "OmUtilFs.h"
 #include "OmUtilDlg.h"
-#include "OmUtilWin.h"
+#include "OmUtilStr.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #include "OmUiPropChn.h"
@@ -48,15 +50,13 @@
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 OmUiPropChn::OmUiPropChn(HINSTANCE hins) : OmDialogProp(hins),
-  _modChan(nullptr),
-  _movBck_hth(nullptr),
-  _movBck_dest()
+  _ModChan(nullptr)
 {
   // create tab dialogs
-  this->_addPage(L"Settings", new OmUiPropChnStg(hins));
-  this->_addPage(L"Library", new OmUiPropChnLib(hins));
-  this->_addPage(L"Backup", new OmUiPropChnBck(hins));
-  this->_addPage(L"Repositories", new OmUiPropChnNet(hins));
+  this->_addPage(L"General Settings", new OmUiPropChnStg(hins));
+  this->_addPage(L"Mod Library", new OmUiPropChnLib(hins));
+  this->_addPage(L"Data Backup", new OmUiPropChnBck(hins));
+  this->_addPage(L"Mod Repositories", new OmUiPropChnNet(hins));
 
   // creates child sub-dialogs
   this->addChild(new OmUiAddRep(hins));     //< Dialog for new Repository
@@ -87,87 +87,162 @@ long OmUiPropChn::id()  const
 ///
 bool OmUiPropChn::checkChanges()
 {
+  if(!this->_ModChan)
+    return false;
+
+  bool different, changed = false;
+
+  OmWString item_str;
+
+  // General Settings Tab
   OmUiPropChnStg* pUiPropLocStg  = static_cast<OmUiPropChnStg*>(this->childById(IDD_PROP_CHN_STG));
+
+  if(pUiPropLocStg->paramChanged(CHN_PROP_STG_TITLE)) { //< parameter for Mod Channel title
+    pUiPropLocStg->getItemText(IDC_EC_INP01, item_str);
+    if(this->_ModChan->title() != item_str) {
+      changed = true;
+    } else {
+      pUiPropLocStg->paramReset(CHN_PROP_STG_TITLE);
+    }
+  }
+
+  if(pUiPropLocStg->paramChanged(CHN_PROP_STG_TARGET)) { //< parameter for Target path
+    pUiPropLocStg->getItemText(IDC_EC_INP02, item_str);
+    if(!Om_namesMatches(this->_ModChan->targetPath(),item_str)) {
+      changed = true;
+    } else {
+      pUiPropLocStg->paramReset(CHN_PROP_STG_TARGET);
+    }
+  }
+
+  // Mods Library Tab
   OmUiPropChnLib* pUiPropLocLib  = static_cast<OmUiPropChnLib*>(this->childById(IDD_PROP_CHN_LIB));
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_CUSTDIR)) { //< parameter for Library path
+    different = false;
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
+      pUiPropLocLib->getItemText(IDC_EC_INP01, item_str);
+      if(!Om_namesMatches(this->_ModChan->libraryPath(), item_str) || !this->_ModChan->hasCustomLibraryDir())
+        different = true;
+    } else {
+      if(this->_ModChan->hasCustomLibraryDir()) different = true;
+    }
+    if(different) {
+      changed = true;
+    } else {
+      pUiPropLocLib->paramReset(CHN_PROP_LIB_CUSTDIR);
+    }
+  }
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_DEVMODE)) {
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX2, BM_GETCHECK) != this->_ModChan->libraryDevmod()) {
+      changed = true;
+    } else {
+      pUiPropLocLib->paramReset(CHN_PROP_LIB_DEVMODE);
+    }
+  }
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_WARNINGS)) {
+
+    different = false;
+
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX3, BM_GETCHECK) != this->_ModChan->warnOverlaps())
+      different = true;
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX4, BM_GETCHECK) != this->_ModChan->warnExtraInst())
+      different = true;
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX5, BM_GETCHECK) != this->_ModChan->warnMissDeps())
+      different = true;
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX6, BM_GETCHECK) != this->_ModChan->warnExtraUnin())
+      different = true;
+
+    if(different) {
+      changed = true;
+    } else {
+      pUiPropLocLib->paramReset(CHN_PROP_LIB_WARNINGS);
+    }
+  }
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_SHOWHIDDEN)) {
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX7, BM_GETCHECK) != this->_ModChan->libraryShowhidden()) {
+      changed = true;
+    } else {
+      pUiPropLocLib->paramReset(CHN_PROP_LIB_SHOWHIDDEN);
+    }
+  }
+
+  // Data backup Tab
   OmUiPropChnBck* pUiPropLocBck  = static_cast<OmUiPropChnBck*>(this->childById(IDD_PROP_CHN_BCK));
+
+  if(pUiPropLocBck->paramChanged(CHN_PROP_BCK_CUSTDIR)) { //< parameter for Backup path
+
+    different = false;
+
+    if(pUiPropLocBck->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
+      pUiPropLocBck->getItemText(IDC_EC_INP01, item_str);
+      if(!Om_namesMatches(this->_ModChan->backupPath(), item_str) || !this->_ModChan->hasCustomBackupDir())
+        different = true;
+    } else {
+      if(this->_ModChan->hasCustomBackupDir()) different = true;
+    }
+
+    if(different) {
+      changed = true;
+    } else {
+      pUiPropLocBck->paramReset(CHN_PROP_LIB_CUSTDIR);
+    }
+  }
+
+  if(pUiPropLocBck->paramChanged(CHN_PROP_BCK_COMP_LEVEL)) { //< parameter for Backup compression level
+
+    different = false;
+
+    if(pUiPropLocBck->msgItem(IDC_BC_CKBX2, BM_GETCHECK)) {
+
+      if(this->_ModChan->backupCompMethod() != pUiPropLocBck->msgItem(IDC_CB_ZMD, CB_GETCURSEL))
+        different = true;
+
+      if(this->_ModChan->backupCompLevel() != pUiPropLocBck->msgItem(IDC_CB_ZLV, CB_GETCURSEL))
+        different = true;
+
+    } else {
+      if(this->_ModChan->backupCompMethod() != -1) different = true;
+    }
+
+    if(different) {
+      changed = true;
+    } else {
+      pUiPropLocBck->paramReset(CHN_PROP_BCK_COMP_LEVEL);
+    }
+
+  }
+
+  // Mods Repositories Tab
   OmUiPropChnNet* pUiPropLocNet  = static_cast<OmUiPropChnNet*>(this->childById(IDD_PROP_CHN_NET));
 
-  bool changed = false;
+  if(pUiPropLocNet->paramChanged(CHN_PROP_NET_WARNINGS)) {
 
-  wstring item_str;
+     different = false;
 
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_TITLE)) { //< parameter for Mod Channel title
-    pUiPropLocStg->getItemText(IDC_EC_INP01, item_str);
-    if(this->_modChan->title() != item_str) changed = true;
-  }
+    if(pUiPropLocNet->msgItem(IDC_BC_CKBX1, BM_GETCHECK) != this->_ModChan->warnExtraDnld())
+      different = true;
+    if(pUiPropLocNet->msgItem(IDC_BC_CKBX2, BM_GETCHECK) != this->_ModChan->warnMissDnld())
+      different = true;
+    if(pUiPropLocNet->msgItem(IDC_BC_CKBX3, BM_GETCHECK) != this->_ModChan->warnUpgdBrkDeps())
+      different = true;
 
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_INSTALL)) { //< parameter for Target path
-    pUiPropLocStg->getItemText(IDC_EC_INP02, item_str);
-    if(this->_modChan->dstDir() != item_str) changed = true;
-  }
-
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_LIBRARY)) { //< parameter for Library path
-    if(pUiPropLocStg->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
-      pUiPropLocStg->getItemText(IDC_EC_INP03, item_str);
-      if(this->_modChan->libDir() != item_str || !this->_modChan->hasCustLibDir())
-        changed = true;
+    if(different) {
+      changed = true;
     } else {
-      if(this->_modChan->hasCustLibDir()) changed = true;
+      pUiPropLocNet->paramReset(CHN_PROP_NET_WARNINGS);
     }
   }
 
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_BACKUP)) { //< parameter for Backup path
-    if(pUiPropLocStg->msgItem(IDC_BC_CKBX2, BM_GETCHECK)) {
-      pUiPropLocStg->getItemText(IDC_EC_INP04, item_str);
-      if(this->_modChan->bckDir() != item_str || !this->_modChan->hasCustBckDir())
-        changed = true;
+  if(pUiPropLocNet->paramChanged(CHN_PROP_NET_ONUPGRADE)) {
+    if(pUiPropLocNet->msgItem(IDC_BC_RAD02, BM_GETCHECK) != this->_ModChan->upgdRename()) {
+      changed = true;
     } else {
-      if(this->_modChan->hasCustBckDir()) changed = true;
+      pUiPropLocNet->paramReset(CHN_PROP_NET_ONUPGRADE);
     }
-  }
-
-  if(pUiPropLocBck->hasChParam(CHN_PROP_BCK_COMP_LEVEL)) { //< parameter for Backup compression level
-    if(pUiPropLocBck->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
-      int cb_sel = pUiPropLocBck->msgItem(IDC_CB_LVL, CB_GETCURSEL);
-      if(this->_modChan->bckZipLevel() != cb_sel) changed = true;
-    } else {
-      if(this->_modChan->bckZipLevel() != -1) changed = true;
-    }
-  }
-
-  if(pUiPropLocLib->hasChParam(CHN_PROP_LIB_DEVMODE)) {
-    if(pUiPropLocLib->msgItem(IDC_BC_CKBX1, BM_GETCHECK) != this->_modChan->libDevMode())
-      changed = true;
-  }
-
-  if(pUiPropLocLib->hasChParam(CHN_PROP_LIB_WARNINGS)) {
-    if(pUiPropLocLib->msgItem(IDC_BC_CKBX2, BM_GETCHECK) != this->_modChan->warnOverlaps())
-      changed = true;
-    if(pUiPropLocLib->msgItem(IDC_BC_CKBX3, BM_GETCHECK) != this->_modChan->warnExtraInst())
-      changed = true;
-    if(pUiPropLocLib->msgItem(IDC_BC_CKBX4, BM_GETCHECK) != this->_modChan->warnMissDeps())
-      changed = true;
-    if(pUiPropLocLib->msgItem(IDC_BC_CKBX5, BM_GETCHECK) != this->_modChan->warnExtraUnin())
-      changed = true;
-  }
-
-  if(pUiPropLocLib->hasChParam(CHN_PROP_LIB_SHOWHIDDEN)) {
-    if(pUiPropLocLib->msgItem(IDC_BC_CKBX6, BM_GETCHECK) != this->_modChan->libShowHidden())
-      changed = true;
-  }
-
-  if(pUiPropLocNet->hasChParam(CHN_PROP_NET_WARNINGS)) {
-    if(pUiPropLocNet->msgItem(IDC_BC_CKBX1, BM_GETCHECK) != this->_modChan->warnExtraDnld())
-      changed = true;
-    if(pUiPropLocNet->msgItem(IDC_BC_CKBX2, BM_GETCHECK) != this->_modChan->warnMissDnld())
-      changed = true;
-    if(pUiPropLocNet->msgItem(IDC_BC_CKBX3, BM_GETCHECK) != this->_modChan->warnUpgdBrkDeps())
-      changed = true;
-  }
-
-  if(pUiPropLocNet->hasChParam(CHN_PROP_NET_ONUPGRADE)) {
-    if(pUiPropLocNet->msgItem(IDC_BC_RAD02, BM_GETCHECK) != this->_modChan->upgdRename())
-      changed = true;
   }
 
   // enable Apply button
@@ -180,187 +255,73 @@ bool OmUiPropChn::checkChanges()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-bool OmUiPropChn::applyChanges()
+bool OmUiPropChn::validChanges()
 {
-  OmUiPropChnBck* pUiPropLocBck  = static_cast<OmUiPropChnBck*>(this->childById(IDD_PROP_CHN_BCK));
-  OmUiPropChnLib* pUiPropLocLib  = static_cast<OmUiPropChnLib*>(this->childById(IDD_PROP_CHN_LIB));
+  if(!this->_ModChan)
+    return true;
+
+  OmWString inp_str;
+
+  // General Settings Tab
   OmUiPropChnStg* pUiPropLocStg  = static_cast<OmUiPropChnStg*>(this->childById(IDD_PROP_CHN_STG));
-  OmUiPropChnNet* pUiPropLocNet  = static_cast<OmUiPropChnNet*>(this->childById(IDD_PROP_CHN_NET));
 
-  wstring chn_name, chn_dst, chn_lib, chn_bck;
+  if(pUiPropLocStg->paramChanged(CHN_PROP_STG_TITLE)) { //< parameter for Channel name
 
-  bool cust_lib = false;
-  bool cust_bck = false;
+    pUiPropLocStg->getItemText(IDC_EC_INP01, inp_str);
 
-  // Step 1, verify everything
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_TITLE)) { //< parameter for Channel name
-    pUiPropLocStg->getItemText(IDC_EC_INP01, chn_name);
-    if(!Om_dlgValidName(this->_hwnd, L"Channel name", chn_name))
+    if(!Om_dlgValidName(this->_hwnd, L"Channel name", inp_str))
       return false;
   }
 
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_INSTALL)) { //< parameter for Target path
-    pUiPropLocStg->getItemText(IDC_EC_INP02, chn_dst);
-    if(!Om_dlgValidDir(this->_hwnd, L"Target path", chn_dst))
+  if(pUiPropLocStg->paramChanged(CHN_PROP_STG_TARGET)) { //< parameter for Target path
+
+    pUiPropLocStg->getItemText(IDC_EC_INP02, inp_str);
+
+    if(!Om_dlgValidDir(this->_hwnd, L"Target path", inp_str))
       return false;
   }
 
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_LIBRARY)) { //< parameter for Library path
-    cust_lib = pUiPropLocStg->msgItem(IDC_BC_CKBX1, BM_GETCHECK);
-    if(cust_lib) { //< Custom Library folder Check-Box checked
-      pUiPropLocStg->getItemText(IDC_EC_INP03, chn_lib);
-      if(Om_dlgValidPath(this->_hwnd, L"Library folder path", chn_lib)) {
-        if(!Om_dlgCreateFolder(this->_hwnd, L"Custom Library folder", chn_lib))
+  // Mods Library Tab
+  OmUiPropChnLib* pUiPropLocLib  = static_cast<OmUiPropChnLib*>(this->childById(IDD_PROP_CHN_LIB));
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_CUSTDIR)) { //< parameter for Library path
+
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) { //< Custom Library folder Check-Box checked
+
+      pUiPropLocLib->getItemText(IDC_EC_INP01, inp_str);
+
+      if(Om_dlgValidPath(this->_hwnd, L"Library folder path", inp_str)) {
+
+        if(!Om_dlgCreateFolder(this->_hwnd, L"Custom Library folder", inp_str))
           return false;
+
       } else {
+
         return false;
       }
     }
   }
 
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_BACKUP)) { //< parameter for Backup path
-    cust_bck = pUiPropLocStg->msgItem(IDC_BC_CKBX2, BM_GETCHECK);
-    if(cust_bck) { //< Custom Backup folder Check-Box checked
-      pUiPropLocStg->getItemText(IDC_EC_INP04, chn_bck);
-      if(Om_dlgValidPath(this->_hwnd, L"Backup folder path", chn_bck)) {
-        if(!Om_dlgCreateFolder(this->_hwnd, L"Custom Backup folder", chn_bck))
+  // Data backup Tab
+  OmUiPropChnBck* pUiPropLocBck  = static_cast<OmUiPropChnBck*>(this->childById(IDD_PROP_CHN_BCK));
+
+  if(pUiPropLocBck->paramChanged(CHN_PROP_BCK_CUSTDIR)) { //< parameter for Backup path
+
+    if(pUiPropLocBck->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) { //< Custom Backup folder Check-Box checked
+
+      pUiPropLocBck->getItemText(IDC_EC_INP01, inp_str);
+
+      if(Om_dlgValidPath(this->_hwnd, L"Backup folder path", inp_str)) {
+
+        if(!Om_dlgCreateFolder(this->_hwnd, L"Custom Backup folder", inp_str))
           return false;
+
       } else {
+
         return false;
       }
     }
   }
-
-  // Step 2, save changes
-  if(pUiPropLocLib->hasChParam(CHN_PROP_LIB_DEVMODE)) {
-
-    this->_modChan->setLibDevMode(pUiPropLocLib->msgItem(IDC_BC_CKBX1, BM_GETCHECK));
-
-    // Reset parameter as unmodified
-    pUiPropLocLib->setChParam(CHN_PROP_LIB_DEVMODE, false);
-  }
-
-  if(pUiPropLocLib->hasChParam(CHN_PROP_LIB_WARNINGS)) {
-
-    this->_modChan->setWarnOverlaps(pUiPropLocLib->msgItem(IDC_BC_CKBX2, BM_GETCHECK));
-    this->_modChan->setWarnExtraInst(pUiPropLocLib->msgItem(IDC_BC_CKBX3, BM_GETCHECK));
-    this->_modChan->setWarnMissDeps(pUiPropLocLib->msgItem(IDC_BC_CKBX4, BM_GETCHECK));
-    this->_modChan->setWarnExtraUnin(pUiPropLocLib->msgItem(IDC_BC_CKBX5, BM_GETCHECK));
-
-    // Reset parameter as unmodified
-    pUiPropLocLib->setChParam(CHN_PROP_LIB_WARNINGS, false);
-  }
-
-  if(pUiPropLocLib->hasChParam(CHN_PROP_LIB_SHOWHIDDEN)) {
-
-    this->_modChan->setLibShowHidden(pUiPropLocLib->msgItem(IDC_BC_CKBX6, BM_GETCHECK));
-
-    // Reset parameter as unmodified
-    pUiPropLocLib->setChParam(CHN_PROP_LIB_SHOWHIDDEN, false);
-  }
-
-  if(pUiPropLocNet->hasChParam(CHN_PROP_NET_WARNINGS)) {
-
-    this->_modChan->setWarnExtraDnld(pUiPropLocNet->msgItem(IDC_BC_CKBX1, BM_GETCHECK));
-    this->_modChan->setWarnMissDnld(pUiPropLocNet->msgItem(IDC_BC_CKBX2, BM_GETCHECK));
-    this->_modChan->setWarnUpgdBrkDeps(pUiPropLocNet->msgItem(IDC_BC_CKBX3, BM_GETCHECK));
-
-    // Reset parameter as unmodified
-    pUiPropLocNet->setChParam(CHN_PROP_NET_WARNINGS, false);
-  }
-
-
-  if(pUiPropLocNet->hasChParam(CHN_PROP_NET_ONUPGRADE)) {
-
-    this->_modChan->setUpgdRename(pUiPropLocNet->msgItem(IDC_BC_RAD02, BM_GETCHECK));
-
-    // Reset parameter as unmodified
-    pUiPropLocNet->setChParam(CHN_PROP_NET_ONUPGRADE, false);
-  }
-
-  if(pUiPropLocBck->hasChParam(CHN_PROP_BCK_COMP_LEVEL)) { //< parameter for Backup compression level
-    if(pUiPropLocBck->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
-      int cb_sel = pUiPropLocBck->msgItem(IDC_CB_LVL, CB_GETCURSEL);
-      if(cb_sel >= 0) this->_modChan->setBckZipLevel(cb_sel);
-    } else {
-      // disable zipped backups
-      this->_modChan->setBckZipLevel(-1);
-    }
-
-    // Reset parameter as unmodified
-    pUiPropLocBck->setChParam(CHN_PROP_BCK_COMP_LEVEL, false);
-  }
-
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_INSTALL)) { //< parameter for Mod Channel Install path
-    this->_modChan->setDstDir(chn_dst);
-
-    // Reset parameter as unmodified
-    pUiPropLocStg->setChParam(CHN_PROP_STG_INSTALL, false);
-  }
-
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_LIBRARY)) { //< parameter for Mod Channel Library path
-    if(cust_lib) {
-      this->_modChan->setCustLibDir(chn_lib);
-    } else {
-      this->_modChan->remCustLibDir();
-    }
-    // Reset parameter as unmodified
-    pUiPropLocStg->setChParam(CHN_PROP_STG_LIBRARY, false);
-  }
-
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_BACKUP)) { //< parameter for Mod Channel Backup path
-
-    // check whether we need to transfer backup data, if yes we
-    // launch the process via a new thread with progress dialog window. The
-    // Mod Channel backup setting will be properly modified withing the
-    // dedicates thread
-    if(this->_modChan->bckDir() != chn_bck) {
-
-      // start move backup thread
-      this->_movBck_init(chn_bck);
-
-      // if backup transfer thread is running, we do not quit since it will
-      // end the process before it ends. We will wait for the UWM_MOVEBACKUP_DONE
-      // message sent from the thread, then quit this dialog safely at this
-      // moment
-      return false;
-
-    } else {
-      // uncheck the unnecessary "custom" flag
-      if(!cust_bck && this->_modChan->hasCustBckDir())
-        this->_modChan->remCustBckDir();
-
-      // Reset parameter as unmodified
-      pUiPropLocStg->setChParam(CHN_PROP_STG_BACKUP, false);
-    }
-  }
-
-  if(pUiPropLocStg->hasChParam(CHN_PROP_STG_TITLE)) { //< parameter for Mod Channel title
-
-    this->_modChan->setTitle(chn_name);
-
-    // To prevent crash during operation we unselect location in the main dialog
-    static_cast<OmUiMgr*>(this->root())->safemode(true);
-
-    if(!this->_modChan->renameHome(chn_name)) {
-      Om_dlgBox_okl(this->_hwnd, L"Channel properties", IDI_WRN,
-                   L"Channel files rename error", L"Channel "
-                   "title changed but folder and definition file rename "
-                   "failed because of the following error:", this->_modChan->lastError());
-    }
-
-    // Back to main dialog window to normal state
-    static_cast<OmUiMgr*>(this->root())->safemode(false);
-
-    // Reset parameter as unmodified
-    pUiPropLocStg->setChParam(CHN_PROP_STG_TITLE, false);
-  }
-
-  // disable Apply button
-  this->enableItem(IDC_BC_APPLY, false);
-
-  // refresh all dialogs from root (Main dialog)
-  this->root()->refresh();
 
   return true;
 }
@@ -369,137 +330,193 @@ bool OmUiPropChn::applyChanges()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChn::_movBck_init(const wstring& dest)
+bool OmUiPropChn::applyChanges()
 {
-  if(!this->_modChan) return;
+  if(!this->_ModChan)
+    return true;
 
-  // verify we have something to move
-  if(!Om_isDirEmpty(this->_modChan->bckDir())) {
-    this->_movBck_stop();
+  OmWString inp_str;
+
+  // General Settings Tab
+  OmUiPropChnStg* pUiPropLocStg  = static_cast<OmUiPropChnStg*>(this->childById(IDD_PROP_CHN_STG));
+
+  if(pUiPropLocStg->paramChanged(CHN_PROP_STG_TITLE)) { //< parameter for Mod Channel title
+
+    pUiPropLocStg->getItemText(IDC_EC_INP01, inp_str);
+
+    // To prevent crash during operation we unselect location in the main dialog
+    static_cast<OmUiMan*>(this->root())->safemode(true);
+
+    //TODO: a tester pour de vrai et voir à améliorer ce système de "safemode"
+
+    if(!this->_ModChan->rename(inp_str)) {
+      Om_dlgBox_okl(this->_hwnd, L"Mod Channel properties", IDI_WRN,
+                   L"Mod Channel files rename error", L"Mod Channel "
+                   "title changed but folder and definition file rename "
+                   "failed because of the following error:", this->_ModChan->lastError());
+    }
+
+    // Back to main dialog window to normal state
+    static_cast<OmUiMan*>(this->root())->safemode(false);
+
+    // Reset parameter as unmodified
+    pUiPropLocStg->paramReset(CHN_PROP_STG_TITLE);
   }
 
-  // keep destination path
-  this->_movBck_dest = dest;
+  if(pUiPropLocStg->paramChanged(CHN_PROP_STG_TARGET)) { //< parameter for Mod Channel Install path
 
-  // To prevent crash during operation we unselect location in the main dialog
-  static_cast<OmUiMgr*>(this->root())->safemode(true);
+    pUiPropLocStg->getItemText(IDC_EC_INP02, inp_str);
 
-  OmUiProgress* pUiProgress = static_cast<OmUiProgress*>(this->childById(IDD_PROGRESS));
-  pUiProgress->open(true);
-  pUiProgress->setCaption(L"Change backup folder");
-  pUiProgress->setScHeadText(L"Transferring backup data");
+    this->_ModChan->setDstDir(inp_str);
 
-  DWORD dwid;
-  this->_movBck_hth = CreateThread(nullptr, 0, this->_movBck_fth, this, 0, &dwid);
+    // Reset parameter as unmodified
+    pUiPropLocStg->paramReset(CHN_PROP_STG_TARGET);
+  }
+
+  // Mod Library Tab
+  OmUiPropChnLib* pUiPropLocLib  = static_cast<OmUiPropChnLib*>(this->childById(IDD_PROP_CHN_LIB));
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_CUSTDIR)) { //< parameter for Mod Channel Library path
+
+    if(pUiPropLocLib->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
+
+      pUiPropLocLib->getItemText(IDC_EC_INP01, inp_str);
+
+      this->_ModChan->setCustomLibraryDir(inp_str);
+
+    } else {
+
+      this->_ModChan->setDefaultLibraryDir();
+    }
+
+    // Reset parameter as unmodified
+    pUiPropLocLib->paramReset(CHN_PROP_LIB_CUSTDIR);
+  }
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_DEVMODE)) {
+
+    this->_ModChan->setLibraryDevmod(pUiPropLocLib->msgItem(IDC_BC_CKBX2, BM_GETCHECK));
+
+    // Reset parameter as unmodified
+    pUiPropLocLib->paramReset(CHN_PROP_LIB_DEVMODE);
+  }
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_WARNINGS)) {
+
+    this->_ModChan->setWarnOverlaps(pUiPropLocLib->msgItem(IDC_BC_CKBX3, BM_GETCHECK));
+    this->_ModChan->setWarnExtraInst(pUiPropLocLib->msgItem(IDC_BC_CKBX4, BM_GETCHECK));
+    this->_ModChan->setWarnMissDeps(pUiPropLocLib->msgItem(IDC_BC_CKBX5, BM_GETCHECK));
+    this->_ModChan->setWarnExtraUnin(pUiPropLocLib->msgItem(IDC_BC_CKBX6, BM_GETCHECK));
+
+    // Reset parameter as unmodified
+    pUiPropLocLib->paramReset(CHN_PROP_LIB_WARNINGS);
+  }
+
+  if(pUiPropLocLib->paramChanged(CHN_PROP_LIB_SHOWHIDDEN)) {
+
+    this->_ModChan->setLibraryShowhidden(pUiPropLocLib->msgItem(IDC_BC_CKBX7, BM_GETCHECK));
+
+    // Reset parameter as unmodified
+    pUiPropLocLib->paramReset(CHN_PROP_LIB_SHOWHIDDEN);
+  }
+
+  // Data Backup Tab
+  OmUiPropChnBck* pUiPropLocBck  = static_cast<OmUiPropChnBck*>(this->childById(IDD_PROP_CHN_BCK));
+
+  if(pUiPropLocBck->paramChanged(CHN_PROP_BCK_CUSTDIR)) { //< parameter for Mod Channel Library path
+
+    bool has_error = false;
+
+    if(pUiPropLocBck->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
+
+      pUiPropLocBck->getItemText(IDC_EC_INP01, inp_str);
+
+      if(!this->_ModChan->setCustomBackupDir(inp_str))
+        has_error = true;
+
+    } else {
+
+      if(!this->_ModChan->setDefaultBackupDir())
+        has_error = true;
+    }
+
+    if(has_error) {
+      // an error occurred during backup purge
+      Om_dlgBox_ok(this->_hwnd, L"Mod Channel properties", IDI_WRN,
+                   L"Backup Directory transfer error", L"Mod Channel Backup "
+                   "Data transfer encountered errors, some Backup Data may "
+                   "had not properly transfered to new location.");
+    }
+
+    // Reset parameter as unmodified
+    pUiPropLocBck->paramReset(CHN_PROP_BCK_CUSTDIR);
+  }
+
+  if(pUiPropLocBck->paramChanged(CHN_PROP_BCK_COMP_LEVEL)) { //< parameter for Backup compression level
+
+    if(pUiPropLocBck->msgItem(IDC_BC_CKBX2, BM_GETCHECK)) {
+
+      int32_t comp_method, comp_level;
+
+      switch(pUiPropLocBck->msgItem(IDC_CB_ZMD, CB_GETCURSEL)) {
+      case 1:   comp_method = OM_METHOD_DEFLATE; break; //< MZ_COMPRESS_METHOD_DEFLATE
+      case 2:   comp_method = OM_METHOD_LZMA; break;    //< MZ_COMPRESS_METHOD_LZMA
+      case 3:   comp_method = OM_METHOD_LZMA2; break;   //< MZ_COMPRESS_METHOD_XZ
+      case 4:   comp_method = OM_METHOD_ZSTD; break;    //< MZ_COMPRESS_METHOD_ZSTD
+      default:  comp_method = OM_METHOD_STORE; break;   //< MZ_COMPRESS_METHOD_STORE
+      }
+
+      switch(pUiPropLocBck->msgItem(IDC_CB_ZLV, CB_GETCURSEL)) {
+      case 1:   comp_level = OM_LEVEL_FAST; break; //< MZ_COMPRESS_LEVEL_FAST
+      case 2:   comp_level = OM_LEVEL_SLOW; break; //< MZ_COMPRESS_LEVEL_NORMAL
+      case 3:   comp_level = OM_LEVEL_BEST; break; //< MZ_COMPRESS_LEVEL_BEST
+      default:  comp_level = OM_LEVEL_NONE; break;
+      }
+
+      this->_ModChan->setBackupComp(comp_method, comp_level);
+
+    } else {
+
+      // disable zipped backups
+      this->_ModChan->setBackupComp(-1, 0);
+
+    }
+
+    // Reset parameter as unmodified
+    pUiPropLocBck->paramReset(CHN_PROP_BCK_COMP_LEVEL);
+  }
+
+  // Mods Repositories Tab
+  OmUiPropChnNet* pUiPropLocNet  = static_cast<OmUiPropChnNet*>(this->childById(IDD_PROP_CHN_NET));
+
+  if(pUiPropLocNet->paramChanged(CHN_PROP_NET_WARNINGS)) {
+
+    this->_ModChan->setWarnExtraDnld(pUiPropLocNet->msgItem(IDC_BC_CKBX1, BM_GETCHECK));
+    this->_ModChan->setWarnMissDnld(pUiPropLocNet->msgItem(IDC_BC_CKBX2, BM_GETCHECK));
+    this->_ModChan->setWarnUpgdBrkDeps(pUiPropLocNet->msgItem(IDC_BC_CKBX3, BM_GETCHECK));
+
+    // Reset parameter as unmodified
+    pUiPropLocNet->paramReset(CHN_PROP_NET_WARNINGS);
+  }
+
+  if(pUiPropLocNet->paramChanged(CHN_PROP_NET_ONUPGRADE)) {
+
+    this->_ModChan->setUpgdRename(pUiPropLocNet->msgItem(IDC_BC_RAD02, BM_GETCHECK));
+
+    // Reset parameter as unmodified
+    pUiPropLocNet->paramReset(CHN_PROP_NET_ONUPGRADE);
+  }
+
+  // disable Apply button
+  this->enableItem(IDC_BC_APPLY, false);
+
+  return true;
 }
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropChn::_movBck_stop()
-{
-  DWORD exitCode;
-
-  if(this->_movBck_hth) {
-    WaitForSingleObject(this->_movBck_hth, INFINITE);
-    GetExitCodeThread(this->_movBck_hth, &exitCode);
-    CloseHandle(this->_movBck_hth);
-    this->_movBck_hth = nullptr;
-  }
-
-  // Back to main dialog window to normal state
-  static_cast<OmUiMgr*>(this->root())->safemode(false);
-
-  // Close progress dialog
-  static_cast<OmUiProgress*>(this->childById(IDD_PROGRESS))->quit();
-
-  if(exitCode == 1)  {
-    // an error occurred during backup purge
-    Om_dlgBox_ok(this->_hwnd, L"Channel properties", IDI_WRN,
-                 L"Channel backup transfer error", L"Channel "
-                 "backup data transfer encountered error(s), some backup data may "
-                 "had not properly moved. Please read debug log for details.");
-  }
-
-  OmUiPropChnStg* pUiPropLocStg = static_cast<OmUiPropChnStg*>(this->childById(IDD_PROP_CHN_STG));
-
-  // Reset parameter as unmodified
-  pUiPropLocStg->setChParam(CHN_PROP_STG_BACKUP, false);
-
-  // modify the backup path for the Mod Channel
-  if(pUiPropLocStg->msgItem(IDC_BC_CKBX2, BM_GETCHECK)) { // custom backup checked
-    this->_modChan->setCustBckDir(this->_movBck_dest);
-  } else {
-    this->_modChan->remCustBckDir();
-  }
-
-  // Call apply again in case it still changes to be applied
-  this->applyChanges();
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-DWORD WINAPI OmUiPropChn::_movBck_fth(void* arg)
-{
-  OmUiPropChn* self = static_cast<OmUiPropChn*>(arg);
-
-  OmModChan* pModChan = self->_modChan;
-  if(!pModChan) return 1;
-
-  DWORD exitCode = 0;
-
-  if(!pModChan->bckMove(self->_movBck_dest, &self->_movBck_progress_cb, self->childById(IDD_PROGRESS))) {
-    exitCode = 1;
-  }
-
-  // send message to window, to proper quit dialog and finish
-  PostMessage(self->_hwnd, UWM_MOVEBACKUP_DONE, 0, 0);
-
-  return exitCode;
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-bool OmUiPropChn::_movBck_progress_cb(void* ptr, size_t tot, size_t cur, uint64_t data)
-{
-  OmUiProgress* pUiProgress = reinterpret_cast<OmUiProgress*>(ptr);
-
-  if(data) {
-    pUiProgress->setScItemText(reinterpret_cast<wchar_t*>(data));
-  }
-  pUiProgress->setPbRange(0, tot);
-  pUiProgress->setPbPos(cur);
-
-  return !pUiProgress->abortGet();
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropChn::_onPropInit()
-{
-  // set dialog icon
-  this->setIcon(Om_getResIcon(this->_hins, IDI_APP, 2), Om_getResIcon(this->_hins, IDI_APP, 1));
-}
-
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 INT_PTR OmUiPropChn::_onPropMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  // UWM_MOVEBACKUP_DONE is a custom message sent from backup transfer thread
-  // function, to notify the progress dialog ended is job.
-  if(uMsg == UWM_MOVEBACKUP_DONE) {
-    // end the backup transfer process
-    this->_movBck_stop();
-  }
-
   return false;
 }

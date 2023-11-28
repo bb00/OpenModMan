@@ -15,13 +15,9 @@
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
 #include "OmBase.h"
-
 #include "OmBaseUi.h"
-
-#include "OmManager.h"
-
+#include "OmModMan.h"
 #include "OmUiPropChn.h"
-
 #include "OmUtilDlg.h"
 
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -31,11 +27,9 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropChnStg::OmUiPropChnStg(HINSTANCE hins) : OmDialog(hins)
+OmUiPropChnStg::OmUiPropChnStg(HINSTANCE hins) : OmDialogPropTab(hins)
 {
-  // modified parameters flags
-  for(unsigned i = 0; i < 8; ++i)
-    this->_chParam[i] = false;
+
 }
 
 
@@ -60,19 +54,9 @@ long OmUiPropChnStg::id() const
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnStg::setChParam(unsigned i, bool en)
-{
-  _chParam[i] = en;
-  static_cast<OmDialogProp*>(this->_parent)->checkChanges();
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
 void OmUiPropChnStg::_onBcBrwDst()
 {
-  wstring start, result;
+  OmWString start, result;
 
   this->getItemText(IDC_EC_INP02, start);
 
@@ -86,81 +70,7 @@ void OmUiPropChnStg::_onBcBrwDst()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnStg::_onCkBoxLib()
-{
-  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
-  if(!pModChan) return;
-
-  bool bm_chk = this->msgItem(IDC_BC_CKBX1, BM_GETCHECK);
-
-  this->enableItem(IDC_EC_INP03, bm_chk);
-  this->enableItem(IDC_BC_BRW03, bm_chk);
-
-  if(bm_chk && pModChan->hasCustLibDir()) {
-    this->setItemText(IDC_EC_INP03, pModChan->libDir());
-  } else {
-    this->setItemText(IDC_EC_INP03, pModChan->home() + L"\\Library");
-  }
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropChnStg::_onBcBrwLib()
-{
-  wstring start, result;
-
-  this->getItemText(IDC_EC_INP03, start);
-
-  if(!Om_dlgBrowseDir(result, this->_hwnd, L"Select Library folder, where Mods/Packages are stored.", start))
-    return;
-
-  this->setItemText(IDC_EC_INP03, result);
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropChnStg::_onCkBoxBck()
-{
-  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
-  if(!pModChan) return;
-
-  bool bm_chk = this->msgItem(IDC_BC_CKBX2, BM_GETCHECK);
-
-  this->enableItem(IDC_EC_INP04, bm_chk);
-  this->enableItem(IDC_BC_BRW04, bm_chk);
-
-  if(bm_chk && pModChan->hasCustBckDir()) {
-    this->setItemText(IDC_EC_INP04, pModChan->bckDir());
-  } else {
-    this->setItemText(IDC_EC_INP04, pModChan->home() + L"\\Backup");
-  }
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropChnStg::_onBcBrwBck()
-{
-  wstring start, result;
-
-  this->getItemText(IDC_EC_INP04, start);
-
-  if(!Om_dlgBrowseDir(result, this->_hwnd, L"Select Backup folder, where backup data will be stored.", start))
-    return;
-
-  this->setItemText(IDC_EC_INP04, result);
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropChnStg::_onInit()
+void OmUiPropChnStg::_onTabInit()
 {
   // define controls tool-tips
   this->_createTooltip(IDC_EC_INP01,  L"Mod Channel name, to identify it");
@@ -168,22 +78,14 @@ void OmUiPropChnStg::_onInit()
   this->_createTooltip(IDC_EC_INP02,  L"Installation destination path, where Mods/Packages are to be installed");
   this->_createTooltip(IDC_BC_BRW02,  L"Browse to select destination folder");
 
-  this->_createTooltip(IDC_BC_CKBX1,  L"Use a custom Library folder instead of default one");
-  this->_createTooltip(IDC_EC_INP03,  L"Library folder path, where Mods/Packages are stored");
-  this->_createTooltip(IDC_BC_BRW03,  L"Browse to select a custom Library folder");
-
-  this->_createTooltip(IDC_BC_CKBX2,  L"Use a custom Backup folder instead of default one");
-  this->_createTooltip(IDC_EC_INP04,  L"Backup folder path, where backup data will be stored");
-  this->_createTooltip(IDC_BC_BRW04,  L"Browse to select a custom Backup folder");
-
-  this->_onRefresh();
+  this->_onTabRefresh();
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnStg::_onResize()
+void OmUiPropChnStg::_onTabResize()
 {
   // Mod Channel Title Label & EditControl
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 220, 9);
@@ -193,53 +95,28 @@ void OmUiPropChnStg::_onResize()
   this->_setItemPos(IDC_SC_LBL02, 50, 50, 220, 9);
   this->_setItemPos(IDC_EC_INP02, 50, 60, this->cliUnitX()-108, 13);
   this->_setItemPos(IDC_BC_BRW02, this->cliUnitX()-55, 60, 16, 13);
-
-  // Custom Library CheckBox
-  this->_setItemPos(IDC_BC_CKBX1, 50, 90, 240, 9);
-  // Mod Channel Library Label, EditControl and Browse button
-  this->_setItemPos(IDC_EC_INP03, 50, 100, this->cliUnitX()-108, 13);
-  this->_setItemPos(IDC_BC_BRW03, this->cliUnitX()-55, 100, 16, 13);
-
-  // Custom Backup CheckBox
-  this->_setItemPos(IDC_BC_CKBX2, 50, 120, 240, 9);
-  // Mod Channel Backup Label, EditControl and Browse button
-  this->_setItemPos(IDC_EC_INP04, 50, 130, this->cliUnitX()-108, 13);
-  this->_setItemPos(IDC_BC_BRW04, this->cliUnitX()-55, 130, 16, 13);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnStg::_onRefresh()
+void OmUiPropChnStg::_onTabRefresh()
 {
-  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  OmModChan* ModChan = static_cast<OmUiPropChn*>(this->_parent)->ModChan();
 
-  if(pModChan == nullptr)
+  if(ModChan == nullptr)
     return;
 
-  this->setItemText(IDC_EC_INP01, pModChan->title());
-  this->setItemText(IDC_EC_INP02, pModChan->dstDir());
-
-  this->setItemText(IDC_EC_INP03, pModChan->libDir());
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pModChan->hasCustLibDir());
-  this->enableItem(IDC_EC_INP03, pModChan->hasCustLibDir());
-  this->enableItem(IDC_BC_BRW03, pModChan->hasCustLibDir());
-
-  this->setItemText(IDC_EC_INP04, pModChan->bckDir());
-  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pModChan->hasCustBckDir());
-  this->enableItem(IDC_EC_INP04, pModChan->hasCustBckDir());
-  this->enableItem(IDC_BC_BRW04, pModChan->hasCustBckDir());
-
-  // reset modified parameters flags
-  for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;
+  this->setItemText(IDC_EC_INP01, ModChan->title());
+  this->setItemText(IDC_EC_INP02, ModChan->targetPath());
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropChnStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropChnStg::_onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
@@ -248,7 +125,7 @@ INT_PTR OmUiPropChnStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case IDC_EC_INP01: //< Title EditText
       if(HIWORD(wParam) == EN_CHANGE)
         // user modified parameter, notify it
-        this->setChParam(CHN_PROP_STG_TITLE, true);
+        this->paramCheck(CHN_PROP_STG_TITLE);
       break;
 
     case IDC_BC_BRW02: //< Target path "..." (browse) Button
@@ -258,35 +135,7 @@ INT_PTR OmUiPropChnStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case IDC_EC_INP02: //< Target path EditText
       if(HIWORD(wParam) == EN_CHANGE)
         // user modified parameter, notify it
-        this->setChParam(CHN_PROP_STG_INSTALL, true);
-      break;
-
-    case IDC_BC_CKBX1: //< Check Box for custom Library path
-      this->_onCkBoxLib();
-      break;
-
-    case IDC_BC_BRW03: //< Custom Library "..." (browse) Button
-      this->_onBcBrwLib();
-      break;
-
-    case IDC_EC_INP03: //< Library EditText
-      if(HIWORD(wParam) == EN_CHANGE)
-        // user modified parameter, notify it
-        this->setChParam(CHN_PROP_STG_LIBRARY, true);
-      break;
-
-    case IDC_BC_CKBX2: //< Check Box for custom Backup path
-      this->_onCkBoxBck();
-      break;
-
-    case IDC_BC_BRW04: //< Custom Backup "..." (browse) Button
-      this->_onBcBrwBck();
-      break;
-
-    case IDC_EC_INP04: //< Backup EditText
-      if(HIWORD(wParam) == EN_CHANGE)
-        // user modified parameter, notify it
-        this->setChParam(CHN_PROP_STG_BACKUP, true);
+        this->paramCheck(CHN_PROP_STG_TARGET);
       break;
     }
   }

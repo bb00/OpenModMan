@@ -21,11 +21,11 @@
 #include "OmBase.h"
 #include "OmBaseWin.h"
 
-#include "OmConfig.h"
-#include "OmModChan.h"
-#include "OmBatch.h"
+#include "OmXmlConf.h"
 
-class OmManager;
+class OmModMan;
+#include "OmModChan.h"
+#include "OmModPset.h"
 
 /// \brief Mod Hub object.
 ///
@@ -33,16 +33,15 @@ class OmManager;
 ///
 class OmModHub
 {
-  friend class OmModChan;
-  friend class Package;
-
   public:
 
     /// \brief Constructor.
     ///
     /// Default constructor.
     ///
-    OmModHub(OmManager* pMgr);
+    /// \param[in] ModMan : Pointer to parent Mod Manager object
+    ///
+    OmModHub(OmModMan* ModMan);
 
     /// \brief Destructor.
     ///
@@ -58,7 +57,7 @@ class OmModHub
     ///
     /// \return True if operation succeed, false otherwise.
     ///
-    bool open(const wstring& path);
+    bool open(const OmWString& path);
 
     /// \brief Close Mod Hub.
     ///
@@ -66,24 +65,14 @@ class OmModHub
     ///
     void close();
 
-    /// \brief Get last error string.
-    ///
-    /// Returns last error message string.
-    ///
-    /// \return Last error message string.
-    ///
-    const wstring& lastError() const {
-      return _error;
-    }
-
     /// \brief Check whether is valid.
     ///
     /// Checks whether this instance is correctly loaded a ready to use.
     ///
     /// \return True if this instance is valid, false otherwise.
     ///
-    bool isValid() const {
-      return _valid;
+    bool valid() const {
+      return this->_xmlconf.valid();
     }
 
     /// \brief Get Mod Hub file path.
@@ -92,8 +81,8 @@ class OmModHub
     ///
     /// \return Mod Hub file path.
     ///
-    const wstring& path() const {
-      return _path;
+    const OmWString& path() const {
+      return this->_path;
     }
 
     /// \brief Get Mod Hub UUID.
@@ -102,8 +91,8 @@ class OmModHub
     ///
     /// \return Mod Hub UUID.
     ///
-    const wstring& uuid() const {
-      return _uuid;
+    const OmWString& uuid() const {
+      return this->_uuid;
     }
 
     /// \brief Get Mod Hub title.
@@ -112,9 +101,17 @@ class OmModHub
     ///
     /// \return Mod Hub title.
     ///
-    const wstring& title() const {
-      return _title;
+    const OmWString& title() const {
+      return this->_title;
     }
+
+    /// \brief Set Mod Hub title.
+    ///
+    /// Defines and save Mod Hub title.
+    ///
+    /// \param[in]  title   : Title to defines and save
+    ///
+    void setTitle(const OmWString& title);
 
     /// \brief Get Mod Hub home directory.
     ///
@@ -122,8 +119,8 @@ class OmModHub
     ///
     /// \return Mod Hub home directory.
     ///
-    const wstring& home() const {
-      return _home;
+    const OmWString& home() const {
+      return this->_home;
     }
 
     /// \brief Get Mod Hub icon.
@@ -133,26 +130,26 @@ class OmModHub
     /// \return Banner bitmap handle.
     ///
     const HICON& icon() const {
-      return _icon;
+      return this->_icon_handle;
     }
-
-    /// \brief Set Mod Hub title.
+    /// \brief Get Mod Hub icon source path.
     ///
-    /// Defines and save Mod Hub title.
+    /// Returns Mod Hub icon source path.
     ///
-    /// \param[in]  title   : Title to defines and save
+    /// \return Path to icon or executable.
     ///
-    void setTitle(const wstring& title);
+    const OmWString& iconSource() const {
+      return this->_icon_source;
+    }
 
     /// \brief Set Mod Hub icon.
     ///
-    /// Defines the Mod Hub icon source file. This must be a valid path to
-    /// an icon or executable file or empty string to remove current setting.
+    /// Defines the Mod Hub icon source file, either icon file
+    /// or executable.
     ///
-    /// \param[in]  src     : Path to file to extract or empty
-    ///                       string to remove current.
+    /// \param[in]  src     : Path to file to extract
     ///
-    void setIcon(const wstring& src);
+    void setIcon(const OmWString& src);
 
     /// \brief Make new Mod Channel.
     ///
@@ -165,18 +162,18 @@ class OmModHub
     ///
     /// \return True if operation succeed, false otherwise.
     ///
-    bool modChanCreate(const wstring& title, const wstring& install, const wstring& library, const wstring& backup);
+    bool createChannel(const OmWString& title, const OmWString& install, const OmWString& library, const OmWString& backup);
 
     /// \brief Purge existing Mod Channel.
     ///
     /// Cleanup and removes a Mod Channel. Notice that this operation actually delete
     /// the Mod Channel folder and configuration files.
     ///
-    /// \param[in]  i           : Mod Channel index to be removed.
+    /// \param[in] index  : Mod Channel index to be removed.
     ///
     /// \return True if operation succeed, false otherwise.
     ///
-    bool modChanDelete(unsigned i);
+    bool deleteChannel(size_t index);
 
     /// \brief Get Mod Channel count.
     ///
@@ -184,20 +181,20 @@ class OmModHub
     ///
     /// \return Mod Channel count.
     ///
-    size_t modChanCount() {
-      return _modChanLs.size();
+    size_t channelCount() const {
+      return this->_channel_list.size();
     }
 
     /// \brief Get Mod Channel.
     ///
     /// Returns Mod Channel at index.
     ///
-    /// \param[in]  i      : Mod Channel index.
+    /// \param[in]  index  : Mod Channel index.
     ///
     /// \return Mod Channel object at index or nullptr if index is out of bound.
     ///
-    OmModChan* modChanGet(unsigned i) {
-      return (i < _modChanLs.size()) ? _modChanLs[i] : nullptr;
+    OmModChan* getChannel(size_t index) const {
+      return this->_channel_list[index];
     }
 
     /// \brief Get Mod Channel.
@@ -208,7 +205,7 @@ class OmModHub
     ///
     /// \return Mod Channel object or nullptr if not found.
     ///
-    OmModChan* modChanGet(const wstring& uuid);
+    OmModChan* findChannel(const OmWString& uuid) const;
 
     /// \brief Get Mod Channel index.
     ///
@@ -218,23 +215,33 @@ class OmModHub
     ///
     /// \return Mod Channel index or -1 if not found.
     ///
-    int modChanIdx(const wstring& uuid);
+    int32_t indexOfChannel(const OmWString& uuid);
+
+    /// \brief Get Mod Channel index.
+    ///
+    /// Returns the index of the Mod Channel that matches the specified UUID.
+    ///
+    /// \param[in]  ModChan   : Pointer to Mod Channel object to get index of
+    ///
+    /// \return Mod Channel index or -1 if not found.
+    ///
+    int32_t indexOfChannel(const OmModChan* ModChan);
 
     /// \brief Sort Mod Channel list.
     ///
     /// Sort Mod Channel list according Mod Channel ordering index.
     ///
-    void modChanSort();
+    void sortChannels();
 
     /// \brief Select Mod Channel.
     ///
     /// Sets the specified Mod Channel as active one.
     ///
-    /// \param[in]  i       : Mod Channel index or -1 to unselect.
+    /// \param[in]  index   : Mod Channel index or -1 to unselect.
     ///
     /// \return True if operation succeed, false if id is out of bound.
     ///
-    bool modChanSelect(int i);
+    bool selectChannel(int32_t index);
 
     /// \brief Select Mod Channel.
     ///
@@ -244,7 +251,7 @@ class OmModHub
     ///
     /// \return True if operation succeed, false if Mod Channel with such UUID does not exists.
     ///
-    bool modChanSelect(const wstring& uuid);
+    bool selectChannel(const OmWString& uuid);
 
     /// \brief Get active Mod Channel.
     ///
@@ -252,9 +259,7 @@ class OmModHub
     ///
     /// \return Current active Mod Channel or nullptr if none is active.
     ///
-    OmModChan* modChanCur() {
-      return _modChanSl >= 0 ? _modChanLs[_modChanSl] : nullptr;
-    }
+    OmModChan* activeChannel() const;
 
     /// \brief Get active Mod Channel index.
     ///
@@ -262,57 +267,78 @@ class OmModHub
     ///
     /// \return Index of the active Mod Channel.
     ///
-    int modChanCurIdx() const {
-      return _modChanSl;
+    int32_t activeChannelIndex() const {
+      return this->_active_channel;
     }
 
-    /// \brief Get Mod Hub Batch Scripts.
+    /// \brief Get Mod Preset count.
     ///
-    /// Returns count of Scripts defined in the Mod Hub.
+    /// Returns count of Mod Preset referenced in this instance.
     ///
-    /// \return Scripts count.
+    /// \return Mod Preset count.
     ///
-    size_t batCount() {
-      return _batLs.size();
+    size_t presetCount() {
+      return this->_preset_list.size();
     }
 
-    /// \brief Get Script.
+    /// \brief Get Mod Preset
     ///
-    /// Returns Batch at index.
+    /// Returns Mod Preset at index
     ///
-    /// \param[in]  i      : Batch index to get.
+    /// \param[in]  index  : index to get Mod Preset
     ///
-    /// \return Batch object at index.
+    /// \return Mod Preset object at index
     ///
-    OmBatch* batGet(unsigned i) {
-      return (i < _batLs.size()) ? _batLs[i] : nullptr;
+    OmModPset* getPreset(size_t index) {
+      return this->_preset_list[index];
     }
+
+    /// \brief Index of Mod Preset
+    ///
+    /// Returns index of the given Mod Present in list
+    ///
+    /// \param[in]  ModPset  : Mod Preset object to search.
+    ///
+    /// \return Index in list or -1 if not found
+    ///
+    int32_t indexOfPreset(const OmModPset* ModPset) const;
 
     /// \brief Sort Batches list.
     ///
     /// Sort Batches list according Mod Channel ordering index.
     ///
-    void batSort();
+    void sortPresets();
 
-    /// \brief Make new Batch.
+    /// \brief Create new Mod Preset.
     ///
-    /// Creates a new Batch within the Mod Hub.
+    /// Creates a new Mod Preset within the Mod Hub.
     ///
-    /// \param[in]  title         : Title of new Batch to be created.
+    /// \param[in]  title   : Title of new Mod Preset to be created.
     ///
     /// \return Newly created batch object
     ///
-    OmBatch* batAdd(const wstring& title);
+    OmModPset* createPreset(const OmWString& title);
 
-    /// \brief Delete Batch.
+    /// \brief Delete Mod Preset.
     ///
-    /// Delete batch definition file and remove it from list.
+    /// Delete Mod Preset file and remove it from list.
     ///
-    /// \param[in]  i     : Batch index to delete.
+    /// \param[in]  index : Mod Preset index to delete.
     ///
     /// \return True if operation succeed, false otherwise.
     ///
-    bool batRem(unsigned i);
+    bool deletePreset(size_t index);
+
+    /// \brief Rename Mod Preset.
+    ///
+    /// Rename Mod Preset file and update it from list.
+    ///
+    /// \param[in]  index : Mod Preset index to rename.
+    /// \param[in]  title : New name to set.
+    ///
+    /// \return True if operation succeed, false otherwise.
+    ///
+    bool renamePreset(size_t index, const OmWString& title);
 
     /// \brief Get batches warning quiet mode.
     ///
@@ -320,8 +346,8 @@ class OmModHub
     ///
     /// \return warning quiet mode option value.
     ///
-    bool batQuietMode() const {
-      return _batQuietMode;
+    bool presetQuietMode() const {
+      return this->_presets_quietmode;
     }
 
     /// \brief Set batches warning quiet mode.
@@ -330,43 +356,108 @@ class OmModHub
     ///
     /// \param[in]  enable    : Warning quiet mode enable or disable.
     ///
-    void setBatQuietMode(bool enable);
+    void setPresetQuietMode(bool enable);
 
-    /// \brief Add log.
+    void queuePresets(OmModPset* ModPset, Om_beginCb begin_cb = nullptr, Om_progressCb progress_cb = nullptr, Om_resultCb result_cb = nullptr, void* user_ptr = nullptr);
+
+    void abortPresets();
+
+    /// \brief Get last error string.
     ///
-    /// Add entry to log file.
+    /// Returns last error message string.
     ///
-    void log(unsigned level, const wstring& head, const wstring& detail);
+    /// \return Last error message string.
+    ///
+    const OmWString& lastError() const {
+      return this->_lasterr;
+    }
 
-  private: ///              - - - - - - - - - - - - - - - - - - - - - - - - - -
+    /// \brief Escalate log.
+    ///
+    /// Public function to allow "children" item to escalate log
+    ///
+    void escalateLog(unsigned level, const OmWString& origin, const OmWString& detail) const {
+      this->_log(level, origin, detail);
+    }
 
-    OmManager*          _manager;
+  private: ///            - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    OmConfig            _config;
+    // logs and errors
+    void                  _log(unsigned level, const OmWString& origin, const OmWString& detail) const;
 
-    wstring             _path;
+    void                  _error(const OmWString& origin, const OmWString& detail);
 
-    wstring             _uuid;
+    OmWString             _lasterr;
 
-    wstring             _title;
+    // linking
+    OmModMan*             _ModMan;
 
-    wstring             _home;
+    // needed objects
+    OmXmlConf             _xmlconf;
 
-    HICON               _icon;
+    // sorting comparison functions
+    static bool           _compare_chn_index(const OmModChan*, const OmModChan*);
 
-    vector<OmModChan*>  _modChanLs;
+    static bool           _compare_pst_index(const OmModPset*, const OmModPset*);
 
-    int                 _modChanSl;
+    // special migration function
+    bool                  _migrate(const OmWString& path);
 
-    vector<OmBatch*>    _batLs;
+    // channel properties
+    OmWString             _path;
 
-    bool                _batQuietMode;
+    OmWString             _home;
 
-    bool                _valid;
+    OmWString             _uuid;
 
-    wstring             _error;
+    OmWString             _title;
 
-    bool                _migrate(const wstring& path);
+    OmWString             _icon_source;
+
+    HICON                 _icon_handle;
+
+    // Mod Channels
+    OmPModChanArray       _channel_list;
+
+    int32_t               _active_channel;
+
+    // Mod Presets
+    OmPModPsetArray       _preset_list;
+
+    // mods install/restore
+    bool                  _setup_abort;
+
+    void*                 _setup_hth;
+
+    void*                 _setup_hwo;
+
+    OmPModPsetQueue       _setup_queue;
+
+    uint32_t              _setup_dones;
+
+    uint32_t              _setup_percent;
+
+    static DWORD WINAPI   _setup_run_fn(void*);
+
+
+    static VOID WINAPI    _setup_end_fn(void*,uint8_t);
+
+    Om_beginCb            _setup_begin_cb;
+
+    Om_progressCb         _setup_progress_cb;
+
+    Om_resultCb           _setup_result_cb;
+
+    void*                 _setup_user_ptr;
+
+    // options
+    bool                  _presets_quietmode;
 };
+
+/// \brief OmModHub pointer array
+///
+/// Typedef for an STL vector of OmModHub pointer type
+///
+typedef std::vector<OmModHub*> OmPModHubArray;
 
 #endif // OMMODHUB_H

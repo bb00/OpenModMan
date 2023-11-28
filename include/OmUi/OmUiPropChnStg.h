@@ -17,18 +17,16 @@
 #ifndef OMUIPROPCHNSTG_H
 #define OMUIPROPCHNSTG_H
 
-#include "OmDialog.h"
+#include "OmDialogPropTab.h"
 
 #define CHN_PROP_STG_TITLE     0
-#define CHN_PROP_STG_INSTALL   1
-#define CHN_PROP_STG_LIBRARY   2
-#define CHN_PROP_STG_BACKUP    3
+#define CHN_PROP_STG_TARGET   1
 
-/// \brief Mod Channel Properties / Settings tab child
+/// \brief Mod Channel Properties: "General Settings" tab
 ///
-/// OmDialog class derived for Mod Channel Properties / Settings tab child dialog window
+/// OmDialogPropTab class derived for "General Settings" tab child dialog window
 ///
-class OmUiPropChnStg : public OmDialog
+class OmUiPropChnStg : public OmDialogPropTab
 {
   public: ///         - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -54,50 +52,17 @@ class OmUiPropChnStg : public OmDialog
     ///
     long id() const;
 
-    /// \brief Check changed parameter
-    ///
-    /// Checks whether the specified dialog related parameter has been
-    /// marked as changed, meaning it was modified by user.
-    ///
-    /// \param[in]  i   : Dialog related parameter to check
-    ///
-    /// \return True if the specified parameter is marked as changed,
-    ///         false otherwise
-    ///
-    bool hasChParam(unsigned i) const {
-      return _chParam[i];
-    }
-
-    /// \brief Set changed parameter
-    ///
-    /// Marks the specified dialog related parameter as changed or unchanged.
-    ///
-    /// \param[in]  i   : Dialog related parameter to mark
-    /// \param[in]  en  : Boolean value to enable or disable
-    ///
-    void setChParam(unsigned i, bool en);
-
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    bool                _chParam[8];
 
     void                _onBcBrwDst();
 
-    void                _onCkBoxLib();
+    void                _onTabInit();
 
-    void                _onBcBrwLib();
+    void                _onTabResize();
 
-    void                _onCkBoxBck();
+    void                _onTabRefresh();
 
-    void                _onBcBrwBck();
-
-    void                _onInit();
-
-    void                _onResize();
-
-    void                _onRefresh();
-
-    INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    INT_PTR             _onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 #endif // OMUIPROPCHNSTG_H

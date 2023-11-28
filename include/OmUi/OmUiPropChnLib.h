@@ -17,17 +17,18 @@
 #ifndef OMUIPROPCHNLIB_H
 #define OMUIPROPCHNLIB_H
 
-#include "OmDialog.h"
+#include "OmDialogPropTab.h"
 
-#define CHN_PROP_LIB_DEVMODE     0
-#define CHN_PROP_LIB_WARNINGS    1
-#define CHN_PROP_LIB_SHOWHIDDEN  2
+#define CHN_PROP_LIB_CUSTDIR     0
+#define CHN_PROP_LIB_DEVMODE     1
+#define CHN_PROP_LIB_WARNINGS    2
+#define CHN_PROP_LIB_SHOWHIDDEN  3
 
-/// \brief Manager Options / Packages tab child
+/// \brief Mod Channel Properties: "Mods Library" tab
 ///
-/// OmDialog class derived for Manager Options / Packages tab child dialog window
+/// OmDialogPropTab class derived for "Mods Library" tab child dialog window
 ///
-class OmUiPropChnLib : public OmDialog
+class OmUiPropChnLib : public OmDialogPropTab
 {
   public:
 
@@ -53,32 +54,11 @@ class OmUiPropChnLib : public OmDialog
     ///
     long id() const;
 
-    /// \brief Check changed parameter
-    ///
-    /// Checks whether the specified dialog related parameter has been
-    /// marked as changed, meaning it was modified by user.
-    ///
-    /// \param[in]  i   : Dialog related parameter to check
-    ///
-    /// \return True if the specified parameter is marked as changed,
-    ///         false otherwise
-    ///
-    bool hasChParam(unsigned i) const {
-      return _chParam[i];
-    }
-
-    /// \brief Set changed parameter
-    ///
-    /// Marks the specified dialog related parameter as changed or unchanged.
-    ///
-    /// \param[in]  i   : Dialog related parameter to mark
-    /// \param[in]  en  : Boolean value to enable or disable
-    ///
-    void setChParam(unsigned i, bool en);
-
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    bool                _chParam[8];
+    void                _onCkBoxLib();
+
+    void                _onBcBrwLib();
 
     void                _onCkBoxDev();
 
@@ -86,11 +66,13 @@ class OmUiPropChnLib : public OmDialog
 
     void                _onCkBoxHid();
 
-    void                _onInit();
+    void                _onTabInit();
 
-    void                _onResize();
+    void                _onTabResize();
 
-    INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void                _onTabRefresh();
+
+    INT_PTR             _onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 #endif // OMUIPROPCHNLIB_H

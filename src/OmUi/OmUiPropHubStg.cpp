@@ -18,7 +18,7 @@
 
 #include "OmBaseUi.h"
 
-#include "OmManager.h"
+#include "OmModMan.h"
 
 #include "OmUiPropHub.h"
 
@@ -32,12 +32,9 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropHubStg::OmUiPropHubStg(HINSTANCE hins) : OmDialog(hins)
+OmUiPropHubStg::OmUiPropHubStg(HINSTANCE hins) : OmDialogPropTab(hins)
 {
-  // modified parameters flags
-  for(unsigned i = 0; i < 8; ++i) {
-    this->_chParam[i] = false;
-  }
+
 }
 
 
@@ -55,17 +52,7 @@ OmUiPropHubStg::~OmUiPropHubStg()
 ///
 long OmUiPropHubStg::id() const
 {
-  return IDD_PROP_CTX_STG;
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropHubStg::setChParam(unsigned i, bool en)
-{
-  this->_chParam[i] = en;
-  static_cast<OmDialogProp*>(this->_parent)->checkChanges();
+  return IDD_PROP_HUB_STG;
 }
 
 
@@ -74,13 +61,13 @@ void OmUiPropHubStg::setChParam(unsigned i, bool en)
 ///
 void OmUiPropHubStg::_onBcBrwIcon()
 {
-  wstring start, result;
+  OmWString start, result;
 
   // get last valid path to start browsing
   this->getItemText(IDC_EC_INP04, start);
   start = Om_getDirPart(start);
 
-  if(!Om_dlgOpenFile(result, this->_parent->hwnd(), L"Select icon", OMM_ICO_FILES_FILTER, start))
+  if(!Om_dlgOpenFile(result, this->_parent->hwnd(), L"Select icon", OM_ICO_FILES_FILTER, start))
     return;
 
   HICON hIc = nullptr;
@@ -91,17 +78,16 @@ void OmUiPropHubStg::_onBcBrwIcon()
 
   if(hIc) {
     this->setItemText(IDC_EC_INP04, result);
+    DeleteObject(hIc); //< delete temporary icon
   } else {
-    hIc = Om_getShellIcon(SIID_APPLICATION, true);
-    this->setItemText(IDC_EC_INP04, L"<none>");
+    this->setItemText(IDC_EC_INP04, L"");
   }
 
-  this->msgItem(IDC_SB_ICON, STM_SETICON, reinterpret_cast<WPARAM>(hIc));
-
-  InvalidateRect(this->getItem(IDC_SB_ICON), nullptr, true);
+  // refresh icon
+  this->_onTabRefresh();
 
   // user modified parameter, notify it
-  this->setChParam(CTX_PROP_STG_ICON, true);
+  this->paramCheck(HUB_PROP_STG_ICON);
 }
 
 
@@ -110,20 +96,20 @@ void OmUiPropHubStg::_onBcBrwIcon()
 ///
 void OmUiPropHubStg::_onBcDelIcon()
 {
-  HICON hIc = Om_getShellIcon(SIID_APPLICATION, true);
-  this->msgItem(IDC_SB_ICON, STM_SETICON, reinterpret_cast<WPARAM>(hIc));
+  this->setItemText(IDC_EC_INP04, L""); //< set invalid path
 
-  this->setItemText(IDC_EC_INP04, L"<none>"); //< set invalid path
+  // refresh icon
+  this->_onTabRefresh();
 
   // user modified parameter, notify it
-  this->setChParam(CTX_PROP_STG_ICON, true);
+  this->paramCheck(HUB_PROP_STG_ICON);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropHubStg::_onInit()
+void OmUiPropHubStg::_onTabInit()
 {
   // add icon to buttons
   this->setBmIcon(IDC_BC_BRW01, Om_getResIcon(this->_hins, IDI_BT_OPN));
@@ -135,24 +121,24 @@ void OmUiPropHubStg::_onInit()
   this->_createTooltip(IDC_BC_BRW01,  L"Browse to select an icon to associate with Mod Hub");
   this->_createTooltip(IDC_BC_DEL,    L"Remove the associated icon");
 
-  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
+  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHub();
   if(!pModHub) return;
 
   this->setItemText(IDC_EC_INP01, pModHub->home());
   this->setItemText(IDC_EC_INP02, pModHub->uuid());
   this->setItemText(IDC_EC_INP03, pModHub->title());
 
-  this->setItemText(IDC_EC_INP04, L"<none>"); //< hidden icon path
+  this->setItemText(IDC_EC_INP04, pModHub->iconSource()); //< hidden icon path
 
   // refresh with default values
-  this->_onRefresh();
+  this->_onTabRefresh();
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropHubStg::_onResize()
+void OmUiPropHubStg::_onTabResize()
 {
   // home location Label & EditControl
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 180, 9);
@@ -174,53 +160,43 @@ void OmUiPropHubStg::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropHubStg::_onRefresh()
+void OmUiPropHubStg::_onTabRefresh()
 {
-  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
-  if(!pModHub) return;
-
+  OmWString icon_src;
   HICON hIc = nullptr;
-  wstring ico_path;
 
   // check if the path to icon is valid
-  this->getItemText(IDC_EC_INP04, ico_path);
-  if(Om_isValidPath(ico_path)) {
-    // reload the last selected icon
-    ExtractIconExW(ico_path.c_str(), 0, &hIc, nullptr, 1);
+  this->getItemText(IDC_EC_INP04, icon_src);
+  if(Om_isValidPath(icon_src)) {
+    ExtractIconExW(icon_src.c_str(), 0, &hIc, nullptr, 1); //< large icon
   } else {
-    // check whether Mod Hub already have an icon configured
-    if(pModHub->icon())
-      hIc = pModHub->icon();
-  }
-
-  if(!hIc) {
     hIc = Om_getShellIcon(SIID_APPLICATION, true);
-    this->setItemText(IDC_EC_INP04, L"<none>");
   }
 
-  this->msgItem(IDC_SB_ICON, STM_SETICON, reinterpret_cast<WPARAM>(hIc));
+  // Update icon static control
+  hIc = this->setStIcon(IDC_SB_ICON, hIc);
 
-  InvalidateRect(this->getItem(IDC_SB_ICON), nullptr, true);
-
-  // reset modified parameters flags
-  for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;
+  // Properly delete unused icon
+  if(hIc) {
+    if(hIc != Om_getShellIcon(SIID_APPLICATION, true)) DeleteObject(hIc);
+  }
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropHubStg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropHubStg::_onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
-    wstring item_str, brow_str;
+    OmWString item_str, brow_str;
 
     switch(LOWORD(wParam))
     {
     case IDC_EC_INP03: //< Entry for Mod Hub title
       // user modified parameter, notify it
-      this->setChParam(CTX_PROP_STG_TITLE, true);
+      this->paramCheck(HUB_PROP_STG_TITLE);
       break;
 
     case IDC_BC_BRW01: //< Brows Button for Mod Hub icon

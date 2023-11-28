@@ -15,9 +15,10 @@
   along with Open Mod Manager. If not, see <http://www.gnu.org/licenses/>.
 */
 #include "OmBase.h"
+#include "OmBaseApp.h"
 #include "OmBaseUi.h"
 
-#include "OmManager.h"
+#include "OmModMan.h"
 
 #include "OmUtilStr.h"
 #include "OmUtilDlg.h"
@@ -59,7 +60,7 @@ long OmUiAddChn::id() const
 ///
 void OmUiAddChn::_onTitleChange()
 {
-  wstring title;
+  OmWString title;
 
   this->getItemText(IDC_EC_INP01, title);
 
@@ -67,10 +68,10 @@ void OmUiAddChn::_onTitleChange()
     title = L"<invalid path>";
 
   if(!this->msgItem(IDC_BC_CKBX1, BM_GETCHECK)) {
-    this->setItemText(IDC_EC_INP03, title + L"\\Library");
+    this->setItemText(IDC_EC_INP03, title + OM_MODCHAN_MODLIB_DIR);
   }
   if(!this->msgItem(IDC_BC_CKBX2, BM_GETCHECK)) {
-    this->setItemText(IDC_EC_INP04, title + L"\\Backup");
+    this->setItemText(IDC_EC_INP04, title + OM_MODCHAN_BACKUP_DIR);
   }
 }
 
@@ -80,7 +81,7 @@ void OmUiAddChn::_onTitleChange()
 ///
 void OmUiAddChn::_onBcBrwDst()
 {
-  wstring start, result;
+  OmWString start, result;
 
   this->getItemText(IDC_EC_INP02, start);
 
@@ -96,7 +97,7 @@ void OmUiAddChn::_onBcBrwDst()
 ///
 void OmUiAddChn::_onCkBoxLib()
 {
-  wstring title;
+  OmWString title;
 
   int bm_chk = this->msgItem(IDC_BC_CKBX1, BM_GETCHECK);
 
@@ -110,7 +111,7 @@ void OmUiAddChn::_onCkBoxLib()
     }
   }
 
-  this->setItemText(IDC_EC_INP03, title + L"\\Library");
+  this->setItemText(IDC_EC_INP03, title + OM_MODCHAN_MODLIB_DIR);
 }
 
 
@@ -119,7 +120,7 @@ void OmUiAddChn::_onCkBoxLib()
 ///
 void OmUiAddChn::_onBcBrwLib()
 {
-  wstring start, result;
+  OmWString start, result;
 
   this->getItemText(IDC_EC_INP03, start);
 
@@ -135,7 +136,7 @@ void OmUiAddChn::_onBcBrwLib()
 ///
 void OmUiAddChn::_onCkBoxBck()
 {
-  wstring title;
+  OmWString title;
 
   int bm_chk = this->msgItem(IDC_BC_CKBX2, BM_GETCHECK);
 
@@ -149,7 +150,7 @@ void OmUiAddChn::_onCkBoxBck()
     }
   }
 
-  this->setItemText(IDC_EC_INP04, title + L"\\Backup");
+  this->setItemText(IDC_EC_INP04, title + OM_MODCHAN_BACKUP_DIR);
 }
 
 
@@ -158,7 +159,7 @@ void OmUiAddChn::_onCkBoxBck()
 ///
 void OmUiAddChn::_onBcBrwBck()
 {
-  wstring start, result;
+  OmWString start, result;
 
   this->getItemText(IDC_EC_INP04, start);
 
@@ -177,7 +178,7 @@ bool OmUiAddChn::_onBcOk()
   if(!this->_modHub)
     return false;
 
-  wstring chn_name, chn_dst, chn_lib, chn_bck, msg;
+  OmWString chn_name, chn_dst, chn_lib, chn_bck, msg;
 
   this->getItemText(IDC_EC_INP01, chn_name);
   if(!Om_dlgValidName(this->_hwnd, L"Channel name", chn_name))
@@ -210,7 +211,7 @@ bool OmUiAddChn::_onBcOk()
   this->quit();
 
   // create new Mod Channel in Mod Hub
-  if(!this->_modHub->modChanCreate(chn_name, chn_dst, chn_lib, chn_bck)) {
+  if(!this->_modHub->createChannel(chn_name, chn_dst, chn_lib, chn_bck)) {
 
     Om_dlgBox_okl(this->_hwnd, L"New Mod Channel", IDI_ERR,
                   L"Mod Channel creation error", L"Mod Channel "
@@ -253,7 +254,7 @@ void OmUiAddChn::_onInit()
   this->setItemText(IDC_EC_INP03, L"New Mod Channel\\Library");
   this->setItemText(IDC_EC_INP04, L"New Mod Channel\\Backup");
 
-  wstring item_str;
+  OmWString item_str;
 
   // disable OK button
   this->enableItem(IDC_BC_OK, false);
@@ -304,7 +305,7 @@ INT_PTR OmUiAddChn::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     bool has_changed = false;
 
-    wstring item_str;
+    OmWString item_str;
 
     switch(LOWORD(wParam))
     {

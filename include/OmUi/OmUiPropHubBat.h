@@ -17,16 +17,16 @@
 #ifndef OMUIPROPHUBBAT_H
 #define OMUIPROPHUBBAT_H
 
-#include "OmDialog.h"
+#include "OmDialogPropTab.h"
 
-#define CTX_PROP_BAT_ORDER        0
-#define CTX_PROP_BAT_QUIETMODE    1
+#define HUB_PROP_BAT_ORDER        0
+#define HUB_PROP_BAT_QUIETMODE    1
 
 /// \brief Mod Hub Properties / Batches tab child
 ///
 /// OmDialog class derived for Mod Hub Properties / Batches tab child dialog window
 ///
-class OmUiPropHubBat : public OmDialog
+class OmUiPropHubBat : public OmDialogPropTab
 {
   public:
 
@@ -52,32 +52,7 @@ class OmUiPropHubBat : public OmDialog
     ///
     long id() const;
 
-    /// \brief Check changed parameter
-    ///
-    /// Checks whether the specified dialog related parameter has been
-    /// marked as changed, meaning it was modified by user.
-    ///
-    /// \param[in]  i   : Dialog related parameter to check
-    ///
-    /// \return True if the specified parameter is marked as changed,
-    ///         false otherwise
-    ///
-    bool hasChParam(unsigned i) const {
-      return _chParam[i];
-    }
-
-    /// \brief Set changed parameter
-    ///
-    /// Marks the specified dialog related parameter as changed or unchanged.
-    ///
-    /// \param[in]  i   : Dialog related parameter to mark
-    /// \param[in]  en  : Boolean value to enable or disable
-    ///
-    void setChParam(unsigned i, bool en);
-
   private: ///          - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    bool                _chParam[8];
 
     void                _onLbBatlsSel();
 
@@ -93,15 +68,13 @@ class OmUiPropHubBat : public OmDialog
 
     void                _onCkBoxQuiet();
 
-    void                _onInit();
+    void                _onTabInit();
 
-    void                _onResize();
+    void                _onTabResize();
 
-    void                _onRefresh();
+    void                _onTabRefresh();
 
-    void                _onQuit();
-
-    INT_PTR             _onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    INT_PTR             _onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 #endif // OMUIPROPHUBBAT_H

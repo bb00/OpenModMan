@@ -18,11 +18,11 @@
 
 #include "OmBaseUi.h"
 
-#include "OmManager.h"
+#include "OmModMan.h"
 
-#include "OmUiMgr.h"
-#include "OmUiAddBat.h"
-#include "OmUiPropBat.h"
+#include "OmUiMan.h"
+#include "OmUiAddPst.h"
+#include "OmUiPropPst.h"
 #include "OmUiPropHub.h"
 
 #include "OmUtilDlg.h"
@@ -34,12 +34,9 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropHubBat::OmUiPropHubBat(HINSTANCE hins) : OmDialog(hins)
+OmUiPropHubBat::OmUiPropHubBat(HINSTANCE hins) : OmDialogPropTab(hins)
 {
-  // modified parameters flags
-  for(unsigned i = 0; i < 8; ++i) {
-    this->_chParam[i] = false;
-  }
+
 }
 
 ///
@@ -56,17 +53,7 @@ OmUiPropHubBat::~OmUiPropHubBat()
 ///
 long OmUiPropHubBat::id() const
 {
-  return IDD_PROP_CTX_BAT;
-}
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropHubBat::setChParam(unsigned i, bool en)
-{
-  this->_chParam[i] = en;
-  static_cast<OmDialogProp*>(this->_parent)->checkChanges();
+  return IDD_PROP_HUB_BAT;
 }
 
 
@@ -75,7 +62,7 @@ void OmUiPropHubBat::setChParam(unsigned i, bool en)
 ///
 void OmUiPropHubBat::_onLbBatlsSel()
 {
-  int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
+  int32_t lb_sel = this->msgItem(IDC_LB_PST, LB_GETCURSEL);
 
   if(lb_sel >= 0) {
 
@@ -83,7 +70,7 @@ void OmUiPropHubBat::_onLbBatlsSel()
     this->enableItem(IDC_BC_EDI, true);
 
     this->enableItem(IDC_BC_UP, (lb_sel > 0));
-    int lb_max = this->msgItem(IDC_LB_BAT, LB_GETCOUNT) - 1;
+    int32_t lb_max = this->msgItem(IDC_LB_PST, LB_GETCOUNT) - 1;
     this->enableItem(IDC_BC_DN, (lb_sel < lb_max));
   }
 }
@@ -95,29 +82,29 @@ void OmUiPropHubBat::_onLbBatlsSel()
 void OmUiPropHubBat::_onBcUpBat()
 {
   // get selected item (index)
-  int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
+  int32_t lb_sel = this->msgItem(IDC_LB_PST, LB_GETCURSEL);
 
   // check whether we can move up
   if(lb_sel == 0)
     return;
 
-  wchar_t item_buf[OMM_ITM_BUFF];
-  int idx;
+  wchar_t item_buf[OM_MAX_ITEM];
+  int32_t idx;
 
   // retrieve the package List-Box label
-  this->msgItem(IDC_LB_BAT, LB_GETTEXT, lb_sel - 1, reinterpret_cast<LPARAM>(item_buf));
-  idx = this->msgItem(IDC_LB_BAT, LB_GETITEMDATA, lb_sel - 1);
+  this->msgItem(IDC_LB_PST, LB_GETTEXT, lb_sel - 1, reinterpret_cast<LPARAM>(item_buf));
+  idx = this->msgItem(IDC_LB_PST, LB_GETITEMDATA, lb_sel - 1);
 
-  this->msgItem(IDC_LB_BAT, LB_DELETESTRING, lb_sel - 1);
+  this->msgItem(IDC_LB_PST, LB_DELETESTRING, lb_sel - 1);
 
-  this->msgItem(IDC_LB_BAT, LB_INSERTSTRING, lb_sel, reinterpret_cast<LPARAM>(item_buf));
-  this->msgItem(IDC_LB_BAT, LB_SETITEMDATA, lb_sel, idx);
+  this->msgItem(IDC_LB_PST, LB_INSERTSTRING, lb_sel, reinterpret_cast<LPARAM>(item_buf));
+  this->msgItem(IDC_LB_PST, LB_SETITEMDATA, lb_sel, idx);
 
   this->enableItem(IDC_BC_UP, (lb_sel > 1));
   this->enableItem(IDC_BC_DN, true);
 
   // user modified parameter, notify it
-  this->setChParam(CTX_PROP_BAT_ORDER, true);
+  this->paramCheck(HUB_PROP_BAT_ORDER);
 }
 
 ///
@@ -126,32 +113,32 @@ void OmUiPropHubBat::_onBcUpBat()
 void OmUiPropHubBat::_onBcDnBat()
 {
   // get selected item (index)
-  int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
+  int32_t lb_sel = this->msgItem(IDC_LB_PST, LB_GETCURSEL);
   // get count of item in List-Box as index to for insertion
-  int lb_max = this->msgItem(IDC_LB_BAT, LB_GETCOUNT) - 1;
+  int32_t lb_max = this->msgItem(IDC_LB_PST, LB_GETCOUNT) - 1;
 
   // check whether we can move down
   if(lb_sel == lb_max)
     return;
 
-  wchar_t item_buf[OMM_ITM_BUFF];
-  int idx;
+  wchar_t item_buf[OM_MAX_ITEM];
+  int32_t idx;
 
-  this->msgItem(IDC_LB_BAT, LB_GETTEXT, lb_sel, reinterpret_cast<LPARAM>(item_buf));
-  idx = this->msgItem(IDC_LB_BAT, LB_GETITEMDATA, lb_sel);
-  this->msgItem(IDC_LB_BAT, LB_DELETESTRING, lb_sel);
+  this->msgItem(IDC_LB_PST, LB_GETTEXT, lb_sel, reinterpret_cast<LPARAM>(item_buf));
+  idx = this->msgItem(IDC_LB_PST, LB_GETITEMDATA, lb_sel);
+  this->msgItem(IDC_LB_PST, LB_DELETESTRING, lb_sel);
 
   lb_sel++;
 
-  this->msgItem(IDC_LB_BAT, LB_INSERTSTRING, lb_sel, reinterpret_cast<LPARAM>(item_buf));
-  this->msgItem(IDC_LB_BAT, LB_SETITEMDATA, lb_sel, idx);
-  this->msgItem(IDC_LB_BAT, LB_SETCURSEL, lb_sel);
+  this->msgItem(IDC_LB_PST, LB_INSERTSTRING, lb_sel, reinterpret_cast<LPARAM>(item_buf));
+  this->msgItem(IDC_LB_PST, LB_SETITEMDATA, lb_sel, idx);
+  this->msgItem(IDC_LB_PST, LB_SETCURSEL, lb_sel);
 
   this->enableItem(IDC_BC_UP, true);
   this->enableItem(IDC_BC_DN, (lb_sel < lb_max));
 
   // user modified parameter, notify it
-  this->setChParam(CTX_PROP_BAT_ORDER, true);
+  this->paramCheck(HUB_PROP_BAT_ORDER);
 }
 
 
@@ -160,17 +147,21 @@ void OmUiPropHubBat::_onBcDnBat()
 ///
 void OmUiPropHubBat::_onBcEdiBat()
 {
-  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
-  if(!pModHub) return;
+  OmModHub* ModHub = static_cast<OmUiPropHub*>(this->_parent)->modHub();
+  if(!ModHub)
+    return;
 
-  int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
+  int32_t lb_sel = this->msgItem(IDC_LB_PST, LB_GETCURSEL);
 
-  if(lb_sel >= 0 && lb_sel < (int)pModHub->batCount()) {
+  if(lb_sel >= 0 && lb_sel < static_cast<int32_t>(ModHub->presetCount())) {
 
     // open the Batch Properties dialog
-    int bat_id = this->msgItem(IDC_LB_BAT, LB_GETITEMDATA, lb_sel, 0);
-    OmUiPropBat* pUiPropBat = static_cast<OmUiPropBat*>(this->siblingById(IDD_PROP_BAT));
-    pUiPropBat->batSet(pModHub->batGet(bat_id));
+    int32_t bat_id = this->msgItem(IDC_LB_PST, LB_GETITEMDATA, lb_sel, 0);
+
+    OmUiPropPst* pUiPropBat = static_cast<OmUiPropPst*>(this->siblingById(IDD_PROP_PST));
+
+    pUiPropBat->setModPset(ModHub->getPreset(bat_id));
+
     pUiPropBat->open();
   }
 }
@@ -181,31 +172,32 @@ void OmUiPropHubBat::_onBcEdiBat()
 ///
 void OmUiPropHubBat::_onBcDelBat()
 {
-  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
-  if(!pModHub) return;
+  OmModHub* ModHub = static_cast<OmUiPropHub*>(this->_parent)->modHub();
+  if(!ModHub)
+    return;
 
   // get selected item (index)
-  int lb_sel = this->msgItem(IDC_LB_BAT, LB_GETCURSEL);
+  int32_t lb_sel = this->msgItem(IDC_LB_PST, LB_GETCURSEL);
 
   if(lb_sel >= 0) {
 
-    int bat_id = this->msgItem(IDC_LB_BAT, LB_GETITEMDATA, lb_sel, 0);
+    int32_t bat_id = this->msgItem(IDC_LB_PST, LB_GETITEMDATA, lb_sel, 0);
 
     // warns the user before committing the irreparable
     if(!Om_dlgBox_ynl(this->_hwnd, L"Mod Hub properties", IDI_QRY,
               L"Delete Script", L"Delete the Script ?",
-              pModHub->batGet(bat_id)->title()))
+              ModHub->getPreset(bat_id)->title()))
     {
       return;
     }
 
-    if(!pModHub->batRem(bat_id)) {
+    if(!ModHub->deletePreset(bat_id)) {
 
       // warns the user error occurred
       Om_dlgBox_okl(this->_hwnd, L"Mod Hub properties", IDI_ERR,
                 L"Script delete error", L"Script deletion "
                 "process failed because of the following error:",
-                pModHub->lastError());
+                ModHub->lastError());
 
       return;
     }
@@ -221,11 +213,12 @@ void OmUiPropHubBat::_onBcDelBat()
 ///
 void OmUiPropHubBat::_onBcAddBat()
 {
-  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
-  if(!pModHub) return;
+  OmModHub* ModHub = static_cast<OmUiPropHub*>(this->_parent)->modHub();
+  if(!ModHub)
+    return;
 
-  OmUiAddBat* pUiNewBat = static_cast<OmUiAddBat*>(this->siblingById(IDD_ADD_BAT));
-  pUiNewBat->ctxSet(pModHub);
+  OmUiAddPst* pUiNewBat = static_cast<OmUiAddPst*>(this->siblingById(IDD_ADD_PST));
+  pUiNewBat->setModHub(ModHub);
   pUiNewBat->open(true);
 }
 
@@ -237,14 +230,14 @@ void OmUiPropHubBat::_onBcAddBat()
 void OmUiPropHubBat::_onCkBoxQuiet()
 {
   // user modified parameter, notify it
-  this->setChParam(CTX_PROP_BAT_QUIETMODE, true);
+  this->paramCheck(HUB_PROP_BAT_QUIETMODE);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropHubBat::_onInit()
+void OmUiPropHubBat::_onTabInit()
 {
   this->setBmIcon(IDC_BC_ADD, Om_getResIcon(this->_hins, IDI_BT_ADD));
   this->setBmIcon(IDC_BC_DEL, Om_getResIcon(this->_hins, IDI_BT_REM));
@@ -253,7 +246,7 @@ void OmUiPropHubBat::_onInit()
   this->setBmIcon(IDC_BC_DN, Om_getResIcon(this->_hins, IDI_BT_DN));
 
   // Define controls tool-tips
-  this->_createTooltip(IDC_LB_BAT,    L"Installation batches list");
+  this->_createTooltip(IDC_LB_PST,    L"Installation batches list");
   this->_createTooltip(IDC_BC_UP,     L"Move up in list");
   this->_createTooltip(IDC_BC_DN,     L"Move down in list");
   this->_createTooltip(IDC_BC_DEL,    L"Delete the selected Installation batch");
@@ -266,18 +259,18 @@ void OmUiPropHubBat::_onInit()
   this->enableItem(IDC_BC_EDI, false);
 
   // Update values
-  this->_onRefresh();
+  this->_onTabRefresh();
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropHubBat::_onResize()
+void OmUiPropHubBat::_onTabResize()
 {
   // Mod Channel list Label & ListBox
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 180, 9);
-  this->_setItemPos(IDC_LB_BAT, 50, 25, this->cliUnitX()-107, 58);
+  this->_setItemPos(IDC_LB_PST, 50, 25, this->cliUnitX()-107, 58);
   // Up and Down buttons
   this->_setItemPos(IDC_BC_UP, this->cliUnitX()-55, 39, 16, 15);
   this->_setItemPos(IDC_BC_DN, this->cliUnitX()-55, 55, 16, 15);
@@ -298,45 +291,33 @@ void OmUiPropHubBat::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropHubBat::_onRefresh()
+void OmUiPropHubBat::_onTabRefresh()
 {
-  OmModHub* pModHub = static_cast<OmUiPropHub*>(this->_parent)->modHubCur();
-  if(!pModHub) return;
+  OmModHub* ModHub = static_cast<OmUiPropHub*>(this->_parent)->modHub();
+  if(!ModHub)
+    return;
 
-  this->msgItem(IDC_LB_BAT, LB_RESETCONTENT);
+  this->msgItem(IDC_LB_PST, LB_RESETCONTENT);
 
-  for(unsigned i = 0; i < pModHub->batCount(); ++i) {
-    this->msgItem(IDC_LB_BAT, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(pModHub->batGet(i)->title().c_str()));
-    this->msgItem(IDC_LB_BAT, LB_SETITEMDATA, i, i); // for Mod Channel index reordering
+  for(unsigned i = 0; i < ModHub->presetCount(); ++i) {
+    this->msgItem(IDC_LB_PST, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(ModHub->getPreset(i)->title().c_str()));
+    this->msgItem(IDC_LB_PST, LB_SETITEMDATA, i, i); // for Mod Channel index reordering
   }
 
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pModHub->batQuietMode());
-
-  // reset modified parameters flags
-  for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;
-}
-
-
-
-///
-///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-///
-void OmUiPropHubBat::_onQuit()
-{
-
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, ModHub->presetQuietMode());
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropHubBat::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropHubBat::_onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
     switch(LOWORD(wParam))
     {
-    case IDC_LB_BAT: //< Mod Channel(s) list List-Box
+    case IDC_LB_PST: //< Mod Channel(s) list List-Box
       if(HIWORD(wParam) == LBN_SELCHANGE)
         this->_onLbBatlsSel();
       break;

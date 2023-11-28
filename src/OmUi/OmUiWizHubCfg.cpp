@@ -18,7 +18,7 @@
 
 #include "OmBaseUi.h"
 
-#include "OmManager.h"
+#include "OmModMan.h"
 
 #include "OmUiWizHub.h"
 
@@ -52,7 +52,7 @@ OmUiWizHubCfg::~OmUiWizHubCfg()
 ///
 long OmUiWizHubCfg::id() const
 {
-  return IDD_WIZ_CTX_CFG;
+  return IDD_WIZ_HUB_CFG;
 }
 
 
@@ -61,7 +61,7 @@ long OmUiWizHubCfg::id() const
 ///
 bool OmUiWizHubCfg::hasValidParams() const
 {
-  wstring item_str;
+  OmWString item_str;
 
   this->getItemText(IDC_EC_INP01, item_str);
   if(!Om_dlgValidName(this->_hwnd, L"Mod Hub name", item_str))
@@ -84,7 +84,7 @@ bool OmUiWizHubCfg::hasValidParams() const
 ///
 void OmUiWizHubCfg::_onPathChange()
 {
-  wstring name, path;
+  OmWString name, path;
 
   this->getItemText(IDC_EC_INP01, name);
   this->getItemText(IDC_EC_INP02, path);
@@ -104,7 +104,7 @@ void OmUiWizHubCfg::_onPathChange()
 ///
 void OmUiWizHubCfg::_onBcBrwHome()
 {
-  wstring start, result;
+  OmWString start, result;
 
   this->getItemText(IDC_EC_INP02, start);
 
@@ -141,7 +141,7 @@ void OmUiWizHubCfg::_onInit()
 ///
 void OmUiWizHubCfg::_onShow()
 {
-  wstring item_str;
+  OmWString item_str;
 
   // enable or disable "next" button according values
   bool allow = true;
@@ -236,7 +236,7 @@ INT_PTR OmUiWizHubCfg::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     if(has_changed) {
       bool allow = true;
 
-      wstring item_str;
+      OmWString item_str;
 
       this->getItemText(IDC_EC_INP01, item_str);
       if(!item_str.empty()) {

@@ -18,7 +18,7 @@
 
 #include "OmBaseUi.h"
 
-#include "OmManager.h"
+#include "OmModMan.h"
 
 #include "OmUiWizHub.h"
 
@@ -49,7 +49,7 @@ OmUiWizHubBeg::~OmUiWizHubBeg()
 ///
 long OmUiWizHubBeg::id() const
 {
-  return IDD_WIZ_CTX_BEG;
+  return IDD_WIZ_HUB_BEG;
 }
 
 

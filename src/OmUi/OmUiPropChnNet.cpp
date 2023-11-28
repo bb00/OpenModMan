@@ -20,8 +20,8 @@
 
 #include "OmBaseApp.h"
 
-#include "OmManager.h"
-#include "OmSocket.h"
+#include "OmModMan.h"
+#include "OmNetRepo.h"
 
 #include "OmUiAddRep.h"
 #include "OmUiPropChn.h"
@@ -38,11 +38,9 @@
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-OmUiPropChnNet::OmUiPropChnNet(HINSTANCE hins) : OmDialog(hins)
+OmUiPropChnNet::OmUiPropChnNet(HINSTANCE hins) : OmDialogPropTab(hins)
 {
-  // modified parameters flags
-  for(unsigned i = 0; i < 8; ++i)
-    this->_chParam[i] = false;
+
 }
 
 
@@ -63,28 +61,79 @@ long OmUiPropChnNet::id() const
   return IDD_PROP_CHN_NET;
 }
 
+///
+///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+///
+void OmUiPropChnNet::_query_result_fn(void* ptr, OmResult result, uint64_t code)
+{
+  OmUiPropChnNet* self = static_cast<OmUiPropChnNet*>(ptr);
+
+  OmModChan* ModChan = static_cast<OmUiPropChn*>(self->_parent)->ModChan();
+  if(!ModChan)
+    return;
+
+  OmNetRepo* NetRepo = ModChan->getRepository(code);
+
+  switch(NetRepo->queryResult()) {
+    case OM_RESULT_OK: self->setItemText(IDC_SC_STATE, L"Valid"); break;
+    case OM_RESULT_PENDING: self->setItemText(IDC_SC_STATE, L"Pending..."); break;
+    case OM_RESULT_UNKNOW: self->setItemText(IDC_SC_STATE, L"Unknow"); break;
+    default: self->setItemText(IDC_SC_STATE, NetRepo->lastError()); break;
+  }
+}
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnNet::setChParam(unsigned i, bool en)
+void OmUiPropChnNet::_query_start(size_t i)
 {
-  _chParam[i] = en;
-  static_cast<OmDialogProp*>(this->_parent)->checkChanges();
-}
+  OmModChan* ModChan = static_cast<OmUiPropChn*>(this->_parent)->ModChan();
+  if(!ModChan)
+    return;
 
+  this->enableItem(IDC_SC_STATE, true);
+  this->setItemText(IDC_SC_STATE, L"Pending...");
+
+  OmPNetRepoArray selection;
+  selection.push_back(ModChan->getRepository(i));
+
+  ModChan->queueQueries(selection, nullptr, OmUiPropChnNet::_query_result_fn, this);
+}
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
 void OmUiPropChnNet::_onLbReplsSel()
 {
+  OmModChan* ModChan = static_cast<OmUiPropChn*>(this->_parent)->ModChan();
+  if(!ModChan)
+    return;
+
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
   if(lb_sel >= 0) {
+
+    OmNetRepo* ModRepo = ModChan->getRepository(lb_sel);
+
     this->enableItem(IDC_BC_DEL, true);
     this->enableItem(IDC_BC_QRY, true);
+    this->enableItem(IDC_SC_STATE, true);
+
+    if(ModRepo->queryResult() == OM_RESULT_PENDING) {
+      this->setItemText(IDC_SC_STATE, L"Pending...");
+    } else {
+      if(ModRepo->queryResult() == OM_RESULT_OK) {
+        this->setItemText(IDC_SC_STATE, L"Valid");
+      } else if(ModRepo->queryResult() > 0) {
+        this->setItemText(IDC_SC_STATE, ModRepo->lastError());
+      } else {
+        this->setItemText(IDC_SC_STATE, L"Unknown");
+      }
+    }
+
+  } else {
+
     this->enableItem(IDC_SC_STATE, false);
-    this->setItemText(IDC_SC_STATE, L"<no test launched>");
+    this->setItemText(IDC_SC_STATE, L"");
   }
 }
 
@@ -94,7 +143,7 @@ void OmUiPropChnNet::_onLbReplsSel()
 ///
 void OmUiPropChnNet::_onBcAddRepo()
 {
-  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
+  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->ModChan();
   if(!pModChan) return;
 
   // Open new Repository dialog
@@ -109,22 +158,30 @@ void OmUiPropChnNet::_onBcAddRepo()
 ///
 void OmUiPropChnNet::_onBcDelRepo()
 {
-  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
-  if(!pModChan) return;
+  OmModChan* ModChan = static_cast<OmUiPropChn*>(this->_parent)->ModChan();
+  if(!ModChan)
+    return;
 
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
   if(lb_sel >= 0) {
 
+    OmNetRepo* ModRepo = ModChan->getRepository(lb_sel);
+
+    OmWString repo_name;
+    repo_name.assign(ModRepo->urlBase());
+    repo_name.append(L" -- ");
+    repo_name.append(ModRepo->urlName());
+
     // warns the user before committing the irreparable
     if(!Om_dlgBox_ynl(this->_hwnd, L"Channel properties", IDI_QRY,
-                L"Remove Repository", L"Remove Repository from list ?",
-                pModChan->repGet(lb_sel)->base()+L" - "+pModChan->repGet(lb_sel)->name()))
+                L"Remove Mod Repository", L"Remove the following Mod "
+                "Repository from Mod Channel ?", repo_name))
     {
       return;
     }
 
     // refresh list and buttons
-    this->_onRefresh();
+    this->_onTabRefresh();
   }
 }
 
@@ -132,49 +189,15 @@ void OmUiPropChnNet::_onBcDelRepo()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnNet::_onBcChkRepo()
+void OmUiPropChnNet::_onBcQryRepo()
 {
-  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
-  if(!pModChan) return;
+  OmModChan* ModChan = static_cast<OmUiPropChn*>(this->_parent)->ModChan();
+  if(!ModChan) return;
 
   int lb_sel = this->msgItem(IDC_LB_REP, LB_GETCURSEL);
 
-  if(lb_sel >= 0) {
-
-    this->setItemText(IDC_SC_STATE, L"Pending...");
-
-    OmRepository* pRep = pModChan->repGet(lb_sel);
-
-    OmSocket sock;
-
-    wstring msg;
-
-    string data;
-
-    if(sock.httpGet(pRep->url(), data)) {
-
-      OmConfig config;
-
-      if(config.parse(Om_toUTF16(data), OMM_XMAGIC_REP)) {
-        int n = config.xml().child(L"remotes").attrAsInt(L"count");
-        msg = L"Available, provides " + std::to_wstring(n) + L" package(s)";
-      } else {
-        msg = L"Invalid XML definition";
-      }
-    } else {
-      msg = L"HTTP request failed (" + sock.lastErrorStr() + L")";
-    }
-
-    // get local time
-    int t_h, t_m, t_s;
-    Om_getTime(&t_s, &t_m, &t_h);
-
-    wchar_t hour[32];
-    swprintf(hour, 32, L"[%02d:%02d:%02d] ", t_h, t_m, t_s);
-
-    this->setItemText(IDC_SC_STATE, hour + msg);
-    this->enableItem(IDC_SC_STATE, true);
-  }
+  if(lb_sel >= 0)
+    this->_query_start(lb_sel);
 }
 
 
@@ -183,7 +206,7 @@ void OmUiPropChnNet::_onBcChkRepo()
 ///
 void OmUiPropChnNet::_onCkBoxWrn()
 {
-  this->setChParam(CHN_PROP_NET_WARNINGS, true);
+  this->paramCheck(CHN_PROP_NET_WARNINGS);
 }
 
 
@@ -192,44 +215,44 @@ void OmUiPropChnNet::_onCkBoxWrn()
 ///
 void OmUiPropChnNet::_onBcRadUpg()
 {
-  this->setChParam(CHN_PROP_NET_ONUPGRADE, true);
+  this->paramCheck(CHN_PROP_NET_ONUPGRADE);
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnNet::_onInit()
+void OmUiPropChnNet::_onTabInit()
 {
   // Set buttons inner icons
   this->setBmIcon(IDC_BC_ADD, Om_getResIcon(this->_hins, IDI_BT_ADD));
   this->setBmIcon(IDC_BC_DEL, Om_getResIcon(this->_hins, IDI_BT_REM));
 
   // define controls tool-tips
-  this->_createTooltip(IDC_LB_CHN,    L"Repositories list");
+  this->_createTooltip(IDC_LB_CHN,    L"Mod Repositories list");
 
-  this->_createTooltip(IDC_BC_DEL,    L"Remove selection Repository");
-  this->_createTooltip(IDC_BC_EDI,    L"Test for Repository availability");
+  this->_createTooltip(IDC_BC_DEL,    L"Remove selected Mod Repository");
+  this->_createTooltip(IDC_BC_EDI,    L"Query selected Mod Repository");
   this->_createTooltip(IDC_BC_ADD,    L"Add a new Repository");
 
-  this->_createTooltip(IDC_BC_CKBX1,  L"Warn when packages download require additional dependencies download");
-  this->_createTooltip(IDC_BC_CKBX2,  L"Warn when packages to download have missing dependencies");
-  this->_createTooltip(IDC_BC_CKBX3,  L"Warn when packages upgrade will delete older versions required by other");
+  this->_createTooltip(IDC_BC_CKBX1,  L"Warn if Mods download requires additional dependencies to download");
+  this->_createTooltip(IDC_BC_CKBX2,  L"Warn if Mods to download have missing dependencies");
+  this->_createTooltip(IDC_BC_CKBX3,  L"Warn if upgrading Mods will delete older versions required by other");
 
-  this->_createTooltip(IDC_BC_RAD01,  L"On upgrade, the older version package is moved to recycle bin");
-  this->_createTooltip(IDC_BC_RAD02,  L"On upgrade, the older version package is left in Library but renamed with .old extension");
+  this->_createTooltip(IDC_BC_RAD01,  L"On Mod upgrade, the older Mod is moved to recycle bin");
+  this->_createTooltip(IDC_BC_RAD02,  L"On Mod upgrade, the older Mod is renamed with .old extension");
 
   this->enableItem(IDC_SC_STATE, false);
 
   // Update values
-  this->_onRefresh();
+  this->_onTabRefresh();
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnNet::_onResize()
+void OmUiPropChnNet::_onTabResize()
 {
   // Mod Channel list Label & ListBox
   this->_setItemPos(IDC_SC_LBL01, 50, 15, 68, 9);
@@ -240,8 +263,9 @@ void OmUiPropChnNet::_onResize()
   this->_setItemPos(IDC_BC_QRY, 105, 48, 50, 14);
   // Add button
   this->_setItemPos(IDC_BC_ADD, this->cliUnitX()-107, 48, 50, 14);
-  // Test result static
-  this->_setItemPos(IDC_SC_STATE, 51, 64, this->cliUnitX()-137, 9);
+  // Query Status Label & result static
+  this->_setItemPos(IDC_SC_LBL04, 51, 64, 60, 9);
+  this->_setItemPos(IDC_SC_STATE, 97, 64, this->cliUnitX()-180, 9);
 
   // Warnings label
   this->_setItemPos(IDC_SC_LBL02, 50, 85, 180, 9);
@@ -262,49 +286,48 @@ void OmUiPropChnNet::_onResize()
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-void OmUiPropChnNet::_onRefresh()
+void OmUiPropChnNet::_onTabRefresh()
 {
-  OmModChan* pModChan = static_cast<OmUiPropChn*>(this->_parent)->modChan();
-  if(!pModChan) return;
-
-  this->msgItem(IDC_LB_REP, LB_RESETCONTENT);
-  if(pModChan) {
-
-    wstring label;
-    OmRepository* pRep;
-
-    for(unsigned i = 0; i < pModChan->repCount(); ++i) {
-      pRep = pModChan->repGet(i);
-      label = pRep->base() + L" - " + pRep->name();
-      this->msgItem(IDC_LB_REP, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(label.c_str()));
-    }
-  }
-
-  // set warning messages
-  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, pModChan->warnExtraDnld());
-  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, pModChan->warnMissDnld());
-  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, pModChan->warnUpgdBrkDeps());
-
-  // set Upgrade Rename
-  this->msgItem(IDC_BC_RAD01, BM_SETCHECK, !pModChan->upgdRename());
-  this->msgItem(IDC_BC_RAD02, BM_SETCHECK, pModChan->upgdRename());
-
   // Set controls default states and parameters
   this->enableItem(IDC_SC_STATE, false);
-  this->setItemText(IDC_SC_STATE, L"<no test launched>");
+  //this->setItemText(IDC_SC_STATE, L"Unknown");
 
   this->enableItem(IDC_BC_DEL,  false);
   this->enableItem(IDC_BC_QRY,  false);
 
-  // reset modified parameters flags
-  for(unsigned i = 0; i < 8; ++i) _chParam[i] = false;
+  this->msgItem(IDC_LB_REP, LB_RESETCONTENT);
+
+  OmModChan* ModChan = static_cast<OmUiPropChn*>(this->_parent)->ModChan();
+  if(!ModChan) return;
+
+  OmWString lb_entry;
+
+  for(unsigned i = 0; i < ModChan->repositoryCount(); ++i) {
+
+    OmNetRepo* ModRepo = ModChan->getRepository(i);
+
+    lb_entry = ModRepo->urlBase();
+    lb_entry += L" -- ";
+    lb_entry += ModRepo->urlName();
+
+    this->msgItem(IDC_LB_REP, LB_ADDSTRING, i, reinterpret_cast<LPARAM>(lb_entry.c_str()));
+  }
+
+  // set warning messages
+  this->msgItem(IDC_BC_CKBX1, BM_SETCHECK, ModChan->warnExtraDnld());
+  this->msgItem(IDC_BC_CKBX2, BM_SETCHECK, ModChan->warnMissDnld());
+  this->msgItem(IDC_BC_CKBX3, BM_SETCHECK, ModChan->warnUpgdBrkDeps());
+
+  // set Upgrade Rename
+  this->msgItem(IDC_BC_RAD01, BM_SETCHECK, !ModChan->upgdRename());
+  this->msgItem(IDC_BC_RAD02, BM_SETCHECK, ModChan->upgdRename());
 }
 
 
 ///
 ///  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ///
-INT_PTR OmUiPropChnNet::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR OmUiPropChnNet::_onTabMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if(uMsg == WM_COMMAND) {
 
@@ -324,7 +347,7 @@ INT_PTR OmUiPropChnNet::_onMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
       break;
 
     case IDC_BC_QRY:
-      this->_onBcChkRepo();
+      this->_onBcQryRepo();
       break;
 
     case IDC_BC_CKBX1:
